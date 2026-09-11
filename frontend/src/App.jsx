@@ -12,6 +12,8 @@ import {
   productApi,
 } from "./api.js";
 
+import { supabase } from "./lib/supabase.js";
+
 const FALLBACK_PRODUCTS = [
   {
     id: 1,
@@ -3846,25 +3848,32 @@ function AccountPage({
     });
 
 
-  async function loadCustomerData() {
+  function mapSupabaseUser(
+    supabaseUser
+  ) {
+    if (!supabaseUser) {
+      return null;
+    }
 
-    const [
-      addressResult,
-      orderResult,
-    ] =
-      await Promise.all([
-        addressApi.list(),
-        orderApi.list(),
-      ]);
+    const metadata =
+      supabaseUser.user_metadata ||
+      {};
 
+    return {
+      id:
+        supabaseUser.id,
 
-    setAddresses(
-      addressResult.addresses
-    );
+      email:
+        supabaseUser.email ||
+        "",
 
-    setOrders(
-      orderResult.orders
-    );
+      fullName:
+        metadata.full_name ||
+        metadata.name ||
+        supabaseUser.email
+          ?.split("@")[0] ||
+        "Customer",
+    };
   }
 
 
@@ -3877,51 +3886,56 @@ function AccountPage({
 
       try {
 
-        const result =
-          await authApi.me();
+        const {
+          data,
+          error: sessionError,
+        } =
+          await supabase.auth.getSession();
+
+
+        if (sessionError) {
+          throw sessionError;
+        }
 
 
         if (!active) {
           return;
         }
+
+
+        const currentUser =
+          mapSupabaseUser(
+            data.session?.user
+          );
 
 
         setUser(
-          result.user
+          currentUser
         );
 
 
-        const [
-          addressResult,
-          orderResult,
-        ] =
-          await Promise.all([
-            addressApi.list(),
-            orderApi.list(),
-          ]);
-
-
-        if (!active) {
-          return;
-        }
-
-
-        setAddresses(
-          addressResult.addresses
-        );
-
-        setOrders(
-          orderResult.orders
-        );
+        /*
+         * Orders and addresses will be
+         * migrated to Supabase next.
+         *
+         * For now we keep the UI empty
+         * instead of calling the old
+         * backend and showing
+         * "Load failed".
+         */
+        setAddresses([]);
+        setOrders([]);
 
       } catch (err) {
 
-        if (
-          active &&
-          err.status !==
-          401
-        ) {
+        console.error(
+          "Account load error:",
+          err
+        );
+
+        if (active) {
           setError(
+            err.message ||
             "Could not load your account."
           );
         }
@@ -3929,9 +3943,7 @@ function AccountPage({
       } finally {
 
         if (active) {
-          setLoading(
-            false
-          );
+          setLoading(false);
         }
       }
     }
@@ -3940,8 +3952,43 @@ function AccountPage({
     loadAccount();
 
 
+    const {
+      data: authListener,
+    } =
+      supabase.auth.onAuthStateChange(
+        (
+          event,
+          session
+        ) => {
+
+          if (!active) {
+            return;
+          }
+
+
+          setUser(
+            mapSupabaseUser(
+              session?.user
+            )
+          );
+
+
+          if (
+            event ===
+            "SIGNED_OUT"
+          ) {
+            setAddresses([]);
+            setOrders([]);
+          }
+        }
+      );
+
+
     return () => {
       active = false;
+
+      authListener.subscription
+        .unsubscribe();
     };
 
   }, []);
@@ -3983,51 +4030,105 @@ function AccountPage({
 
     try {
 
-      let result;
-
-
       if (
         mode ===
         "register"
       ) {
 
-        result =
-          await authApi.register({
-            fullName:
-              form.fullName,
-
+        const {
+          data,
+          error: registerError,
+        } =
+          await supabase.auth.signUp({
             email:
-              form.email,
+              form.email.trim(),
 
             password:
               form.password,
+
+            options: {
+              data: {
+                full_name:
+                  form.fullName.trim(),
+              },
+            },
           });
+
+
+        if (registerError) {
+          throw registerError;
+        }
+
+
+        if (
+          data.session &&
+          data.user
+        ) {
+
+          setUser(
+            mapSupabaseUser(
+              data.user
+            )
+          );
+
+          setMessage(
+            "Your DEsiglov account has been created."
+          );
+
+        } else {
+
+          setMessage(
+            "Account created. Please check your email to confirm your account, then sign in."
+          );
+
+          setMode(
+            "login"
+          );
+        }
 
       } else {
 
-        result =
-          await authApi.login({
-            email:
-              form.email,
+        const {
+          data,
+          error: loginError,
+        } =
+          await supabase.auth
+            .signInWithPassword({
+              email:
+                form.email.trim(),
 
-            password:
-              form.password,
-          });
+              password:
+                form.password,
+            });
 
+
+        if (loginError) {
+          throw loginError;
+        }
+
+
+        if (!data.user) {
+          throw new Error(
+            "Unable to sign in."
+          );
+        }
+
+
+        setUser(
+          mapSupabaseUser(
+            data.user
+          )
+        );
+
+
+        setMessage(
+          "Welcome back to DEsiglov."
+        );
       }
 
 
-      setUser(
-        result.user
-      );
-
-
-      setMessage(
-        mode ===
-          "register"
-          ? "Your DEsiglov account has been created."
-          : "Welcome back to DEsiglov."
-      );
+      setAddresses([]);
+      setOrders([]);
 
 
       setForm({
@@ -4036,10 +4137,13 @@ function AccountPage({
         password: "",
       });
 
-
-      await loadCustomerData();
-
     } catch (err) {
+
+      console.error(
+        "Authentication error:",
+        err
+      );
+
 
       setError(
         err.message ||
@@ -4048,9 +4152,7 @@ function AccountPage({
 
     } finally {
 
-      setSubmitting(
-        false
-      );
+      setSubmitting(false);
     }
   }
 
@@ -4065,7 +4167,16 @@ function AccountPage({
 
     try {
 
-      await authApi.logout();
+      const {
+        error: logoutError,
+      } =
+        await supabase.auth.signOut();
+
+
+      if (logoutError) {
+        throw logoutError;
+      }
+
 
       setUser(null);
 
@@ -4091,76 +4202,7 @@ function AccountPage({
 
     } finally {
 
-      setSubmitting(
-        false
-      );
-    }
-  }
-
-
-  async function removeAddress(
-    id
-  ) {
-
-    const confirmed =
-      window.confirm(
-        "Remove this saved address?"
-      );
-
-
-    if (!confirmed) {
-      return;
-    }
-
-
-    try {
-
-      await addressApi.remove(
-        id
-      );
-
-
-      const result =
-        await addressApi.list();
-
-
-      setAddresses(
-        result.addresses
-      );
-
-    } catch (err) {
-
-      setError(
-        err.message
-      );
-    }
-  }
-
-
-  async function makeDefault(
-    id
-  ) {
-
-    try {
-
-      await addressApi.makeDefault(
-        id
-      );
-
-
-      const result =
-        await addressApi.list();
-
-
-      setAddresses(
-        result.addresses
-      );
-
-    } catch (err) {
-
-      setError(
-        err.message
-      );
+      setSubmitting(false);
     }
   }
 
@@ -4237,15 +4279,11 @@ function AccountPage({
               </small>
 
               <h2>
-                {
-                  user.fullName
-                }
+                {user.fullName}
               </h2>
 
               <p>
-                {
-                  user.email
-                }
+                {user.email}
               </p>
 
             </div>
@@ -4278,218 +4316,26 @@ function AccountPage({
               </div>
 
               <strong>
-                {
-                  orders.length
-                }{" "}
-                ORDER
-                {
-                  orders.length ===
-                  1
-                    ? ""
-                    : "S"
-                }
+                {orders.length} ORDER
+                {orders.length === 1
+                  ? ""
+                  : "S"}
               </strong>
 
             </div>
 
 
-            {orders.length ===
-            0 ? (
+            <div className="account-empty-block">
 
-              <div className="account-empty-block">
+              <h3>
+                No orders yet.
+              </h3>
 
-                <h3>
-                  No orders yet.
-                </h3>
+              <p>
+                Your completed orders will appear here.
+              </p>
 
-                <p>
-                  Your completed orders will appear here.
-                </p>
-
-              </div>
-
-            ) : (
-
-              <div className="account-orders">
-
-                {orders.map(
-                  (order) => (
-
-                    <article
-                      className="account-order"
-                      key={
-                        order.id
-                      }
-                    >
-
-                      <div className="order-header">
-
-                        <div>
-
-                          <small>
-                            ORDER
-                          </small>
-
-                          <strong>
-                            {
-                              order.orderNumber
-                            }
-                          </strong>
-
-                        </div>
-
-
-                        <div className="order-status">
-                          {
-                            order.status
-                          }
-                        </div>
-
-                      </div>
-
-
-                      <div className="order-meta">
-
-                        <span>
-                          {new Date(
-                            order.createdAt
-                          ).toLocaleDateString(
-                            "en-GB",
-                            {
-                              day:
-                                "numeric",
-
-                              month:
-                                "long",
-
-                              year:
-                                "numeric",
-                            }
-                          )}
-                        </span>
-
-                        <span>
-                          {
-                            order.paymentMethod ===
-                            "COD"
-                              ? "Cash on Delivery"
-                              : order.paymentMethod
-                          }
-                        </span>
-
-                        <strong>
-                          ₹
-                          {
-                            order.totalINR
-                              .toLocaleString(
-                                "en-IN"
-                              )
-                          }
-                        </strong>
-
-                      </div>
-
-
-                      <div className="order-items">
-
-                        {order.items.map(
-                          (
-                            item,
-                            index
-                          ) => (
-
-                            <div
-                              className="account-order-item"
-                              key={
-                                `${order.id}-${index}`
-                              }
-                            >
-
-                              <div>
-
-                                <strong>
-                                  {
-                                    item.productName
-                                  }
-                                </strong>
-
-                                <small>
-                                  Size{" "}
-                                  {
-                                    item.size
-                                  }{" "}
-                                  · Qty{" "}
-                                  {
-                                    item.quantity
-                                  }
-                                </small>
-
-                              </div>
-
-
-                              <span>
-                                ₹
-                                {
-                                  (
-                                    item.unitPriceINR *
-                                    item.quantity
-                                  ).toLocaleString(
-                                    "en-IN"
-                                  )
-                                }
-                              </span>
-
-                            </div>
-
-                          )
-                        )}
-
-                      </div>
-
-
-                      <div className="order-delivery-address">
-
-                        <small>
-                          DELIVERY TO
-                        </small>
-
-                        <p>
-                          {
-                            order.address.fullName
-                          }
-                          <br />
-
-                          {
-                            order.address.line1
-                          }
-                          {
-                            order.address.line2
-                              ? `, ${order.address.line2}`
-                              : ""
-                          }
-                          <br />
-
-                          {
-                            order.address.city
-                          },{" "}
-                          {
-                            order.address.state
-                          }{" "}
-                          {
-                            order.address.postalCode
-                          }
-                        </p>
-
-                      </div>
-
-                    </article>
-
-                  )
-                )}
-
-              </div>
-
-            )}
+            </div>
 
           </div>
 
@@ -4521,124 +4367,17 @@ function AccountPage({
             </div>
 
 
-            {addresses.length ===
-            0 ? (
+            <div className="account-empty-block">
 
-              <div className="account-empty-block">
+              <h3>
+                No saved address yet.
+              </h3>
 
-                <h3>
-                  No saved address yet.
-                </h3>
+              <p>
+                Your delivery address can be added during checkout.
+              </p>
 
-                <p>
-                  Your delivery address can be added during checkout.
-                </p>
-
-              </div>
-
-            ) : (
-
-              <div className="account-address-grid">
-
-                {addresses.map(
-                  (address) => (
-
-                    <article
-                      className="saved-account-address"
-                      key={
-                        address.id
-                      }
-                    >
-
-                      <div className="saved-address-top">
-
-                        <strong>
-                          {
-                            address.fullName
-                          }
-                        </strong>
-
-                        {address.isDefault && (
-                          <span>
-                            DEFAULT
-                          </span>
-                        )}
-
-                      </div>
-
-
-                      <p>
-                        {
-                          address.line1
-                        }
-
-                        {address.line2
-                          ? `, ${address.line2}`
-                          : ""}
-
-                        <br />
-
-                        {
-                          address.city
-                        },{" "}
-                        {
-                          address.state
-                        }{" "}
-                        {
-                          address.postalCode
-                        }
-
-                        <br />
-
-                        {
-                          address.country
-                        }
-
-                        <br />
-
-                        {
-                          address.phone
-                        }
-                      </p>
-
-
-                      <div className="saved-address-actions">
-
-                        {!address.isDefault && (
-
-                          <button
-                            onClick={() =>
-                              makeDefault(
-                                address.id
-                              )
-                            }
-                          >
-                            MAKE DEFAULT
-                          </button>
-
-                        )}
-
-
-                        <button
-                          onClick={() =>
-                            removeAddress(
-                              address.id
-                            )
-                          }
-                        >
-                          REMOVE
-                        </button>
-
-                      </div>
-
-                    </article>
-
-                  )
-                )}
-
-              </div>
-
-            )}
+            </div>
 
           </div>
 
@@ -4646,12 +4385,8 @@ function AccountPage({
           <button
             className="account-logout"
             type="button"
-            disabled={
-              submitting
-            }
-            onClick={
-              logout
-            }
+            disabled={submitting}
+            onClick={logout}
           >
             {submitting
               ? "SIGNING OUT..."
@@ -4690,19 +4425,13 @@ function AccountPage({
           <button
             type="button"
             className={
-              mode ===
-              "login"
+              mode === "login"
                 ? "active"
                 : ""
             }
             onClick={() => {
-
-              setMode(
-                "login"
-              );
-
+              setMode("login");
               setError("");
-
               setMessage("");
             }}
           >
@@ -4713,19 +4442,13 @@ function AccountPage({
           <button
             type="button"
             className={
-              mode ===
-              "register"
+              mode === "register"
                 ? "active"
                 : ""
             }
             onClick={() => {
-
-              setMode(
-                "register"
-              );
-
+              setMode("register");
               setError("");
-
               setMessage("");
             }}
           >
@@ -4751,9 +4474,7 @@ function AccountPage({
 
         <form
           className="auth-form"
-          onSubmit={
-            submit
-          }
+          onSubmit={submit}
         >
 
           {mode ===
@@ -4791,6 +4512,7 @@ function AccountPage({
 
             <input
               required
+              type="email"
               name="email"
               value={
                 form.email
@@ -4798,7 +4520,6 @@ function AccountPage({
               onChange={
                 updateField
               }
-              type="email"
               placeholder="you@example.com"
               autoComplete="email"
             />
@@ -4814,6 +4535,8 @@ function AccountPage({
 
             <input
               required
+              minLength="8"
+              type="password"
               name="password"
               value={
                 form.password
@@ -4821,22 +4544,9 @@ function AccountPage({
               onChange={
                 updateField
               }
-              type="password"
-              placeholder={
-                mode ===
-                "register"
-                  ? "At least 8 characters"
-                  : "Your password"
-              }
-              minLength={
-                mode ===
-                "register"
-                  ? 8
-                  : 1
-              }
+              placeholder="At least 8 characters"
               autoComplete={
-                mode ===
-                "register"
+                mode === "register"
                   ? "new-password"
                   : "current-password"
               }
@@ -4845,25 +4555,7 @@ function AccountPage({
           </label>
 
 
-          
-          {mode === "login" && (
-            <button
-              type="button"
-              className="forgot-password-link"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-
-                navigate(
-                  "/forgot-password"
-                );
-              }}
-            >
-              FORGOT PASSWORD?
-            </button>
-          )}
-
-<button
+          <button
             className="add-bag auth-submit"
             disabled={
               submitting
@@ -4871,8 +4563,7 @@ function AccountPage({
           >
             {submitting
               ? "PLEASE WAIT..."
-              : mode ===
-                "register"
+              : mode === "register"
               ? "CREATE ACCOUNT"
               : "SIGN IN"}
           </button>
@@ -4894,7 +4585,7 @@ function AccountPage({
 
               setMode(
                 mode ===
-                  "register"
+                "register"
                   ? "login"
                   : "register"
               );
@@ -4920,7 +4611,7 @@ function AccountPage({
           </span>
 
           <p>
-            Your password is securely hashed and is never stored as plain text.
+            Your password is securely managed by Supabase Authentication and is never stored as plain text by DEsiglov.
           </p>
 
         </div>
