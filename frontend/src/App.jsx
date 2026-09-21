@@ -2865,6 +2865,57 @@ function OrderSummary({
 }
 
 
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const existingScript =
+      document.querySelector(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      );
+
+    if (existingScript) {
+      existingScript.addEventListener(
+        "load",
+        () => resolve(true),
+        { once: true }
+      );
+
+      existingScript.addEventListener(
+        "error",
+        () => resolve(false),
+        { once: true }
+      );
+
+      return;
+    }
+
+    const script =
+      document.createElement(
+        "script"
+      );
+
+    script.src =
+      "https://checkout.razorpay.com/v1/checkout.js";
+
+    script.async = true;
+
+    script.onload = () =>
+      resolve(true);
+
+    script.onerror = () =>
+      resolve(false);
+
+    document.body.appendChild(
+      script
+    );
+  });
+}
+
+
 function CheckoutPage({
   country,
   items,
@@ -2895,6 +2946,9 @@ function CheckoutPage({
 
   const [successOrder, setSuccessOrder] =
     useState(null);
+
+  const [paymentMethod, setPaymentMethod] =
+    useState("RAZORPAY");
 
   const [addressForm, setAddressForm] =
     useState({
@@ -3079,87 +3133,218 @@ function CheckoutPage({
 
 
   async function placeOrder() {
-
     if (!selectedAddress) {
-
       setError(
         "Please select or add a delivery address."
       );
-
       return;
     }
 
-
-    if (
-      items.length ===
-      0
-    ) {
-
+    if (items.length === 0) {
       setError(
         "Your shopping bag is empty."
       );
-
       return;
     }
-
 
     setPlacing(true);
     setError("");
 
+    const orderItems =
+      items.map((item) => ({
+        productId:
+          item.product.id,
+        size:
+          item.size,
+        quantity:
+          item.quantity,
+      }));
+
+    // --------------------------------------------------------
+    // CASH ON DELIVERY
+    // --------------------------------------------------------
+
+    if (paymentMethod === "COD") {
+      try {
+        const result =
+          await orderApi.create({
+            addressId:
+              selectedAddress,
+            paymentMethod:
+              "COD",
+            items:
+              orderItems,
+          });
+
+        setSuccessOrder(
+          result.order
+        );
+
+        clearCart();
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      } catch (err) {
+        setError(
+          err.message ||
+          "Could not place your order."
+        );
+      } finally {
+        setPlacing(false);
+      }
+
+      return;
+    }
+
+    // --------------------------------------------------------
+    // ONLINE PAYMENT / RAZORPAY
+    // --------------------------------------------------------
 
     try {
+      const loaded =
+        await loadRazorpayScript();
+
+      if (!loaded) {
+        throw new Error(
+          "Secure payment checkout could not be loaded. Please check your connection and try again."
+        );
+      }
 
       const result =
         await orderApi.create({
-
           addressId:
             selectedAddress,
-
           paymentMethod:
-            "COD",
-
+            "RAZORPAY",
           items:
-            items.map(
-              (item) => ({
-                productId:
-                  item.product.id,
-
-                size:
-                  item.size,
-
-                quantity:
-                  item.quantity,
-              })
-            ),
+            orderItems,
         });
 
+      if (
+        !result?.order?.id ||
+        !result?.payment?.keyId ||
+        !result?.payment
+          ?.razorpayOrderId
+      ) {
+        throw new Error(
+          "Payment could not be prepared. Please try again."
+        );
+      }
 
-      setSuccessOrder(
-        result.order
+      const options = {
+        key:
+          result.payment.keyId,
+
+        amount:
+          result.payment.amount,
+
+        currency:
+          result.payment.currency,
+
+        name:
+          result.payment.name ||
+          "DESIGLOV",
+
+        description:
+          result.payment.description ||
+          `Order ${result.order.orderNumber}`,
+
+        order_id:
+          result.payment
+            .razorpayOrderId,
+
+        // Keep Razorpay Checkout aligned with the
+        // backend's 15-minute stock reservation window.
+        timeout: 900,
+
+        prefill:
+          result.payment.prefill ||
+          {},
+
+        theme: {
+          color: "#111111",
+        },
+
+        modal: {
+          ondismiss: () => {
+            setPlacing(false);
+          },
+        },
+
+        handler: async (
+          response
+        ) => {
+          try {
+            const verified =
+              await orderApi
+                .verifyPayment({
+                  orderId:
+                    result.order.id,
+
+                  razorpayOrderId:
+                    response
+                      .razorpay_order_id,
+
+                  razorpayPaymentId:
+                    response
+                      .razorpay_payment_id,
+
+                  razorpaySignature:
+                    response
+                      .razorpay_signature,
+                });
+
+            setSuccessOrder(
+              verified.order
+            );
+
+            clearCart();
+
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+          } catch (err) {
+            setError(
+              err.message ||
+              "Payment was received but verification could not be completed. Please contact DESIGLOV before trying again."
+            );
+          } finally {
+            setPlacing(false);
+          }
+        },
+      };
+
+      const razorpay =
+        new window.Razorpay(
+          options
+        );
+
+      razorpay.on(
+        "payment.failed",
+        (response) => {
+          const message =
+            response?.error
+              ?.description ||
+            "Payment was not completed. Please try again.";
+
+          setError(message);
+          setPlacing(false);
+        }
       );
 
-
-      clearCart();
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-
+      razorpay.open();
     } catch (err) {
-
       setError(
-        err.message
+        err.message ||
+        "Online payment could not be started."
       );
 
-    } finally {
-
-      setPlacing(
-        false
-      );
+      setPlacing(false);
     }
   }
-
 
   if (loading) {
     return (
@@ -3238,8 +3423,9 @@ function CheckoutPage({
           </h2>
 
           <p>
-            Your order has been recorded successfully.
-            Payment will be collected by Cash on Delivery.
+            {successOrder.paymentMethod === "COD"
+              ? "Your order has been recorded successfully. Payment will be collected by Cash on Delivery."
+              : "Your payment has been verified successfully and your order is confirmed."}
           </p>
 
           <div className="confirmation-total">
@@ -3293,14 +3479,46 @@ function CheckoutPage({
   const subtotal =
     totalINR;
 
+  const selectedAddressData =
+    addresses.find(
+      (address) =>
+        address.id ===
+        selectedAddress
+    );
+
+  const normalisedState =
+    (
+      selectedAddressData?.state ||
+      ""
+    )
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+
+  const isTamilNadu =
+    normalisedState ===
+      "tamil nadu" ||
+    normalisedState ===
+      "tamilnadu" ||
+    normalisedState ===
+      "tn";
+
   const shipping =
     subtotal >= 2999
       ? 0
-      : 99;
+      : isTamilNadu
+        ? 70
+        : 99;
+
+  const codFee =
+    paymentMethod === "COD"
+      ? 30
+      : 0;
 
   const finalTotal =
     subtotal +
-    shipping;
+    shipping +
+    codFee;
 
 
   return (
@@ -3598,43 +3816,71 @@ function CheckoutPage({
             number="03"
             title="PAYMENT"
           >
-
-            <label className="payment-choice active-payment">
-
+            <label
+              className={`payment-choice ${
+                paymentMethod === "RAZORPAY"
+                  ? "active-payment"
+                  : ""
+              }`}
+            >
               <input
                 type="radio"
                 name="payment"
-                checked
-                readOnly
+                value="RAZORPAY"
+                checked={
+                  paymentMethod ===
+                  "RAZORPAY"
+                }
+                onChange={() =>
+                  setPaymentMethod(
+                    "RAZORPAY"
+                  )
+                }
               />
 
               <div>
+                <strong>
+                  Online Payment
+                </strong>
 
+                <small>
+                  Pay securely using UPI, cards, net banking or other available payment methods.
+                </small>
+              </div>
+            </label>
+
+            <label
+              className={`payment-choice ${
+                paymentMethod === "COD"
+                  ? "active-payment"
+                  : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="payment"
+                value="COD"
+                checked={
+                  paymentMethod ===
+                  "COD"
+                }
+                onChange={() =>
+                  setPaymentMethod(
+                    "COD"
+                  )
+                }
+              />
+
+              <div>
                 <strong>
                   Cash on Delivery
                 </strong>
 
                 <small>
-                  Pay when your order arrives.
+                  Pay when your order arrives. ₹30 convenience fee applies.
                 </small>
-
               </div>
-
             </label>
-
-
-            <div className="future-payment-card">
-
-              <span>
-                UPI / CARD
-              </span>
-
-              <p>
-                Secure online payment will be connected in the next phase.
-              </p>
-
-            </div>
-
           </CheckoutBlock>
 
 
@@ -3650,8 +3896,12 @@ function CheckoutPage({
             }
           >
             {placing
-              ? "PLACING ORDER..."
-              : "PLACE COD ORDER"}
+              ? paymentMethod === "COD"
+                ? "PLACING ORDER..."
+                : "PREPARING PAYMENT..."
+              : paymentMethod === "COD"
+                ? "PLACE COD ORDER"
+                : "PROCEED TO PAYMENT"}
           </button>
 
         </div>
@@ -3752,6 +4002,20 @@ function CheckoutPage({
 
           </div>
 
+
+          {paymentMethod === "COD" && (
+            <div className="checkout-price-row">
+              <span>
+                COD convenience fee
+              </span>
+
+              <strong>
+                ₹{codFee.toLocaleString(
+                  "en-IN"
+                )}
+              </strong>
+            </div>
+          )}
 
           <div className="summary-total">
 
@@ -3891,14 +4155,48 @@ function AccountPage({
           return;
         }
 
+        const sessionUser =
+          data.session?.user;
+
         setUser(
           mapSupabaseUser(
-            data.session?.user
+            sessionUser
           )
         );
 
-        setAddresses([]);
-        setOrders([]);
+        if (sessionUser) {
+          const [
+            addressResult,
+            orderResult,
+          ] =
+            await Promise.all([
+              addressApi.list(),
+              orderApi.list(),
+            ]);
+
+          if (!active) {
+            return;
+          }
+
+          setAddresses(
+            Array.isArray(
+              addressResult?.addresses
+            )
+              ? addressResult.addresses
+              : []
+          );
+
+          setOrders(
+            Array.isArray(
+              orderResult?.orders
+            )
+              ? orderResult.orders
+              : []
+          );
+        } else {
+          setAddresses([]);
+          setOrders([]);
+        }
       } catch (err) {
         console.error(
           "Account load error:",
@@ -4379,15 +4677,226 @@ function AccountPage({
               </strong>
             </div>
 
-            <div className="account-empty-block">
-              <h3>
-                No orders yet.
-              </h3>
+            {orders.length === 0 ? (
+              <div className="account-empty-block">
+                <h3>No orders yet.</h3>
+                <p>
+                  Your completed orders will appear here.
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gap: "18px",
+                  marginTop: "22px",
+                }}
+              >
+                {orders.map((order) => {
+                  const codFee =
+                    order.paymentMethod === "COD"
+                      ? Math.max(
+                          0,
+                          Number(order.totalINR || 0) -
+                            Number(order.subtotalINR || 0) -
+                            Number(order.shippingINR || 0)
+                        )
+                      : 0;
 
-              <p>
-                Your completed orders will appear here.
-              </p>
-            </div>
+                  return (
+                    <article
+                      key={order.id}
+                      style={{
+                        border: "1px solid #e7ddd7",
+                        background: "#fff",
+                        padding: "24px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: "20px",
+                          flexWrap: "wrap",
+                          paddingBottom: "18px",
+                          borderBottom: "1px solid #eee6e1",
+                        }}
+                      >
+                        <div>
+                          <small
+                            style={{
+                              display: "block",
+                              letterSpacing: "0.15em",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            ORDER NUMBER
+                          </small>
+
+                          <h3 style={{ margin: 0 }}>
+                            {order.orderNumber}
+                          </h3>
+
+                          <p style={{ margin: "8px 0 0" }}>
+                            {order.createdAt
+                              ? new Date(
+                                  order.createdAt
+                                ).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "long",
+                                  year: "numeric",
+                                })
+                              : ""}
+                          </p>
+                        </div>
+
+                        <div style={{ textAlign: "right" }}>
+                          <strong
+                            style={{
+                              display: "block",
+                              marginBottom: "7px",
+                            }}
+                          >
+                            {order.status}
+                          </strong>
+
+                          <span>
+                            {order.paymentMethod} ·{" "}
+                            {order.paymentStatus}
+                          </span>
+                        </div>
+                      </div>
+
+                      {Array.isArray(order.items) &&
+                      order.items.length > 0 ? (
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: "14px",
+                            padding: "18px 0",
+                          }}
+                        >
+                          {order.items.map((item, index) => (
+                            <div
+                              key={
+                                item.productId ||
+                                `${order.id}-${index}`
+                              }
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: "20px",
+                              }}
+                            >
+                              <div>
+                                <strong>
+                                  {item.productName}
+                                </strong>
+
+                                <div
+                                  style={{
+                                    marginTop: "5px",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  {item.size
+                                    ? `Size ${item.size} · `
+                                    : ""}
+                                  Qty {item.quantity}
+                                </div>
+                              </div>
+
+                              <strong>
+                                ₹
+                                {(
+                                  Number(
+                                    item.unitPriceINR || 0
+                                  ) *
+                                  Number(item.quantity || 1)
+                                ).toLocaleString("en-IN")}
+                              </strong>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      <div
+                        style={{
+                          borderTop: "1px solid #eee6e1",
+                          paddingTop: "16px",
+                          display: "grid",
+                          gap: "9px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span>Subtotal</span>
+                          <span>
+                            ₹
+                            {Number(
+                              order.subtotalINR || 0
+                            ).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span>Delivery</span>
+                          <span>
+                            ₹
+                            {Number(
+                              order.shippingINR || 0
+                            ).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+
+                        {codFee > 0 ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span>COD convenience fee</span>
+                            <span>
+                              ₹{codFee.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        ) : null}
+
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            borderTop: "1px solid #eee6e1",
+                            paddingTop: "13px",
+                            marginTop: "4px",
+                            fontSize: "18px",
+                          }}
+                        >
+                          <strong>Total</strong>
+                          <strong>
+                            ₹
+                            {Number(
+                              order.totalINR || 0
+                            ).toLocaleString("en-IN")}
+                          </strong>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="account-section">
@@ -4409,15 +4918,88 @@ function AccountPage({
               </div>
             </div>
 
-            <div className="account-empty-block">
-              <h3>
-                No saved address yet.
-              </h3>
+            {addresses.length === 0 ? (
+              <div className="account-empty-block">
+                <h3>No saved address yet.</h3>
+                <p>
+                  Your delivery address can be added during checkout.
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gap: "16px",
+                  marginTop: "22px",
+                }}
+              >
+                {addresses.map((address) => (
+                  <article
+                    key={address.id}
+                    style={{
+                      border: "1px solid #e7ddd7",
+                      background: "#fff",
+                      padding: "24px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: "20px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div>
+                        <h3 style={{ margin: "0 0 10px" }}>
+                          {address.fullName}
+                        </h3>
 
-              <p>
-                Your delivery address can be added during checkout.
-              </p>
-            </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            lineHeight: 1.8,
+                          }}
+                        >
+                          {address.line1}
+                          <br />
+
+                          {address.line2 ? (
+                            <>
+                              {address.line2}
+                              <br />
+                            </>
+                          ) : null}
+
+                          {address.city}, {address.state}{" "}
+                          {address.postalCode}
+                          <br />
+
+                          {address.country}
+                          <br />
+
+                          {address.phone}
+                        </p>
+                      </div>
+
+                      {address.isDefault ? (
+                        <strong
+                          style={{
+                            fontSize: "10px",
+                            letterSpacing: "0.15em",
+                            border: "1px solid #c9a58f",
+                            padding: "7px 10px",
+                          }}
+                        >
+                          DEFAULT
+                        </strong>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
 
           <button

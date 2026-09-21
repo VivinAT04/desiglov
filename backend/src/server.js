@@ -18,6 +18,10 @@ import authRoutes from "./authRoutes.js";
 import addressRoutes from "./addressRoutes.js";
 
 import orderRoutes from "./orderRoutes.js";
+import razorpayWebhook from "./razorpayWebhook.js";
+import {
+  startRazorpayReconciliation,
+} from "./razorpayReconciliation.js";
 
 import productRoutes from "./productRoutes.js";
 
@@ -53,6 +57,17 @@ app.use(
         .FRONTEND_URL,
     credentials: true,
   })
+);
+
+
+// Razorpay webhook MUST be mounted before express.json().
+//
+// Razorpay signs the exact raw HTTP request body. If the global
+// JSON parser runs first, signature verification is no longer
+// performed against the original raw bytes.
+app.use(
+  "/api/webhooks",
+  razorpayWebhook
 );
 
 
@@ -217,6 +232,8 @@ app.use(
 async function start() {
   try {
     await initialiseDatabase();
+
+  startRazorpayReconciliation();
 
     app.listen(
       PORT,

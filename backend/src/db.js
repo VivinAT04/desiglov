@@ -6,7 +6,40 @@ export const pool =
   new Pool({
     connectionString:
       process.env.DATABASE_URL,
+
+    // Do not allow a stalled remote database connection
+    // to leave an API request hanging indefinitely.
+    connectionTimeoutMillis:
+      10000,
+
+    // Release unused connections so Supabase can recycle
+    // pooled sessions cleanly.
+    idleTimeoutMillis:
+      30000,
+
+    // Keep the local API pool deliberately small.
+    max:
+      5,
+
+    // Allow Node to exit when only idle DB connections remain.
+    allowExitOnIdle:
+      true,
   });
+
+pool.on(
+  "error",
+  (error) => {
+    console.error(
+      "Unexpected PostgreSQL pool error:",
+      {
+        message:
+          error?.message,
+        code:
+          error?.code,
+      }
+    );
+  }
+);
 
 
 export async function initialiseDatabase() {
@@ -145,6 +178,11 @@ export async function initialiseDatabase() {
         DEFAULT 0
         CHECK (stock >= 0),
 
+      reserved_stock INTEGER
+        NOT NULL
+        DEFAULT 0
+        CHECK (reserved_stock >= 0),
+
       badge VARCHAR(80),
 
       colour VARCHAR(120),
@@ -175,6 +213,40 @@ export async function initialiseDatabase() {
         NOT NULL
         DEFAULT NOW()
     );
+  `);
+
+
+  // =========================================================
+  // ONLINE PAYMENT STOCK RESERVATION
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS reserved_stock INTEGER
+    NOT NULL
+    DEFAULT 0;
+  `);
+
+  await pool.query(`
+    UPDATE products
+    SET reserved_stock = 0
+    WHERE reserved_stock IS NULL;
+  `);
+
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'products_reserved_stock_nonnegative'
+      ) THEN
+        ALTER TABLE products
+        ADD CONSTRAINT products_reserved_stock_nonnegative
+        CHECK (reserved_stock >= 0);
+      END IF;
+    END
+    $$;
   `);
 
 
@@ -601,6 +673,10 @@ export async function initialiseDatabase() {
         NOT NULL
         DEFAULT 0,
 
+      cod_fee_inr INTEGER
+        NOT NULL
+        DEFAULT 0,
+
       total_inr INTEGER
         NOT NULL,
 
@@ -612,6 +688,67 @@ export async function initialiseDatabase() {
         NOT NULL
         DEFAULT NOW()
     );
+  `);
+
+
+  // =========================================================
+  // COD CONVENIENCE FEE
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS cod_fee_inr INTEGER
+    NOT NULL
+    DEFAULT 0;
+  `);
+
+
+  // =========================================================
+  // RAZORPAY PAYMENT REFERENCES
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS razorpay_order_id VARCHAR(120);
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS razorpay_payment_id VARCHAR(120);
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS razorpay_signature TEXT;
+  `);
+
+
+  // =========================================================
+  // ONLINE PAYMENT STOCK RESERVATION EXPIRY
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS reservation_expires_at TIMESTAMPTZ;
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS stock_reserved BOOLEAN
+    NOT NULL
+    DEFAULT FALSE;
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS orders_razorpay_order_index
+    ON orders (razorpay_order_id)
+    WHERE razorpay_order_id IS NOT NULL;
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS orders_razorpay_payment_index
+    ON orders (razorpay_payment_id)
+    WHERE razorpay_payment_id IS NOT NULL;
   `);
 
 

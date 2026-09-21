@@ -1,71 +1,103 @@
+import { supabase } from "./lib/supabase.js";
+
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
+/*
+ * Central DESIGLOV API client.
+ *
+ * Authentication flow:
+ *
+ * Supabase login
+ *      ↓
+ * Supabase access token
+ *      ↓
+ * Authorization: Bearer <token>
+ *      ↓
+ * DESIGLOV backend
+ */
+
+async function getAccessToken() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error(
+      "Unable to read Supabase session:",
+      error
+    );
+
+    return null;
+  }
+
+  return session?.access_token || null;
+}
 
 async function request(
   path,
   options = {}
 ) {
+  if (!API_BASE) {
+    throw new Error(
+      "Backend API is not configured."
+    );
+  }
 
   const isFormData =
     options.body instanceof FormData;
 
+  const accessToken =
+    await getAccessToken();
 
-  const response =
-    await fetch(
-      `${API_BASE}${path}`,
-      {
-        credentials:
-          "include",
+  const headers = {
+    ...(isFormData
+      ? {}
+      : {
+          "Content-Type":
+            "application/json",
+        }),
 
-        ...options,
+    ...(accessToken
+      ? {
+          Authorization:
+            `Bearer ${accessToken}`,
+        }
+      : {}),
 
-        headers:
-          isFormData
-            ? {
-                ...(options.headers ||
-                  {}),
-              }
-            : {
-                "Content-Type":
-                  "application/json",
+    ...(options.headers || {}),
+  };
 
-                ...(options.headers ||
-                  {}),
-              },
-      }
-    );
-
+  const response = await fetch(
+    `${API_BASE}${path}`,
+    {
+      ...options,
+      headers,
+    }
+  );
 
   let data = {};
 
-
   try {
-
-    data =
-      await response.json();
-
+    data = await response.json();
   } catch {
-
     data = {};
   }
 
-
   if (!response.ok) {
-
-    const error =
-      new Error(
-        data.error ||
+    const error = new Error(
+      data.error ||
         "Something went wrong."
-      );
-
+    );
 
     error.status =
       response.status;
 
+    error.data =
+      data;
 
     throw error;
   }
-
 
   return data;
 }
@@ -75,116 +107,19 @@ async function request(
 // AUTH
 // ============================================================
 
+/*
+ * Registration, login, logout, OTP and password recovery
+ * are handled directly by Supabase in App.jsx.
+ *
+ * The backend /auth/me endpoint is retained so the frontend
+ * can verify the current Supabase session against DESIGLOV's
+ * backend and synchronise the local customer profile.
+ */
+
 export const authApi = {
-
-  register({
-    fullName,
-    email,
-    password,
-  }) {
-    return request(
-      "/auth/register",
-      {
-        method:
-          "POST",
-
-        body:
-          JSON.stringify({
-            fullName,
-            email,
-            password,
-          }),
-      }
-    );
-  },
-
-
-  login({
-    email,
-    password,
-  }) {
-    return request(
-      "/auth/login",
-      {
-        method:
-          "POST",
-
-        body:
-          JSON.stringify({
-            email,
-            password,
-          }),
-      }
-    );
-  },
-
-
-  logout() {
-    return request(
-      "/auth/logout",
-      {
-        method:
-          "POST",
-      }
-    );
-  },
-
-
   me() {
     return request(
       "/auth/me"
-    );
-  },
-
-
-  forgotPassword(
-    email
-  ) {
-
-    return request(
-      "/auth/forgot-password",
-      {
-        method:
-          "POST",
-
-        body:
-          JSON.stringify({
-            email,
-          }),
-      }
-    );
-  },
-
-
-  validateResetToken(
-    token
-  ) {
-
-    return request(
-      `/auth/reset-password/validate?token=${encodeURIComponent(
-        token
-      )}`
-    );
-  },
-
-
-  resetPassword({
-    token,
-    password,
-  }) {
-
-    return request(
-      "/auth/reset-password",
-      {
-        method:
-          "POST",
-
-        body:
-          JSON.stringify({
-            token,
-            password,
-          }),
-      }
     );
   },
 };
@@ -195,21 +130,17 @@ export const authApi = {
 // ============================================================
 
 export const addressApi = {
-
   list() {
     return request(
       "/addresses"
     );
   },
 
-
   create(address) {
     return request(
       "/addresses",
       {
-        method:
-          "POST",
-
+        method: "POST",
         body:
           JSON.stringify(
             address
@@ -218,24 +149,20 @@ export const addressApi = {
     );
   },
 
-
   makeDefault(id) {
     return request(
       `/addresses/${id}/default`,
       {
-        method:
-          "PATCH",
+        method: "PATCH",
       }
     );
   },
-
 
   remove(id) {
     return request(
       `/addresses/${id}`,
       {
-        method:
-          "DELETE",
+        method: "DELETE",
       }
     );
   },
@@ -247,13 +174,11 @@ export const addressApi = {
 // ============================================================
 
 export const orderApi = {
-
   list() {
     return request(
       "/orders"
     );
   },
-
 
   create({
     addressId,
@@ -263,14 +188,36 @@ export const orderApi = {
     return request(
       "/orders",
       {
-        method:
-          "POST",
-
+        method: "POST",
         body:
           JSON.stringify({
             addressId,
             paymentMethod,
             items,
+          }),
+      }
+    );
+  },
+
+  verifyPayment({
+    orderId,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+  }) {
+    return request(
+      "/orders/verify-payment",
+      {
+        method: "POST",
+        body:
+          JSON.stringify({
+            orderId,
+            razorpay_order_id:
+              razorpayOrderId,
+            razorpay_payment_id:
+              razorpayPaymentId,
+            razorpay_signature:
+              razorpaySignature,
           }),
       }
     );
@@ -283,49 +230,38 @@ export const orderApi = {
 // ============================================================
 
 export const adminApi = {
-
   session() {
-
     return request(
       "/admin/session"
     );
   },
 
-
   auditLog() {
-
     return request(
       "/admin/audit-log"
     );
   },
 
   dashboard() {
-
     return request(
       "/admin/dashboard"
     );
   },
 
-
   orders() {
-
     return request(
       "/admin/orders"
     );
   },
 
-
   updateOrderStatus(
     id,
     status
   ) {
-
     return request(
       `/admin/orders/${id}/status`,
       {
-        method:
-          "PATCH",
-
+        method: "PATCH",
         body:
           JSON.stringify({
             status,
@@ -334,34 +270,26 @@ export const adminApi = {
     );
   },
 
-
   customers() {
-
     return request(
       "/admin/customers"
     );
   },
 
-
   products() {
-
     return request(
       "/admin/products"
     );
   },
 
-
   updateProduct(
     id,
     data
   ) {
-
     return request(
       `/admin/products/${id}`,
       {
-        method:
-          "PATCH",
-
+        method: "PATCH",
         body:
           JSON.stringify(
             data
@@ -369,19 +297,15 @@ export const adminApi = {
       }
     );
   },
-
 
   updateProductDetails(
     id,
     data
   ) {
-
     return request(
       `/admin/products/${id}/details`,
       {
-        method:
-          "PATCH",
-
+        method: "PATCH",
         body:
           JSON.stringify(
             data
@@ -390,37 +314,27 @@ export const adminApi = {
     );
   },
 
-
   createProduct({
     product,
     images,
   }) {
-
     const formData =
       new FormData();
-
 
     Object.entries(
       product
     ).forEach(
-      ([
-        key,
-        value,
-      ]) => {
-
+      ([key, value]) => {
         if (
           key === "sizes"
         ) {
-
           formData.append(
             key,
             JSON.stringify(
               value
             )
           );
-
         } else {
-
           formData.append(
             key,
             String(
@@ -431,12 +345,10 @@ export const adminApi = {
       }
     );
 
-
     Array.from(
       images || []
     ).forEach(
       (file) => {
-
         formData.append(
           "images",
           file
@@ -444,34 +356,26 @@ export const adminApi = {
       }
     );
 
-
     return request(
       "/admin/products",
       {
-        method:
-          "POST",
-
-        body:
-          formData,
+        method: "POST",
+        body: formData,
       }
     );
   },
-
 
   uploadProductImages(
     id,
     images
   ) {
-
     const formData =
       new FormData();
-
 
     Array.from(
       images || []
     ).forEach(
       (file) => {
-
         formData.append(
           "images",
           file
@@ -479,44 +383,32 @@ export const adminApi = {
       }
     );
 
-
     return request(
       `/admin/products/${id}/images`,
       {
-        method:
-          "POST",
-
-        body:
-          formData,
+        method: "POST",
+        body: formData,
       }
     );
   },
-
 
   removeProductImage(
     id,
     index
   ) {
-
     return request(
       `/admin/products/${id}/images/${index}`,
       {
-        method:
-          "DELETE",
+        method: "DELETE",
       }
     );
   },
 
-
-  archiveProduct(
-    id
-  ) {
-
+  archiveProduct(id) {
     return request(
       `/admin/products/${id}`,
       {
-        method:
-          "DELETE",
+        method: "DELETE",
       }
     );
   },
@@ -528,17 +420,13 @@ export const adminApi = {
 // ============================================================
 
 export const productApi = {
-
   list() {
-
     return request(
       "/products"
     );
   },
 
-
   get(slug) {
-
     return request(
       `/products/${encodeURIComponent(
         slug

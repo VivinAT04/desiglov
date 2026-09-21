@@ -1,167 +1,154 @@
-import jwt from "jsonwebtoken";
+import { createClient } from "@supabase/supabase-js";
+import { pool } from "./db.js";
 
-import {
-  pool,
-} from "./db.js";
+const supabaseUrl =
+  process.env.SUPABASE_URL;
 
+const supabaseKey =
+  process.env.SUPABASE_PUBLISHABLE_KEY;
 
-const COOKIE_NAME =
-  "desiglov_session";
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    "SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be configured."
+  );
+}
 
+const supabase = createClient(
+  supabaseUrl,
+  supabaseKey,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  }
+);
 
-function jwtSecret() {
+function normaliseEmail(email) {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+}
 
-  const secret =
-    process.env.JWT_SECRET;
+function getFullName(user) {
+  const metadata =
+    user.user_metadata || {};
 
+  return String(
+    metadata.full_name ||
+    metadata.fullName ||
+    metadata.name ||
+    user.email?.split("@")[0] ||
+    "DESIGLOV Customer"
+  )
+    .trim()
+    .slice(0, 120);
+}
 
-  if (
-    !secret ||
-    secret.length < 32
-  ) {
+async function syncLocalUser(user) {
+  const email =
+    normaliseEmail(user.email);
 
+  if (!user.id || !email) {
     throw new Error(
-      "JWT_SECRET must contain at least 32 characters."
+      "Authenticated Supabase user is missing required account information."
     );
   }
 
+  const fullName =
+    getFullName(user);
 
-  return secret;
-}
+  const adminEmail =
+    normaliseEmail(
+      process.env.ADMIN_EMAIL
+    );
 
+  const desiredRole =
+    adminEmail &&
+    email === adminEmail
+      ? "ADMIN"
+      : "CUSTOMER";
 
-function isProduction() {
+  const result =
+    await pool.query(
+      `
+      INSERT INTO users (
+        id,
+        full_name,
+        email,
+        password_hash,
+        role
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        NULL,
+        $4
+      )
 
-  return (
-    process.env.NODE_ENV ===
-    "production"
-  );
-}
+      ON CONFLICT (id)
+      DO UPDATE SET
+        full_name =
+          EXCLUDED.full_name,
+        email =
+          EXCLUDED.email,
+        role =
+          CASE
+            WHEN users.role = 'ADMIN'
+              THEN 'ADMIN'
+            ELSE EXCLUDED.role
+          END,
+        updated_at =
+          NOW()
 
-
-export function createToken(
-  user
-) {
-
-  return jwt.sign(
-    {
-      sub:
+      RETURNING
+        id,
+        full_name,
+        email,
+        role,
+        created_at,
+        updated_at
+      `,
+      [
         user.id,
+        fullName,
+        email,
+        desiredRole,
+      ]
+    );
 
-      email:
-        user.email,
-    },
-
-    jwtSecret(),
-
-    {
-      expiresIn:
-        process.env.JWT_EXPIRES_IN ||
-        "7d",
-
-      issuer:
-        "desiglov",
-
-      audience:
-        "desiglov-web",
-    }
-  );
+  return result.rows[0];
 }
 
+function bearerToken(req) {
+  const authorization =
+    String(
+      req.headers.authorization ||
+      ""
+    );
 
-export function verifyToken(
-  token
-) {
+  const match =
+    authorization.match(
+      /^Bearer\s+(.+)$/i
+    );
 
-  return jwt.verify(
-    token,
-    jwtSecret(),
-    {
-      issuer:
-        "desiglov",
-
-      audience:
-        "desiglov-web",
-    }
-  );
+  return match
+    ? match[1].trim()
+    : null;
 }
 
-
-export function setAuthCookie(
-  res,
-  token
-) {
-
-  res.cookie(
-    COOKIE_NAME,
-    token,
-    {
-      httpOnly:
-        true,
-
-      secure:
-        isProduction(),
-
-      sameSite:
-        isProduction()
-          ? "strict"
-          : "lax",
-
-      maxAge:
-        7 *
-        24 *
-        60 *
-        60 *
-        1000,
-
-      path:
-        "/",
-    }
-  );
-}
-
-
-export function clearAuthCookie(
-  res
-) {
-
-  res.clearCookie(
-    COOKIE_NAME,
-    {
-      httpOnly:
-        true,
-
-      secure:
-        isProduction(),
-
-      sameSite:
-        isProduction()
-          ? "strict"
-          : "lax",
-
-      path:
-        "/",
-    }
-  );
-}
-
-
-export function requireAuth(
+export async function requireAuth(
   req,
   res,
   next
 ) {
-
   try {
-
     const token =
-      req.cookies[
-        COOKIE_NAME
-      ];
-
+      bearerToken(req);
 
     if (!token) {
-
       return res
         .status(401)
         .json({
@@ -170,204 +157,171 @@ export function requireAuth(
         });
     }
 
-
-    const decoded =
-      verifyToken(
+    const {
+      data,
+      error,
+    } =
+      await supabase.auth.getUser(
         token
       );
 
+    if (
+      error ||
+      !data?.user
+    ) {
+      return res
+        .status(401)
+        .json({
+          error:
+            "Your session is invalid or has expired. Please sign in again.",
+        });
+    }
+
+    const localUser =
+      await syncLocalUser(
+        data.user
+      );
 
     req.userId =
-      decoded.sub;
+      data.user.id;
 
+    req.supabaseUser =
+      data.user;
+
+    req.user =
+      localUser;
 
     next();
-
-  } catch {
-
-    clearAuthCookie(
-      res
+  } catch (error) {
+    console.error(
+      "Authentication error:",
+      error
     );
-
 
     return res
       .status(401)
       .json({
         error:
-          "Your session has expired. Please sign in again.",
+          "Unable to verify your session. Please sign in again.",
       });
   }
 }
-
 
 export async function requireAdmin(
   req,
   res,
   next
 ) {
+  requireAuth(
+    req,
+    res,
+    async () => {
+      try {
+        const result =
+          await pool.query(
+            `
+            SELECT
+              id,
+              role
+            FROM users
+            WHERE id = $1
+            LIMIT 1
+            `,
+            [
+              req.userId,
+            ]
+          );
 
-  try {
+        if (
+          result.rowCount ===
+            0 ||
+          result.rows[0]
+            .role !== "ADMIN"
+        ) {
+          return res
+            .status(403)
+            .json({
+              error:
+                "Administrator access required.",
+            });
+        }
 
-    if (!req.userId) {
-
-      return res
-        .status(401)
-        .json({
-          error:
-            "Authentication required.",
-        });
+        next();
+      } catch (error) {
+        next(error);
+      }
     }
-
-
-    const result =
-      await pool.query(
-        `
-        SELECT
-          id,
-          email,
-          full_name,
-          role
-
-        FROM users
-
-        WHERE id = $1
-
-        LIMIT 1
-        `,
-        [
-          req.userId,
-        ]
-      );
-
-
-    if (
-      result.rowCount ===
-      0
-    ) {
-
-      clearAuthCookie(
-        res
-      );
-
-
-      return res
-        .status(401)
-        .json({
-          error:
-            "Account not found.",
-        });
-    }
-
-
-    const user =
-      result.rows[0];
-
-
-    if (
-      user.role !==
-      "ADMIN"
-    ) {
-
-      return res
-        .status(403)
-        .json({
-          error:
-            "Admin access required.",
-        });
-    }
-
-
-    req.admin = {
-      id:
-        user.id,
-
-      email:
-        user.email,
-
-      fullName:
-        user.full_name,
-
-      role:
-        user.role,
-    };
-
-
-    next();
-
-  } catch (error) {
-
-    next(error);
-  }
+  );
 }
 
+export async function writeAdminAudit({
+  adminUserId,
+  action,
+  entityType,
+  entityId = null,
+  details = {},
+}) {
+  await pool.query(
+    `
+    INSERT INTO admin_audit_log (
+      id,
+      admin_user_id,
+      action,
+      entity_type,
+      entity_id,
+      details
+    )
+    VALUES (
+      gen_random_uuid(),
+      $1,
+      $2,
+      $3,
+      $4,
+      $5::jsonb
+    )
+    `,
+    [
+      adminUserId,
+      action,
+      entityType,
+      entityId,
+      JSON.stringify(
+        details
+      ),
+    ]
+  );
+}
 
-export async function writeAdminAudit(
-  req,
-  {
-    action,
-    entityType = null,
-    entityId = null,
-    metadata = {},
-  }
+/*
+ * Temporary compatibility exports.
+ *
+ * Authentication is now owned by Supabase.
+ * These functions remain only so the legacy
+ * authRoutes.js module can still be imported
+ * while we remove the old auth endpoints.
+ */
+
+export function createToken() {
+  throw new Error(
+    "Legacy DESIGLOV JWT authentication has been disabled. Use Supabase Auth."
+  );
+}
+
+export function setAuthCookie() {
+  throw new Error(
+    "Legacy DESIGLOV authentication cookies have been disabled. Use Supabase Auth."
+  );
+}
+
+export function clearAuthCookie(
+  res
 ) {
-
-  try {
-
-    await pool.query(
-      `
-      INSERT INTO admin_audit_log (
-        id,
-        admin_user_id,
-        admin_email,
-        action,
-        entity_type,
-        entity_id,
-        metadata,
-        ip_address
-      )
-
-      VALUES (
-        gen_random_uuid(),
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6::jsonb,
-        $7
-      )
-      `,
-      [
-        req.admin?.id ||
-          null,
-
-        req.admin?.email ||
-          null,
-
-        action,
-
-        entityType,
-
-        entityId
-          ? String(
-              entityId
-            )
-          : null,
-
-        JSON.stringify(
-          metadata || {}
-        ),
-
-        req.ip ||
-          null,
-      ]
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Could not write admin audit log:",
-      error.message
+  if (res?.clearCookie) {
+    res.clearCookie(
+      "desiglov_session",
+      {
+        path: "/",
+      }
     );
   }
 }
