@@ -3818,25 +3818,18 @@ function AccountPage({
 }) {
   const [mode, setMode] =
     useState("login");
-
   const [user, setUser] =
     useState(null);
-
   const [loading, setLoading] =
     useState(true);
-
   const [submitting, setSubmitting] =
     useState(false);
-
   const [message, setMessage] =
     useState("");
-
   const [error, setError] =
     useState("");
-
   const [addresses, setAddresses] =
     useState([]);
-
   const [orders, setOrders] =
     useState([]);
 
@@ -3847,6 +3840,12 @@ function AccountPage({
       password: "",
     });
 
+  const [registrationOtp, setRegistrationOtp] =
+    useState("");
+  const [pendingRegistrationEmail, setPendingRegistrationEmail] =
+    useState("");
+  const [registrationStep, setRegistrationStep] =
+    useState("details");
 
   function mapSupabaseUser(
     supabaseUser
@@ -3860,13 +3859,10 @@ function AccountPage({
       {};
 
     return {
-      id:
-        supabaseUser.id,
-
+      id: supabaseUser.id,
       email:
         supabaseUser.email ||
         "",
-
       fullName:
         metadata.full_name ||
         metadata.name ||
@@ -3876,58 +3872,34 @@ function AccountPage({
     };
   }
 
-
   useEffect(() => {
-
     let active = true;
 
-
     async function loadAccount() {
-
       try {
-
         const {
           data,
           error: sessionError,
         } =
           await supabase.auth.getSession();
 
-
         if (sessionError) {
           throw sessionError;
         }
-
 
         if (!active) {
           return;
         }
 
-
-        const currentUser =
+        setUser(
           mapSupabaseUser(
             data.session?.user
-          );
-
-
-        setUser(
-          currentUser
+          )
         );
 
-
-        /*
-         * Orders and addresses will be
-         * migrated to Supabase next.
-         *
-         * For now we keep the UI empty
-         * instead of calling the old
-         * backend and showing
-         * "Load failed".
-         */
         setAddresses([]);
         setOrders([]);
-
       } catch (err) {
-
         console.error(
           "Account load error:",
           err
@@ -3939,18 +3911,14 @@ function AccountPage({
             "Could not load your account."
           );
         }
-
       } finally {
-
         if (active) {
           setLoading(false);
         }
       }
     }
 
-
     loadAccount();
-
 
     const {
       data: authListener,
@@ -3960,18 +3928,15 @@ function AccountPage({
           event,
           session
         ) => {
-
           if (!active) {
             return;
           }
-
 
           setUser(
             mapSupabaseUser(
               session?.user
             )
           );
-
 
           if (
             event ===
@@ -3983,69 +3948,89 @@ function AccountPage({
         }
       );
 
-
     return () => {
       active = false;
-
       authListener.subscription
         .unsubscribe();
     };
-
   }, []);
-
 
   function updateField(
     event
   ) {
-
     const {
       name,
       value,
     } =
       event.target;
 
-
     setForm(
       (current) => ({
         ...current,
-
-        [name]:
-          value,
+        [name]: value,
       })
     );
   }
 
+  function changeMode(
+    nextMode
+  ) {
+    setMode(nextMode);
+    setError("");
+    setMessage("");
+    setRegistrationOtp("");
+    setPendingRegistrationEmail("");
+    setRegistrationStep("details");
+
+    setForm({
+      fullName: "",
+      email: "",
+      password: "",
+    });
+  }
 
   async function submit(
     event
   ) {
-
     event.preventDefault();
-
     setSubmitting(true);
-
     setError("");
     setMessage("");
 
-
     try {
-
       if (
         mode ===
         "register"
       ) {
+        if (
+          !form.fullName.trim()
+        ) {
+          throw new Error(
+            "Please enter your full name."
+          );
+        }
+
+        if (
+          form.password.length < 8
+        ) {
+          throw new Error(
+            "Password must contain at least 8 characters."
+          );
+        }
+
+        const cleanEmail =
+          form.email
+            .trim()
+            .toLowerCase();
 
         const {
           data,
           error: registerError,
         } =
           await supabase.auth.signUp({
-            email:
-              form.email.trim(),
-
+            email: cleanEmail,
             password:
               form.password,
-
             options: {
               data: {
                 full_name:
@@ -4054,17 +4039,14 @@ function AccountPage({
             },
           });
 
-
         if (registerError) {
           throw registerError;
         }
-
 
         if (
           data.session &&
           data.user
         ) {
-
           setUser(
             mapSupabaseUser(
               data.user
@@ -4075,19 +4057,21 @@ function AccountPage({
             "Your DEsiglov account has been created."
           );
 
-        } else {
-
-          setMessage(
-            "Account created. Please check your email to confirm your account, then sign in."
-          );
-
-          setMode(
-            "login"
-          );
+          return;
         }
 
-      } else {
+        setPendingRegistrationEmail(
+          cleanEmail
+        );
+        setRegistrationStep(
+          "otp"
+        );
+        setRegistrationOtp("");
 
+        setMessage(
+          `We sent an 8-digit verification code to ${cleanEmail}.`
+        );
+      } else {
         const {
           data,
           error: loginError,
@@ -4095,17 +4079,16 @@ function AccountPage({
           await supabase.auth
             .signInWithPassword({
               email:
-                form.email.trim(),
-
+                form.email
+                  .trim()
+                  .toLowerCase(),
               password:
                 form.password,
             });
 
-
         if (loginError) {
           throw loginError;
         }
-
 
         if (!data.user) {
           throw new Error(
@@ -4113,23 +4096,94 @@ function AccountPage({
           );
         }
 
-
         setUser(
           mapSupabaseUser(
             data.user
           )
         );
 
-
         setMessage(
           "Welcome back to DEsiglov."
         );
-      }
 
+        setForm({
+          fullName: "",
+          email: "",
+          password: "",
+        });
+      }
 
       setAddresses([]);
       setOrders([]);
+    } catch (err) {
+      console.error(
+        "Authentication error:",
+        err
+      );
 
+      setError(
+        err.message ||
+        "Something went wrong."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function verifyRegistrationOtp(
+    event
+  ) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const cleanOtp =
+        registrationOtp
+          .replace(/\D/g, "")
+          .slice(0, 8);
+
+      if (
+        cleanOtp.length !== 8
+      ) {
+        throw new Error(
+          "Enter the 8-digit verification code."
+        );
+      }
+
+      const {
+        data,
+        error: verifyError,
+      } =
+        await supabase.auth.verifyOtp({
+          email:
+            pendingRegistrationEmail,
+          token: cleanOtp,
+          type: "signup",
+        });
+
+      if (verifyError) {
+        throw verifyError;
+      }
+
+      if (!data.user) {
+        throw new Error(
+          "Unable to verify this code."
+        );
+      }
+
+      setUser(
+        mapSupabaseUser(
+          data.user
+        )
+      );
+
+      setRegistrationOtp("");
+      setPendingRegistrationEmail("");
+      setRegistrationStep(
+        "details"
+      );
 
       setForm({
         fullName: "",
@@ -4137,75 +4191,101 @@ function AccountPage({
         password: "",
       });
 
+      setMessage(
+        "Email verified. Your DEsiglov account is ready."
+      );
     } catch (err) {
-
       console.error(
-        "Authentication error:",
+        "Registration OTP error:",
         err
       );
 
-
       setError(
         err.message ||
-        "Something went wrong."
+        "The verification code is invalid or has expired."
       );
-
     } finally {
-
       setSubmitting(false);
     }
   }
 
-
-  async function logout() {
+  async function resendRegistrationOtp() {
+    if (
+      !pendingRegistrationEmail
+    ) {
+      return;
+    }
 
     setSubmitting(true);
-
     setError("");
     setMessage("");
 
+    try {
+      const {
+        error: resendError,
+      } =
+        await supabase.auth.resend({
+          type: "signup",
+          email:
+            pendingRegistrationEmail,
+        });
+
+      if (resendError) {
+        throw resendError;
+      }
+
+      setMessage(
+        `A new verification code was sent to ${pendingRegistrationEmail}.`
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not resend the verification code."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function logout() {
+    setSubmitting(true);
+    setError("");
+    setMessage("");
 
     try {
-
       const {
         error: logoutError,
       } =
         await supabase.auth.signOut();
 
-
       if (logoutError) {
         throw logoutError;
       }
 
-
       setUser(null);
-
       setAddresses([]);
-
       setOrders([]);
-
-      setMode(
-        "login"
+      setMode("login");
+      setRegistrationStep(
+        "details"
       );
-
+      setPendingRegistrationEmail(
+        ""
+      );
+      setRegistrationOtp("");
 
       setMessage(
         "You have been signed out."
       );
-
     } catch (err) {
-
       setError(
         err.message ||
         "Could not sign out."
       );
-
     } finally {
-
       setSubmitting(false);
     }
   }
-
 
   if (loading) {
     return (
@@ -4217,25 +4297,18 @@ function AccountPage({
         />
 
         <section className="account-page">
-
           <div className="account-loading">
-
             <span />
-
             <p>
               Loading account
             </p>
-
           </div>
-
         </section>
       </>
     );
   }
 
-
   if (user) {
-
     return (
       <>
         <PageHero
@@ -4247,16 +4320,12 @@ function AccountPage({
           text="Orders, addresses and account details."
         />
 
-
         <section className="account-page logged-account">
-
-
           {message && (
             <div className="auth-message success">
               {message}
             </div>
           )}
-
 
           {error && (
             <div className="auth-message error">
@@ -4264,16 +4333,12 @@ function AccountPage({
             </div>
           )}
 
-
           <div className="account-card">
-
             <div className="account-card-number">
               01
             </div>
 
-
             <div>
-
               <small>
                 ACCOUNT DETAILS
               </small>
@@ -4285,24 +4350,17 @@ function AccountPage({
               <p>
                 {user.email}
               </p>
-
             </div>
-
           </div>
 
-
           <div className="account-section">
-
             <div className="account-section-heading">
-
               <div>
-
                 <span>
                   02
                 </span>
 
                 <div>
-
                   <small>
                     ORDERS
                   </small>
@@ -4310,9 +4368,7 @@ function AccountPage({
                   <h2>
                     Your orders
                   </h2>
-
                 </div>
-
               </div>
 
               <strong>
@@ -4321,12 +4377,9 @@ function AccountPage({
                   ? ""
                   : "S"}
               </strong>
-
             </div>
 
-
             <div className="account-empty-block">
-
               <h3>
                 No orders yet.
               </h3>
@@ -4334,24 +4387,17 @@ function AccountPage({
               <p>
                 Your completed orders will appear here.
               </p>
-
             </div>
-
           </div>
 
-
           <div className="account-section">
-
             <div className="account-section-heading">
-
               <div>
-
                 <span>
                   03
                 </span>
 
                 <div>
-
                   <small>
                     SAVED ADDRESSES
                   </small>
@@ -4359,16 +4405,11 @@ function AccountPage({
                   <h2>
                     Delivery details
                   </h2>
-
                 </div>
-
               </div>
-
             </div>
 
-
             <div className="account-empty-block">
-
               <h3>
                 No saved address yet.
               </h3>
@@ -4376,11 +4417,8 @@ function AccountPage({
               <p>
                 Your delivery address can be added during checkout.
               </p>
-
             </div>
-
           </div>
-
 
           <button
             className="account-logout"
@@ -4392,36 +4430,144 @@ function AccountPage({
               ? "SIGNING OUT..."
               : "SIGN OUT"}
           </button>
-
         </section>
       </>
     );
   }
 
+  if (
+    mode === "register" &&
+    registrationStep === "otp"
+  ) {
+    return (
+      <>
+        <PageHero
+          eyebrow="VERIFY YOUR EMAIL"
+          title="Enter your code."
+          text={`We sent an 8-digit verification code to ${pendingRegistrationEmail}.`}
+        />
+
+        <section className="account-page">
+          {message && (
+            <div className="auth-message success">
+              {message}
+            </div>
+          )}
+
+          {error && (
+            <div className="auth-message error">
+              {error}
+            </div>
+          )}
+
+          <form
+            className="auth-form"
+            onSubmit={
+              verifyRegistrationOtp
+            }
+          >
+            <label className="auth-field">
+              <span>
+                8-DIGIT CODE
+              </span>
+
+              <input
+                required
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength="8"
+                value={
+                  registrationOtp
+                }
+                onChange={(event) =>
+                  setRegistrationOtp(
+                    event.target.value
+                      .replace(
+                        /\D/g,
+                        ""
+                      )
+                      .slice(0, 8)
+                  )
+                }
+                placeholder="00000000"
+                style={{
+                  textAlign:
+                    "center",
+                  letterSpacing:
+                    "0.35em",
+                  fontSize:
+                    "1.35rem",
+                }}
+              />
+            </label>
+
+            <button
+              className="add-bag auth-submit"
+              disabled={submitting}
+            >
+              {submitting
+                ? "VERIFYING..."
+                : "VERIFY & CREATE ACCOUNT"}
+            </button>
+          </form>
+
+          <div className="account-switch">
+            Didn't receive the code?
+
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={
+                resendRegistrationOtp
+              }
+            >
+              Resend code
+            </button>
+          </div>
+
+          <div className="account-switch">
+            Wrong email?
+
+            <button
+              type="button"
+              onClick={() => {
+                setRegistrationStep(
+                  "details"
+                );
+                setRegistrationOtp(
+                  ""
+                );
+                setError("");
+                setMessage("");
+              }}
+            >
+              Change email
+            </button>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
       <PageHero
         eyebrow="YOUR DESIGLOV"
         title={
-          mode ===
-          "register"
+          mode === "register"
             ? "Create account."
             : "Welcome back."
         }
         text={
-          mode ===
-          "register"
-            ? "Save favourites and manage your orders."
+          mode === "register"
+            ? "Create your account and verify your email with a secure code."
             : "Sign in to your DEsiglov account."
         }
       />
 
-
       <section className="account-page">
-
         <div className="auth-tabs">
-
           <button
             type="button"
             className={
@@ -4429,15 +4575,14 @@ function AccountPage({
                 ? "active"
                 : ""
             }
-            onClick={() => {
-              setMode("login");
-              setError("");
-              setMessage("");
-            }}
+            onClick={() =>
+              changeMode(
+                "login"
+              )
+            }
           >
             SIGN IN
           </button>
-
 
           <button
             type="button"
@@ -4446,17 +4591,15 @@ function AccountPage({
                 ? "active"
                 : ""
             }
-            onClick={() => {
-              setMode("register");
-              setError("");
-              setMessage("");
-            }}
+            onClick={() =>
+              changeMode(
+                "register"
+              )
+            }
           >
             CREATE ACCOUNT
           </button>
-
         </div>
-
 
         {message && (
           <div className="auth-message success">
@@ -4464,24 +4607,19 @@ function AccountPage({
           </div>
         )}
 
-
         {error && (
           <div className="auth-message error">
             {error}
           </div>
         )}
 
-
         <form
           className="auth-form"
           onSubmit={submit}
         >
-
           {mode ===
             "register" && (
-
             <label className="auth-field">
-
               <span>
                 FULL NAME
               </span>
@@ -4498,14 +4636,10 @@ function AccountPage({
                 placeholder="Your full name"
                 autoComplete="name"
               />
-
             </label>
-
           )}
 
-
           <label className="auth-field">
-
             <span>
               EMAIL ADDRESS
             </span>
@@ -4523,12 +4657,9 @@ function AccountPage({
               placeholder="you@example.com"
               autoComplete="email"
             />
-
           </label>
 
-
           <label className="auth-field">
-
             <span>
               PASSWORD
             </span>
@@ -4551,61 +4682,78 @@ function AccountPage({
                   : "current-password"
               }
             />
-
           </label>
 
+          {mode === "login" && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "flex-end",
+                marginTop:
+                  "-8px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    "/forgot-password"
+                  )
+                }
+                style={{
+                  border: 0,
+                  background:
+                    "transparent",
+                  padding: 0,
+                  cursor:
+                    "pointer",
+                  textDecoration:
+                    "underline",
+                  font: "inherit",
+                }}
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           <button
             className="add-bag auth-submit"
-            disabled={
-              submitting
-            }
+            disabled={submitting}
           >
             {submitting
               ? "PLEASE WAIT..."
-              : mode === "register"
+              : mode ===
+                "register"
               ? "CREATE ACCOUNT"
               : "SIGN IN"}
           </button>
-
         </form>
 
-
         <div className="account-switch">
-
-          {mode ===
-          "register"
+          {mode === "register"
             ? "Already have an account?"
             : "New to DEsiglov?"}
 
-
           <button
             type="button"
-            onClick={() => {
-
-              setMode(
+            onClick={() =>
+              changeMode(
                 mode ===
-                "register"
+                  "register"
                   ? "login"
                   : "register"
-              );
-
-              setError("");
-
-              setMessage("");
-            }}
+              )
+            }
           >
-            {mode ===
-            "register"
+            {mode === "register"
               ? "Sign in"
               : "Create account"}
           </button>
-
         </div>
 
-
         <div className="account-security-note">
-
           <span>
             ◇
           </span>
@@ -4613,9 +4761,7 @@ function AccountPage({
           <p>
             Your password is securely managed by Supabase Authentication and is never stored as plain text by DEsiglov.
           </p>
-
         </div>
-
       </section>
     </>
   );
@@ -6715,402 +6861,241 @@ function StatusBadge({
 function ForgotPasswordPage({
   navigate,
 }) {
-
+  const [step, setStep] =
+    useState("email");
   const [email, setEmail] =
     useState("");
-
+  const [otp, setOtp] =
+    useState("");
+  const [password, setPassword] =
+    useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
   const [loading, setLoading] =
     useState(false);
-
   const [error, setError] =
     useState("");
-
   const [message, setMessage] =
     useState("");
 
-  const [devResetUrl, setDevResetUrl] =
-    useState("");
-
-
-  async function submit(
+  async function sendResetCode(
     event
   ) {
+    event?.preventDefault();
 
-    event.preventDefault();
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
+
+    if (!cleanEmail) {
+      setError(
+        "Enter your email address."
+      );
+      return;
+    }
 
     setLoading(true);
     setError("");
     setMessage("");
-    setDevResetUrl("");
-
 
     try {
+      const {
+        error: resetError,
+      } =
+        await supabase.auth
+          .resetPasswordForEmail(
+            cleanEmail
+          );
 
-      const result =
-        await authApi.forgotPassword(
-          email
-        );
-
-
-      setMessage(
-        result.message ||
-        "If an account exists with that email, reset instructions have been prepared."
-      );
-
-
-      if (
-        result.devResetUrl
-      ) {
-
-        setDevResetUrl(
-          result.devResetUrl
-        );
+      if (resetError) {
+        throw resetError;
       }
 
+      setEmail(cleanEmail);
+      setStep("otp");
+      setOtp("");
+
+      setMessage(
+        `We sent an 8-digit password reset code to ${cleanEmail}.`
+      );
     } catch (err) {
+      console.error(
+        "Password reset email error:",
+        err
+      );
 
       setError(
         err.message ||
-        "Could not prepare password reset."
+        "Could not send the password reset code."
       );
-
     } finally {
-
       setLoading(false);
     }
   }
 
-
-  return (
-    <>
-      <PageHero
-        eyebrow="ACCOUNT RECOVERY"
-        title="Forgot your password?"
-        text="Enter the email address linked to your DEsiglov account."
-      />
-
-
-      <section className="password-reset-page">
-
-        {message && (
-          <div className="auth-message success">
-            {message}
-          </div>
-        )}
-
-
-        {error && (
-          <div className="auth-message error">
-            {error}
-          </div>
-        )}
-
-
-        <form
-          className="password-reset-card"
-          onSubmit={submit}
-        >
-
-          <label>
-
-            EMAIL ADDRESS
-
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(event) =>
-                setEmail(
-                  event.target.value
-                )
-              }
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-
-          </label>
-
-
-          <button
-            type="submit"
-            className="add-bag"
-            disabled={loading}
-          >
-            {loading
-              ? "PREPARING RESET..."
-              : "RESET PASSWORD"}
-          </button>
-
-        </form>
-
-
-        {devResetUrl && (
-
-          <div className="development-reset-box">
-
-            <small>
-              LOCAL DEVELOPMENT TEST
-            </small>
-
-            <p>
-              Email delivery is not connected yet. Use this one-time reset link to test password recovery.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => {
-
-                const url =
-                  new URL(
-                    devResetUrl
-                  );
-
-                navigate(
-                  `${url.pathname}${url.search}`
-                );
-              }}
-            >
-              OPEN RESET LINK →
-            </button>
-
-          </div>
-
-        )}
-
-
-        <button
-          type="button"
-          className="back-to-login"
-          onClick={() =>
-            navigate(
-              "/account"
-            )
-          }
-        >
-          ← BACK TO SIGN IN
-        </button>
-
-      </section>
-    </>
-  );
-}
-
-
-function ResetPasswordPage({
-  route,
-  navigate,
-}) {
-
-  const params =
-    new URLSearchParams(
-      route.split("?")[1] ||
-      ""
-    );
-
-
-  const token =
-    params.get("token") ||
-    "";
-
-
-  const [checking, setChecking] =
-    useState(true);
-
-  const [valid, setValid] =
-    useState(false);
-
-  const [password, setPassword] =
-    useState("");
-
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [message, setMessage] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
-
-  useEffect(() => {
-
-    let active = true;
-
-
-    async function checkToken() {
-
-      if (!token) {
-
-        if (active) {
-
-          setError(
-            "This password reset link is invalid."
-          );
-
-          setChecking(false);
-        }
-
-        return;
-      }
-
-
-      try {
-
-        await authApi.validateResetToken(
-          token
-        );
-
-
-        if (active) {
-
-          setValid(true);
-        }
-
-      } catch (err) {
-
-        if (active) {
-
-          setError(
-            err.message ||
-            "This password reset link is invalid or has expired."
-          );
-        }
-
-      } finally {
-
-        if (active) {
-
-          setChecking(false);
-        }
-      }
-    }
-
-
-    checkToken();
-
-
-    return () => {
-
-      active = false;
-    };
-
-  }, [token]);
-
-
-  async function submit(
+  async function verifyResetCode(
     event
   ) {
-
     event.preventDefault();
-
+    setLoading(true);
     setError("");
     setMessage("");
 
+    try {
+      const cleanOtp =
+        otp
+          .replace(/\D/g, "")
+          .slice(0, 8);
+
+      if (
+        cleanOtp.length !== 8
+      ) {
+        throw new Error(
+          "Enter the 8-digit verification code."
+        );
+      }
+
+      const {
+        data,
+        error: verifyError,
+      } =
+        await supabase.auth.verifyOtp({
+          email:
+            email
+              .trim()
+              .toLowerCase(),
+          token: cleanOtp,
+          type: "recovery",
+        });
+
+      if (verifyError) {
+        throw verifyError;
+      }
+
+      if (!data.session) {
+        throw new Error(
+          "Unable to verify this password reset code."
+        );
+      }
+
+      setStep("password");
+      setMessage(
+        "Code verified. Create your new password."
+      );
+    } catch (err) {
+      console.error(
+        "Recovery OTP error:",
+        err
+      );
+
+      setError(
+        err.message ||
+        "The verification code is invalid or has expired."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function changePassword(
+    event
+  ) {
+    event.preventDefault();
+    setError("");
+    setMessage("");
 
     if (
       password.length < 8
     ) {
-
       setError(
         "Password must contain at least 8 characters."
       );
-
       return;
     }
-
 
     if (
       password !==
       confirmPassword
     ) {
-
       setError(
         "The passwords do not match."
       );
-
       return;
     }
 
-
     setLoading(true);
 
-
     try {
+      const {
+        error: updateError,
+      } =
+        await supabase.auth
+          .updateUser({
+            password,
+          });
 
-      const result =
-        await authApi.resetPassword({
-          token,
-          password,
-        });
+      if (updateError) {
+        throw updateError;
+      }
 
+      await supabase.auth.signOut();
+
+      setStep("complete");
+      setPassword("");
+      setConfirmPassword("");
+      setOtp("");
 
       setMessage(
-        result.message ||
-        "Your password has been changed successfully."
+        "Your password has been changed successfully. You can now sign in with your new password."
       );
-
-      setValid(false);
-
     } catch (err) {
+      console.error(
+        "Password update error:",
+        err
+      );
 
       setError(
         err.message ||
-        "Could not reset password."
+        "Could not change your password."
       );
-
     } finally {
-
       setLoading(false);
     }
   }
-
-
-  if (checking) {
-
-    return (
-      <>
-        <PageHero
-          eyebrow="ACCOUNT RECOVERY"
-          title="Checking your reset link."
-          text="Please wait a moment."
-        />
-
-        <div className="password-checking">
-          VERIFYING LINK
-        </div>
-      </>
-    );
-  }
-
 
   return (
     <>
       <PageHero
         eyebrow="ACCOUNT RECOVERY"
         title={
-          message
-            ? "Password changed."
-            : "Create a new password."
+          step === "email"
+            ? "Forgot your password?"
+            : step === "otp"
+            ? "Enter your code."
+            : step ===
+              "password"
+            ? "Create a new password."
+            : "Password changed."
         }
         text={
-          message
-            ? "Your DEsiglov account is ready."
-            : "Choose a secure password for your account."
+          step === "email"
+            ? "Enter the email address linked to your DEsiglov account."
+            : step === "otp"
+            ? `Enter the 8-digit code sent to ${email}.`
+            : step ===
+              "password"
+            ? "Choose a secure new password for your account."
+            : "Your DEsiglov account is ready."
         }
       />
 
-
       <section className="password-reset-page">
-
         {message && (
           <div className="auth-message success">
             {message}
           </div>
         )}
-
 
         {error && (
           <div className="auth-message error">
@@ -7118,16 +7103,139 @@ function ResetPasswordPage({
           </div>
         )}
 
-
-        {valid && !message && (
-
+        {step === "email" && (
           <form
             className="password-reset-card"
-            onSubmit={submit}
+            onSubmit={
+              sendResetCode
+            }
           >
-
             <label>
+              EMAIL ADDRESS
 
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(event) =>
+                  setEmail(
+                    event.target.value
+                  )
+                }
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="add-bag"
+              disabled={loading}
+            >
+              {loading
+                ? "SENDING CODE..."
+                : "SEND RESET CODE"}
+            </button>
+          </form>
+        )}
+
+        {step === "otp" && (
+          <>
+            <form
+              className="password-reset-card"
+              onSubmit={
+                verifyResetCode
+              }
+            >
+              <label>
+                8-DIGIT CODE
+
+                <input
+                  required
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength="8"
+                  value={otp}
+                  onChange={(event) =>
+                    setOtp(
+                      event.target.value
+                        .replace(
+                          /\D/g,
+                          ""
+                        )
+                        .slice(
+                          0,
+                          8
+                        )
+                    )
+                  }
+                  placeholder="00000000"
+                  style={{
+                    textAlign:
+                      "center",
+                    letterSpacing:
+                      "0.35em",
+                    fontSize:
+                      "1.35rem",
+                  }}
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="add-bag"
+                disabled={loading}
+              >
+                {loading
+                  ? "VERIFYING..."
+                  : "VERIFY CODE"}
+              </button>
+            </form>
+
+            <div className="account-switch">
+              Didn't receive the code?
+
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  sendResetCode()
+                }
+              >
+                Resend code
+              </button>
+            </div>
+
+            <div className="account-switch">
+              Wrong email?
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep(
+                    "email"
+                  );
+                  setOtp("");
+                  setError("");
+                  setMessage("");
+                }}
+              >
+                Change email
+              </button>
+            </div>
+          </>
+        )}
+
+        {step ===
+          "password" && (
+          <form
+            className="password-reset-card"
+            onSubmit={
+              changePassword
+            }
+          >
+            <label>
               NEW PASSWORD
 
               <input
@@ -7143,19 +7251,18 @@ function ResetPasswordPage({
                 placeholder="At least 8 characters"
                 autoComplete="new-password"
               />
-
             </label>
 
-
             <label>
-
               CONFIRM PASSWORD
 
               <input
                 required
                 type="password"
                 minLength="8"
-                value={confirmPassword}
+                value={
+                  confirmPassword
+                }
                 onChange={(event) =>
                   setConfirmPassword(
                     event.target.value
@@ -7164,9 +7271,7 @@ function ResetPasswordPage({
                 placeholder="Enter password again"
                 autoComplete="new-password"
               />
-
             </label>
-
 
             <button
               type="submit"
@@ -7177,14 +7282,11 @@ function ResetPasswordPage({
                 ? "UPDATING..."
                 : "CHANGE PASSWORD"}
             </button>
-
           </form>
-
         )}
 
-
-        {(message || !valid) && (
-
+        {step ===
+          "complete" && (
           <button
             type="button"
             className="button-dark password-signin-button"
@@ -7194,68 +7296,40 @@ function ResetPasswordPage({
               )
             }
           >
-            GO TO SIGN IN
+            SIGN IN
           </button>
-
         )}
 
+        {step !==
+          "complete" && (
+          <button
+            type="button"
+            className="back-to-login"
+            onClick={() =>
+              navigate(
+                "/account"
+              )
+            }
+          >
+            ← BACK TO SIGN IN
+          </button>
+        )}
       </section>
     </>
   );
 }
 
 
-
-function InformationPage({
-  eyebrow,
-  title,
-  intro,
-  children,
+function ResetPasswordPage({
+  navigate,
 }) {
+  useEffect(() => {
+    navigate(
+      "/forgot-password"
+    );
+  }, [navigate]);
 
-  return (
-    <>
-      <PageHero
-        eyebrow={eyebrow}
-        title={title}
-        text={intro}
-      />
-
-      <section className="information-page">
-        {children}
-      </section>
-    </>
-  );
-}
-
-
-function InfoSection({
-  number,
-  title,
-  children,
-}) {
-
-  return (
-    <article className="info-section">
-
-      <div className="info-number">
-        {number}
-      </div>
-
-      <div>
-
-        <h2>
-          {title}
-        </h2>
-
-        <div className="info-copy">
-          {children}
-        </div>
-
-      </div>
-
-    </article>
-  );
+  return null;
 }
 
 
@@ -7842,7 +7916,7 @@ function SearchPanel({
                 search
                   .toLowerCase()
               )
-        ).slice(0, 6)
+        ).slice(0, 8)
       : [];
 
   return (
