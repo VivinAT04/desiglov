@@ -925,6 +925,10 @@ function App() {
         setSearchOpen={
           setSearchOpen
         }
+        search={search}
+        setSearch={setSearch}
+        products={products}
+        openProduct={openProduct}
         cartCount={
           cartCount
         }
@@ -933,18 +937,6 @@ function App() {
         }
       />
 
-      {searchOpen && (
-        <SearchPanel
-          products={products}
-          search={search}
-          setSearch={
-            setSearch
-          }
-          openProduct={
-            openProduct
-          }
-        />
-      )}
 
       <main>
         {page}
@@ -1014,7 +1006,12 @@ function Header({
   setCountryOpen,
   mobileOpen,
   setMobileOpen,
+  searchOpen,
   setSearchOpen,
+  search,
+  setSearch,
+  products = [],
+  openProduct,
   cartCount,
   setCartOpen,
 }) {
@@ -1053,168 +1050,145 @@ function Header({
           </div>
         </button>
 
-        <nav className="desktop-nav">
-          <button
-            onClick={() =>
-              navigate("/")
-            }
+        <div className="header-centre">
+          <nav
+            className={`desktop-nav ${
+              searchOpen ? "desktop-nav-searching" : ""
+            }`}
           >
-            Home
-          </button>
-
-          <button
-            onClick={() =>
-              navigate("/shop")
-            }
-          >
-            Shop
-          </button>
-
-          <button
-            onClick={() =>
-              navigate(
-                "/shop?category=Kurtis"
-              )
-            }
-          >
-            Kurtis
-          </button>
-
-          <button
-            onClick={() =>
-              navigate(
-                "/shop?category=Short%20Tops"
-              )
-            }
-          >
-            Short Tops
-          </button>
-
-          <button
-            onClick={() =>
-              navigate(
-                "/shop?category=Coord%20Sets"
-              )
-            }
-          >
-            Coord Sets
-          </button>
-
-          <button
-            onClick={() =>
-              navigate(
-                "/shop?category=3%20Piece%20Sets"
-              )
-            }
-          >
-            3 Piece Sets
-          </button>
-
-          <button
-            onClick={() =>
-              navigate(
-                "/shop?category=Jewellery"
-              )
-            }
-          >
-            Jewellery
-          </button>
-        </nav>
-
-        <div className="header-tools">
-          <div className="country-wrapper">
-            <button
-              className="country-button"
-              onClick={() =>
-                setCountryOpen(
-                  !countryOpen
-                )
-              }
-            >
-              <span>
-                {
-                  COUNTRIES[
-                    country
-                  ].flag
-                }
-              </span>
-
-              <span className="country-name">
-                {
-                  COUNTRIES[
-                    country
-                  ].name
-                }
-              </span>
-
-              <strong>
-                {
-                  COUNTRIES[
-                    country
-                  ].currency
-                }
-              </strong>
-
-              <span className="chevron">
-                ▾
-              </span>
+            <button onClick={() => navigate("/")}>
+              Home
             </button>
 
-            {countryOpen && (
-              <div className="country-menu">
-                {Object.entries(
-                  COUNTRIES
-                ).map(
-                  ([
-                    code,
-                    item,
-                  ]) => (
-                    <button
-                      key={
-                        code
-                      }
-                      onClick={() => {
-                        setCountry(
-                          code
-                        );
+            <button onClick={() => navigate("/shop")}>
+              Shop
+            </button>
 
-                        setCountryOpen(
-                          false
-                        );
+            <button
+              onClick={() =>
+                navigate("/shop?category=Kurtis")
+              }
+            >
+              Kurtis
+            </button>
+
+            <button
+              onClick={() =>
+                navigate("/shop?category=Short%20Tops")
+              }
+            >
+              Short Tops
+            </button>
+
+            <button
+              onClick={() =>
+                navigate("/shop?category=Coord%20Sets")
+              }
+            >
+              Coord Sets
+            </button>
+
+            <button
+              onClick={() =>
+                navigate("/shop?category=3%20Piece%20Sets")
+              }
+            >
+              3 Piece Sets
+            </button>
+
+            <button
+              onClick={() =>
+                navigate("/shop?category=Jewellery")
+              }
+            >
+              Jewellery
+            </button>
+          </nav>
+
+          <div
+            className={`navbar-search ${
+              searchOpen ? "navbar-search-open" : ""
+            }`}
+          >
+            <SearchIcon />
+
+            <input
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              placeholder="Search products..."
+              aria-label="Search products"
+            />
+
+            {search && (
+              <button
+                type="button"
+                className="navbar-search-clear"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="navbar-search-close"
+              onClick={() => {
+                setSearchOpen(false);
+                setSearch("");
+              }}
+              aria-label="Close search"
+            >
+              ×
+            </button>
+
+            {search.trim() && (
+              <div className="navbar-search-results">
+                {products
+                  .filter((product) =>
+                    `${product.name} ${product.category} ${product.colour}`
+                      .toLowerCase()
+                      .includes(search.toLowerCase())
+                  )
+                  .slice(0, 6)
+                  .map((product) => (
+                    <button
+                      type="button"
+                      key={product.id}
+                      className="navbar-search-result"
+                      onClick={() => {
+                        openProduct(product);
+                        setSearch("");
+                        setSearchOpen(false);
                       }}
                     >
-                      <span>
-                        {
-                          item.flag
-                        }
-                      </span>
+                      {product.images?.[0] && (
+                        <img
+                          src={product.images[0]}
+                          alt=""
+                        />
+                      )}
 
                       <span>
-                        {
-                          item.name
-                        }
+                        <strong>{product.name}</strong>
+                        <small>{product.category}</small>
                       </span>
-
-                      <small>
-                        {
-                          item.currency
-                        }
-                      </small>
                     </button>
-                  )
-                )}
+                  ))}
               </div>
             )}
           </div>
+        </div>
 
+        <div className="header-tools">
           <button
             className="icon-button"
-            onClick={() =>
-              setSearchOpen(
-                (value) =>
-                  !value
-              )
-            }
+            onClick={() => {
+              setSearchOpen((value) => !value);
+              setMobileOpen(false);
+            }}
             aria-label="Search"
           >
             <SearchIcon />
@@ -1290,17 +1264,28 @@ function Header({
               "Jewellery",
               "/shop?category=Jewellery",
             ],
+            [
+              "Wishlist",
+              "/wishlist",
+            ],
+            [
+              "Account",
+              "/account",
+            ],
           ].map(
             ([label, path]) => (
               <button
                 key={
                   label
                 }
-                onClick={() =>
+                onClick={() => {
                   navigate(
                     path
-                  )
-                }
+                  );
+                  setMobileOpen(
+                    false
+                  );
+                }}
               >
                 {label}
               </button>
@@ -2116,6 +2101,23 @@ function ProductPage({
   const [activeImage, setActiveImage] =
     useState(0);
 
+  const [deliveryPin, setDeliveryPin] =
+    useState("");
+
+  const [deliveryStatus, setDeliveryStatus] =
+    useState("");
+
+  function checkDeliveryPin() {
+    const pin = deliveryPin.trim();
+
+    if (!/^\d{6}$/.test(pin)) {
+      setDeliveryStatus("invalid");
+      return;
+    }
+
+    setDeliveryStatus("available");
+  }
+
   const [size, setSize] =
     useState(
       product.sizes.length ===
@@ -2304,7 +2306,12 @@ function ProductPage({
                 SELECT SIZE
               </span>
 
-              <button>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/size-guide")
+                }
+              >
                 SIZE GUIDE
               </button>
             </div>
@@ -2396,19 +2403,91 @@ function ProductPage({
           <div className="delivery-box">
             <TruckIcon />
 
-            <div>
+            <div className="delivery-content">
               <strong>
-                Delivery across
-                India
+                Delivery across India
               </strong>
 
               <p>
-                Enter your PIN
-                code during
-                checkout for
-                delivery
-                availability.
+                Check delivery availability for your area.
               </p>
+
+              <div className="delivery-pin-checker">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength="6"
+                  value={deliveryPin}
+                  onChange={(event) => {
+                    const value =
+                      event.target.value.replace(
+                        /\D/g,
+                        ""
+                      );
+
+                    setDeliveryPin(value);
+                    setDeliveryStatus("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter"
+                    ) {
+                      checkDeliveryPin();
+                    }
+                  }}
+                  placeholder="Enter PIN code"
+                  aria-label="Enter delivery PIN code"
+                />
+
+                <button
+                  type="button"
+                  onClick={
+                    checkDeliveryPin
+                  }
+                >
+                  CHECK
+                </button>
+              </div>
+
+              {deliveryStatus ===
+                "available" && (
+                <div className="delivery-result available">
+                  <span className="delivery-check">
+                    ✓
+                  </span>
+
+                  <div>
+                    <strong>
+                      Delivery available
+                    </strong>
+
+                    <p>
+                      We deliver to PIN code{" "}
+                      {deliveryPin}.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {deliveryStatus ===
+                "invalid" && (
+                <div className="delivery-result invalid">
+                  <span>
+                    !
+                  </span>
+
+                  <div>
+                    <strong>
+                      Check your PIN code
+                    </strong>
+
+                    <p>
+                      Please enter a valid
+                      6-digit Indian PIN code.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -7915,73 +7994,143 @@ function ResetPasswordPage({
 }
 
 
+
+function InformationPage({
+  eyebrow,
+  title,
+  intro,
+  children,
+}) {
+  return (
+    <main className="information-page">
+      <section className="page-heading">
+        {eyebrow && (
+          <span className="eyebrow">
+            {eyebrow}
+          </span>
+        )}
+
+        <h1>{title}</h1>
+
+        {intro && (
+          <p>
+            {intro}
+          </p>
+        )}
+      </section>
+
+      {children}
+    </main>
+  );
+}
+
+
+function InfoSection({
+  number,
+  title,
+  children,
+}) {
+  return (
+    <section className="info-section">
+      <div className="info-number">
+        {number}
+      </div>
+
+      <div className="info-copy">
+        <h2>{title}</h2>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+
 function ContactPage() {
+  const founders = [
+    {
+      number: "01",
+      name: "B.S. Abinaya Parameswari",
+      role: "Associate Software Engineer at Accenture",
+      phone: "9344921188",
+      phoneLink: "tel:+919344921188",
+      image: "/Founder1.png",
+    },
+    {
+      number: "02",
+      name: "Harini M",
+      role: "Software System Engineer at HP",
+      phone: "+91 72002 32989",
+      phoneLink: "tel:+917200232989",
+      image: "/Founder2.png",
+    },
+  ];
 
   return (
     <InformationPage
-      eyebrow="WE ARE HERE TO HELP"
-      title="Contact DEsiglov."
-      intro="Questions about an order, sizing or a piece from the collection? Get in touch with us."
+      eyebrow="GET IN TOUCH"
+      title="Contact us."
+      intro="Questions about an order, sizing or a piece from the collection? Our founders are here to help."
     >
-
-      <div className="contact-grid">
-
-        <article className="contact-card">
-
-          <small>
-            INSTAGRAM
-          </small>
-
-          <h2>
-            @itz_desiglov
-          </h2>
-
+      <section className="founders-section">
+        <div className="founders-heading">
+          <span>OUR FOUNDERS</span>
           <p>
-            Message us on Instagram for product and general enquiries.
+            Connect directly with the people behind DEsiglov.
           </p>
+        </div>
 
-          <a
-            href="https://www.instagram.com/itz_desiglov/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            OPEN INSTAGRAM →
-          </a>
+        <div className="founders-grid">
+          {founders.map((founder) => (
+            <article
+              className="founder-card"
+              key={founder.name}
+            >
+              <div className="founder-photo">
+                <img
+                  src={founder.image}
+                  alt={founder.name}
+                />
+              </div>
 
-        </article>
+              <div className="founder-details">
+                <small>
+                  FOUNDER {founder.number}
+                </small>
 
+                <h2>{founder.name}</h2>
 
-        <article className="contact-card">
+                <p className="founder-role">
+                  {founder.role}
+                </p>
 
-          <small>
-            ORDER SUPPORT
-          </small>
+                <a
+                  className="founder-phone"
+                  href={founder.phoneLink}
+                >
+                  <span className="founder-phone-icon">
+                    ☎
+                  </span>
 
-          <h2>
-            Have your order number ready.
-          </h2>
+                  <span>
+                    <small>PHONE</small>
+                    <strong>
+                      {founder.phone}
+                    </strong>
+                  </span>
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
 
+        <div className="founder-contact-note">
+          <span>DE</span>
           <p>
-            When contacting us about an existing order, include the DEsiglov order number shown in your account.
+            For product, sizing and order enquiries,
+            please contact our team using the details above.
           </p>
-
-        </article>
-
-      </div>
-
-
-      <div className="policy-note">
-
-        <strong>
-          Before launch
-        </strong>
-
-        <p>
-          Add the official DEsiglov customer-service email and registered business contact details here once confirmed.
-        </p>
-
-      </div>
-
+        </div>
+      </section>
     </InformationPage>
   );
 }
@@ -8371,113 +8520,99 @@ function FaqPage() {
 
 
 function SizeGuidePage() {
+  const measurements = [
+    ["S", "34", "28", "38"],
+    ["M", "36", "30", "40"],
+    ["L", "38", "32", "42"],
+    ["XL", "40", "34", "44"],
+    ["XXL", "42", "36", "46"],
+    ["3XL", "44", "38", "48"],
+    ["4XL", "46", "40", "50"],
+    ["5XL", "48", "42", "52"],
+    ["6XL", "50", "44", "54"],
+    ["7XL", "52", "46", "56"],
+  ];
 
   return (
-    <InformationPage
-      eyebrow="SIZE GUIDE"
-      title="Find your fit."
-      intro="Use this guide as a starting point and check individual product notes where available."
-    >
+    <div className="size-guide-page">
+      <section className="size-guide-hero">
+        <span className="size-guide-eyebrow">
+          DESIGLOV SIZE GUIDE
+        </span>
 
-      <div className="size-table-wrap">
-
-        <table className="size-table">
-
-          <thead>
-
-            <tr>
-              <th>SIZE</th>
-              <th>BUST</th>
-              <th>WAIST</th>
-              <th>HIP</th>
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            <tr>
-              <td>XS</td>
-              <td>32 in</td>
-              <td>26 in</td>
-              <td>34 in</td>
-            </tr>
-
-            <tr>
-              <td>S</td>
-              <td>34 in</td>
-              <td>28 in</td>
-              <td>36 in</td>
-            </tr>
-
-            <tr>
-              <td>M</td>
-              <td>36 in</td>
-              <td>30 in</td>
-              <td>38 in</td>
-            </tr>
-
-            <tr>
-              <td>L</td>
-              <td>38 in</td>
-              <td>32 in</td>
-              <td>40 in</td>
-            </tr>
-
-            <tr>
-              <td>XL</td>
-              <td>40 in</td>
-              <td>34 in</td>
-              <td>42 in</td>
-            </tr>
-
-            <tr>
-              <td>XXL</td>
-              <td>42 in</td>
-              <td>36 in</td>
-              <td>44 in</td>
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-
-      <InfoSection
-        number="01"
-        title="How to measure"
-      >
-        <p>
-          Measure around the fullest part of the bust, around the natural waist and around the fullest part of the hips.
-        </p>
-      </InfoSection>
-
-
-      <InfoSection
-        number="02"
-        title="Between sizes?"
-      >
-        <p>
-          Fit can vary by design and fabric. Check individual product information and choose based on the fit you prefer.
-        </p>
-      </InfoSection>
-
-
-      <div className="policy-note">
-
-        <strong>
-          Confirm before launch
-        </strong>
+        <h1>Find your fit.</h1>
 
         <p>
-          Replace these provisional measurements with DEsiglov's official garment measurements before customers rely on this guide.
+          Use our body measurements as a guide to find
+          the size that feels right for you.
         </p>
+      </section>
 
-      </div>
+      <section className="desiglov-size-guide">
+        <div className="desiglov-size-table-wrap">
+          <table className="desiglov-size-table">
+            <thead>
+              <tr className="measurement-title-row">
+                <th colSpan="4">
+                  BODY MEASUREMENTS (INCHES)
+                </th>
+              </tr>
 
-    </InformationPage>
+              <tr>
+                <th>SIZE</th>
+                <th>BUST</th>
+                <th>WAIST</th>
+                <th>HIP</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {measurements.map(
+                ([size, bust, waist, hip]) => (
+                  <tr key={size}>
+                    <td>{size}</td>
+                    <td>{bust}</td>
+                    <td>{waist}</td>
+                    <td>{hip}</td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="desiglov-measure-help">
+          <div>
+            <strong>BUST</strong>
+            <p>
+              Measure around the fullest part of your bust,
+              keeping the tape level around your body.
+            </p>
+          </div>
+
+          <div>
+            <strong>WAIST</strong>
+            <p>
+              Measure around your natural waistline without
+              pulling the measuring tape too tightly.
+            </p>
+          </div>
+
+          <div>
+            <strong>HIP</strong>
+            <p>
+              Measure around the fullest part of your hips
+              while standing naturally.
+            </p>
+          </div>
+        </div>
+
+        <p className="size-guide-note">
+          Measurements are in inches. Individual garment fit
+          may vary slightly depending on the style and fabric.
+        </p>
+      </section>
+    </div>
   );
 }
 
@@ -8514,7 +8649,7 @@ function SearchPanel({
               e.target.value
             )
           }
-          placeholder="Search DEsiglov"
+          placeholder="Search products..."
         />
       </div>
 
@@ -8915,7 +9050,11 @@ function Footer({
             HELP
           </strong>
 
-          <button>
+          <button
+            onClick={() =>
+              navigate("/contact")
+            }
+          >
             Contact
           </button>
 
@@ -8927,7 +9066,12 @@ function Footer({
             Returns
           </button>
 
-          <button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/size-guide")
+            }
+          >
             Size Guide
           </button>
         </div>

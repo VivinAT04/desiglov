@@ -9355,3 +9355,3019 @@ button:first-child {
   }
 
 }
+
+
+/* DESIGLOV COMPACT MOBILE FOOTER */
+@media (max-width: 650px) {
+
+  .footer {
+    background: #1f1c1b;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 38px 28px;
+    padding: 42px 24px 36px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+    padding-bottom: 26px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-brand .footer-word {
+    font-size: 29px;
+  }
+
+  .footer-brand p {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .footer-column {
+    gap: 11px;
+  }
+
+  .footer-column strong {
+    margin-bottom: 5px;
+    font-size: 7px;
+    letter-spacing: 2.5px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  /* FOLLOW takes a clean full-width row */
+  .footer-column:last-child {
+    grid-column: 1 / -1;
+    padding-top: 4px;
+  }
+
+  .footer-bottom {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 20px;
+    padding: 22px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-bottom span {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+  }
+
+  .footer-bottom span:nth-child(2) {
+    display: none;
+  }
+
+  .footer-bottom span:nth-child(3) {
+    text-align: right;
+  }
+
+  .footer-legal-links {
+    margin-top: 0;
+    padding: 18px 24px 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+  }
+
+  .footer-legal-links button {
+    padding: 0;
+    font-size: 6px;
+    letter-spacing: 0.8px;
+  }
+
+}
+
+
+/* ============================================================
+   DESIGLOV — PREMIUM FOOTER FINAL POLISH
+============================================================ */
+
+/* ---------- DESKTOP ---------- */
+
+.footer {
+  background: #1f1c1b;
+  color: #fff;
+}
+
+.footer-top {
+  padding-top: 82px;
+  padding-bottom: 72px;
+}
+
+.footer-word {
+  font-size: 38px;
+  line-height: 1;
+}
+
+.footer-brand p {
+  margin-top: 18px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #aaa09a;
+}
+
+.footer-column {
+  gap: 15px;
+}
+
+.footer-column strong {
+  margin-bottom: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 3px;
+}
+
+.footer-column button,
+.footer-column a {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #bdb4af;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.footer-column button:hover,
+.footer-column a:hover {
+  color: #fff;
+}
+
+.footer-bottom {
+  min-height: 82px;
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+
+.footer-legal-links {
+  min-height: 64px;
+  margin-top: 0;
+  padding: 0 clamp(35px, 6vw, 95px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 34px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.footer-legal-links button {
+  padding: 10px 0;
+  font-size: 8px;
+  line-height: 1.4;
+  letter-spacing: 1.2px;
+  color: #8f8681;
+  transition: color 0.2s ease;
+}
+
+
+/* ---------- TABLET ---------- */
+
+@media (max-width: 1020px) {
+
+  .footer-top {
+    gap: 48px 35px;
+    padding-top: 65px;
+    padding-bottom: 60px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 12px;
+  }
+
+}
+
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 650px) {
+
+  .footer {
+    background: #1f1c1b;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 38px 30px;
+
+    padding:
+      48px
+      24px
+      42px;
+  }
+
+
+  /* BRAND */
+
+  .footer-brand {
+    grid-column: 1 / -1;
+
+    padding-bottom: 30px;
+
+    border-bottom:
+      1px solid
+      rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-brand .footer-word {
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .footer-brand p {
+    margin:
+      15px
+      0
+      0;
+
+    font-size: 15px;
+    line-height: 1.55;
+
+    color: #aaa09a;
+  }
+
+
+  /* SHOP / HELP */
+
+  .footer-column {
+    gap: 13px;
+  }
+
+  .footer-column strong {
+    margin-bottom: 7px;
+
+    font-size: 8px;
+    font-weight: 600;
+
+    letter-spacing: 2.4px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 12px;
+    line-height: 1.55;
+
+    color: #bdb4af;
+  }
+
+
+  /* FOLLOW */
+
+  .footer-column:last-child {
+    grid-column: 1 / -1;
+
+    padding-top: 5px;
+  }
+
+
+  /* COPYRIGHT */
+
+  .footer-bottom {
+    min-height: 68px;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      auto;
+
+    align-items: center;
+
+    gap: 10px 20px;
+
+    padding:
+      20px
+      24px;
+
+    border-top:
+      1px solid
+      rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-bottom span {
+    font-size: 8px;
+
+    line-height: 1.4;
+
+    letter-spacing:
+      1.4px;
+
+    color: #827974;
+  }
+
+  .footer-bottom span:nth-child(2) {
+    display: none;
+  }
+
+  .footer-bottom span:nth-child(3) {
+    text-align: right;
+  }
+
+
+  /* LEGAL */
+
+  .footer-legal-links {
+    min-height: 64px;
+
+    margin-top: 0;
+
+    padding:
+      16px
+      24px
+      20px;
+
+    display: flex;
+
+    justify-content:
+      flex-start;
+
+    align-items:
+      center;
+
+    flex-wrap: wrap;
+
+    gap:
+      10px
+      24px;
+
+    border-top:
+      1px solid
+      rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-legal-links button {
+    padding:
+      8px
+      0;
+
+    font-size: 8px;
+
+    line-height: 1.4;
+
+    letter-spacing:
+      0.9px;
+
+    color: #918883;
+  }
+
+}
+
+
+/* ---------- VERY SMALL PHONES ---------- */
+
+@media (max-width: 380px) {
+
+  .footer-top {
+    padding-left: 20px;
+    padding-right: 20px;
+
+    gap:
+      34px
+      20px;
+  }
+
+  .footer-brand .footer-word {
+    font-size: 30px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 11.5px;
+  }
+
+  .footer-bottom {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .footer-legal-links {
+    padding-left: 20px;
+    padding-right: 20px;
+
+    gap:
+      8px
+      18px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — PRODUCT CARD TYPOGRAPHY POLISH
+============================================================ */
+
+.product-info {
+  padding-top: 18px;
+}
+
+.product-info .eyebrow,
+.product-info > span:first-child {
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 2.4px;
+}
+
+.product-info h3 {
+  margin-top: 10px;
+  margin-bottom: 8px;
+
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 400;
+}
+
+.product-info p,
+.product-info .price {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+
+/* TABLET */
+
+@media (max-width: 1020px) {
+
+  .product-info h3 {
+    font-size: 22px;
+  }
+
+  .product-info p,
+  .product-info .price {
+    font-size: 14px;
+  }
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+
+  .product-info {
+    padding-top: 13px;
+  }
+
+  .product-info .eyebrow,
+  .product-info > span:first-child {
+    font-size: 8px;
+    letter-spacing: 1.8px;
+  }
+
+  .product-info h3 {
+    margin-top: 7px;
+    margin-bottom: 6px;
+
+    font-size: 19px;
+    line-height: 1.15;
+  }
+
+  .product-info p,
+  .product-info .price {
+    font-size: 14px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — SHOP FILTER TYPOGRAPHY POLISH
+============================================================ */
+
+/* Main FILTERS heading */
+.filters h3,
+.filters > strong {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+}
+
+/* CATEGORY / AVAILABILITY headings */
+.filters h4,
+.filter-group strong,
+.filter-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+/* Filter option labels */
+.filters label {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Buttons/text inside filters */
+.filters button {
+  font-size: 11px;
+}
+
+/* CLEAR ALL */
+.filters .clear-filters,
+.filters .clear-all {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* Slightly improve spacing between options */
+.filters label {
+  min-height: 28px;
+}
+
+/* Radio / checkbox controls */
+.filters input[type="radio"],
+.filters input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+}
+
+
+/* TABLET / MOBILE */
+
+@media (max-width: 1020px) {
+
+  .filters h3,
+  .filters > strong {
+    font-size: 11px;
+  }
+
+  .filters h4,
+  .filter-group strong,
+  .filter-title {
+    font-size: 9px;
+  }
+
+  .filters label {
+    font-size: 13px;
+  }
+
+}
+
+
+/* SMALL MOBILE */
+
+@media (max-width: 650px) {
+
+  .filters h3,
+  .filters > strong {
+    font-size: 12px;
+  }
+
+  .filters h4,
+  .filter-group strong,
+  .filter-title {
+    font-size: 10px;
+  }
+
+  .filters label {
+    font-size: 14px;
+    min-height: 32px;
+  }
+
+  .filters button {
+    font-size: 10px;
+  }
+
+  .filters input[type="radio"],
+  .filters input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — SHOP SORT CONTROL TYPOGRAPHY
+============================================================ */
+
+.shop-toolbar {
+  align-items: center;
+}
+
+/* SORT BY label */
+.shop-toolbar label,
+.shop-toolbar > span,
+.shop-toolbar strong {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+}
+
+/* Sort dropdown */
+.shop-toolbar select {
+  min-width: 200px;
+  height: 46px;
+
+  padding:
+    0
+    16px;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  color: var(--ink);
+  background-color: #fff;
+
+  border:
+    1px solid
+    var(--champagne);
+}
+
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+
+  .shop-toolbar label,
+  .shop-toolbar > span,
+  .shop-toolbar strong {
+    font-size: 9px;
+    letter-spacing: 1.8px;
+  }
+
+  .shop-toolbar select {
+    min-width: 150px;
+    height: 44px;
+    font-size: 12px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — PREMIUM FOOTER BOTTOM TYPOGRAPHY
+============================================================ */
+
+.footer-bottom {
+  min-height: 82px;
+}
+
+.footer-bottom span {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.8px;
+  line-height: 1.4;
+}
+
+.footer-legal-links {
+  margin-top: 0;
+  padding:
+    22px
+    clamp(35px, 6vw, 95px)
+    24px;
+}
+
+.footer-legal-links button {
+  padding: 4px 0;
+
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+
+  line-height: 1.4;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+
+  .footer-bottom {
+    min-height: 0;
+    padding: 22px 24px;
+  }
+
+  .footer-bottom span {
+    font-size: 8px;
+    letter-spacing: 1.3px;
+  }
+
+  .footer-legal-links {
+    padding:
+      19px
+      24px
+      22px;
+
+    gap:
+      10px
+      22px;
+  }
+
+  .footer-legal-links button {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — FOOTER BOTTOM FINAL READABILITY
+============================================================ */
+
+/* Copyright / tagline / country */
+.footer-bottom {
+  color: #ffffff;
+}
+
+.footer-bottom span {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.7px;
+  opacity: 0.9;
+}
+
+
+/* Privacy / Terms / FAQs */
+.footer-legal-links button {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  opacity: 0.85;
+}
+
+.footer-legal-links button:hover {
+  color: #ffffff;
+  opacity: 1;
+}
+
+
+/* MOBILE */
+@media (max-width: 650px) {
+
+  .footer-bottom span {
+    color: #ffffff;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    opacity: 0.9;
+  }
+
+  .footer-legal-links button {
+    color: #ffffff;
+    font-size: 9px;
+    letter-spacing: 0.9px;
+    opacity: 0.85;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — FOOTER NAVIGATION FINAL SIZE
+============================================================ */
+
+/* SHOP / HELP / FOLLOW */
+.footer-column strong {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  line-height: 1.4;
+}
+
+/* All Products / Kurtis / Contact / Instagram etc. */
+.footer-column button,
+.footer-column a {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.65;
+}
+
+
+/* MOBILE */
+@media (max-width: 650px) {
+
+  .footer-column strong {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV NAVBAR SLIDING SEARCH
+   Desktop: right -> left inside header
+============================================================ */
+
+.header {
+  overflow: visible;
+}
+
+.header-centre {
+  position: relative;
+  height: 108px;
+  min-width: 0;
+  overflow: visible;
+}
+
+.header-centre .desktop-nav {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  transition:
+    opacity 0.24s ease,
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.24s ease;
+}
+
+.header-centre .desktop-nav.desktop-nav-searching {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-55px);
+}
+
+
+/* Search bar lives INSIDE the navbar */
+
+.navbar-search {
+  position: absolute;
+  z-index: 10;
+
+  top: 0;
+  right: 0;
+
+  width: 100%;
+  height: 108px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  padding:
+    0
+    8px
+    0
+    24px;
+
+  background:
+    rgba(
+      254,
+      254,
+      254,
+      0.99
+    );
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transform:
+    translateX(105%);
+
+  transition:
+    transform
+      0.48s
+      cubic-bezier(
+        0.22,
+        1,
+        0.36,
+        1
+      ),
+    opacity
+      0.22s
+      ease,
+    visibility
+      0.22s
+      ease;
+}
+
+
+/* right -> left opening animation */
+
+.navbar-search.navbar-search-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  transform:
+    translateX(0);
+}
+
+
+.navbar-search > svg {
+  flex: 0 0 auto;
+
+  width: 23px;
+  height: 23px;
+
+  color:
+    #3c3531;
+}
+
+
+.navbar-search input {
+  min-width: 0;
+  flex: 1;
+
+  height: 56px;
+
+  padding:
+    0
+    4px;
+
+  border: 0;
+
+  border-bottom:
+    1px solid
+    #b9ada5;
+
+  outline: 0;
+
+  background:
+    transparent;
+
+  color:
+    var(--ink);
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size:
+    clamp(
+      20px,
+      1.7vw,
+      27px
+    );
+
+  font-weight:
+    400;
+
+  letter-spacing:
+    0.2px;
+
+  transition:
+    border-color
+      0.2s ease;
+}
+
+
+.navbar-search input:focus {
+  border-bottom-color:
+    var(--gold-dark);
+}
+
+
+.navbar-search input::placeholder {
+  color:
+    #948985;
+
+  opacity:
+    0.8;
+}
+
+
+/* clear + close */
+
+.navbar-search-clear,
+.navbar-search-close {
+  flex: 0 0 auto;
+
+  width: 40px;
+  height: 40px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 0;
+
+  background:
+    transparent;
+
+  color:
+    #625954;
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  font-size:
+    24px;
+
+  font-weight:
+    300;
+
+  line-height: 1;
+
+  cursor:
+    pointer;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.navbar-search-clear {
+  width: 30px;
+
+  font-size:
+    18px;
+
+  color:
+    #a09690;
+}
+
+
+.navbar-search-close:hover {
+  color:
+    var(--gold-dark);
+
+  transform:
+    rotate(90deg);
+}
+
+
+/* Search result dropdown only appears after typing */
+
+.navbar-search-results {
+  position: absolute;
+
+  z-index: 200;
+
+  top: 92px;
+  left: 0;
+  right: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 8px;
+
+  padding:
+    16px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.99
+    );
+
+  border:
+    1px solid
+    var(--champagne);
+
+  box-shadow:
+    0
+    22px
+    50px
+    rgba(
+      45,
+      35,
+      30,
+      0.12
+    );
+
+  animation:
+    desiglovSearchResults
+    0.22s
+    ease
+    both;
+}
+
+
+@keyframes desiglovSearchResults {
+  from {
+    opacity: 0;
+    transform:
+      translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+
+.navbar-search-result {
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    52px
+    minmax(
+      0,
+      1fr
+    );
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding:
+    8px;
+
+  border: 0;
+
+  background:
+    #f8f4f0;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background
+      0.2s ease;
+}
+
+
+.navbar-search-result:hover {
+  background:
+    #f0e7df;
+}
+
+
+.navbar-search-result img {
+  width: 52px;
+  height: 62px;
+
+  object-fit: cover;
+}
+
+
+.navbar-search-result > span {
+  min-width: 0;
+
+  display: grid;
+
+  gap: 5px;
+}
+
+
+.navbar-search-result strong {
+  overflow: hidden;
+
+  color:
+    var(--ink);
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size:
+    14px;
+
+  font-weight:
+    500;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+
+.navbar-search-result small {
+  color:
+    #887c76;
+
+  font-size:
+    8px;
+
+  letter-spacing:
+    1px;
+
+  text-transform:
+    uppercase;
+}
+
+
+/* Tablet/mobile keeps the existing responsive header stable */
+
+@media (max-width: 1020px) {
+
+  .header-centre {
+    display: none;
+  }
+
+}
+
+
+/* slightly larger DESIGLOV desktop logo */
+
+@media (min-width: 1021px) {
+
+  .header > .brand .brand-word {
+    font-size:
+      36px;
+  }
+
+  .header > .brand .brand-line {
+    font-size:
+      6.5px;
+
+    letter-spacing:
+      4.5px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — NAVBAR SEARCH PILL FINAL DESIGN
+============================================================ */
+
+@media (min-width: 1021px) {
+
+  .navbar-search {
+    top: 50%;
+    right: 0;
+
+    width: 100%;
+    height: 68px;
+
+    padding: 0 12px 0 22px;
+
+    gap: 14px;
+
+    background: #fbf8f5;
+
+    border: 1px solid #e4d7cf;
+
+    border-radius: 999px;
+
+    box-shadow:
+      0 4px 18px
+      rgba(52, 42, 36, 0.035);
+
+    transform:
+      translate(105%, -50%);
+
+    transition:
+      transform 0.5s
+        cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.22s ease,
+      visibility 0.22s ease;
+  }
+
+
+  .navbar-search.navbar-search-open {
+    transform:
+      translate(0, -50%);
+  }
+
+
+  .navbar-search > svg {
+    width: 22px;
+    height: 22px;
+
+    flex-shrink: 0;
+
+    color: #342f2c;
+  }
+
+
+  .navbar-search input {
+    flex: 1;
+
+    width: 100%;
+    height: 64px;
+
+    padding: 0 6px;
+
+    border: 0 !important;
+    border-bottom: 0 !important;
+
+    outline: none;
+
+    background: transparent;
+
+    color: #302a27;
+
+    font-family:
+      "Playfair Display",
+      serif;
+
+    font-size: 21px;
+
+    font-weight: 400;
+
+    box-shadow: none;
+  }
+
+
+  .navbar-search input:focus {
+    border: 0 !important;
+    border-bottom: 0 !important;
+
+    outline: none;
+
+    box-shadow: none;
+  }
+
+
+  .navbar-search input::placeholder {
+    color: #978b85;
+
+    opacity: 0.85;
+  }
+
+
+  .navbar-search-close {
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    display: grid;
+    place-items: center;
+
+    border: 0;
+
+    border-radius: 50%;
+
+    background: #f1eae5;
+
+    color: #514944;
+
+    font-size: 23px;
+
+    cursor: pointer;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+
+  .navbar-search-close:hover {
+    background: #e9ded6;
+
+    color: var(--gold-dark);
+
+    transform: rotate(90deg);
+  }
+
+
+  .navbar-search-clear {
+    display: none;
+  }
+
+
+  /* dropdown begins underneath the pill */
+
+  .navbar-search-results {
+    top: 78px;
+
+    border-radius: 16px;
+
+    overflow: hidden;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — PREMIUM NAV HOVER
+============================================================ */
+
+@media (min-width: 1021px) {
+
+  .desktop-nav button {
+    transition:
+      color 0.28s ease,
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      letter-spacing 0.28s ease;
+  }
+
+
+  .desktop-nav button:hover {
+    color: var(--gold-dark);
+
+    transform:
+      translateY(-3px);
+
+    letter-spacing:
+      0.35px;
+  }
+
+
+  .desktop-nav button::after {
+    left: 50%;
+    bottom: 24px;
+
+    width: 0;
+    height: 1px;
+
+    background:
+      var(--gold-dark);
+
+    opacity: 0;
+
+    transform:
+      translateX(-50%);
+
+    transition:
+      width 0.32s
+        cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.2s ease;
+  }
+
+
+  .desktop-nav button:hover::after {
+    width: 100%;
+
+    opacity: 1;
+  }
+
+
+  /* little press feedback */
+
+  .desktop-nav button:active {
+    transform:
+      translateY(-1px)
+      scale(0.98);
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — LOGO + NAVBAR ICON HOVER
+   Search icon intentionally excluded
+============================================================ */
+
+@media (min-width: 1021px) {
+
+  /* ---------------- LOGO ---------------- */
+
+  .header > .brand {
+    cursor: pointer;
+
+    transition:
+      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.25s ease;
+  }
+
+  .header > .brand .brand-word {
+    transition:
+      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      letter-spacing 0.32s ease;
+  }
+
+  .header > .brand .brand-glov {
+    transition:
+      color 0.28s ease;
+  }
+
+  .header > .brand .brand-line {
+    transition:
+      letter-spacing 0.32s ease,
+      color 0.28s ease;
+  }
+
+  .header > .brand:hover {
+    transform: translateY(-2px);
+  }
+
+  .header > .brand:hover .brand-word {
+    transform: scale(1.025);
+    letter-spacing: 1.4px;
+  }
+
+  .header > .brand:hover .brand-glov {
+    color: var(--gold);
+  }
+
+  .header > .brand:hover .brand-line {
+    color: var(--gold-dark);
+    letter-spacing: 4.8px;
+  }
+
+
+  /* ==========================================================
+     PROFILE + WISHLIST + BAG
+     First icon is Search, so exclude it.
+  ========================================================== */
+
+  .header-tools .icon-button:not(:first-child) {
+    border-radius: 50%;
+
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.28s ease,
+      color 0.28s ease;
+  }
+
+  .header-tools .icon-button:not(:first-child) svg {
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .header-tools .icon-button:not(:first-child):hover {
+    background: #f6eee8;
+    color: var(--gold-dark);
+
+    transform: translateY(-3px);
+  }
+
+  .header-tools .icon-button:not(:first-child):hover svg {
+    transform: scale(1.08);
+  }
+
+  .header-tools .icon-button:not(:first-child):active {
+    transform:
+      translateY(-1px)
+      scale(0.95);
+  }
+
+
+  /* ---------------- SEARCH ----------------
+     No hover animation/background.
+  ---------------------------------------------------------- */
+
+  .header-tools .icon-button:first-child,
+  .header-tools .icon-button:first-child:hover,
+  .header-tools .icon-button:first-child:active {
+    background: transparent;
+    color: #35302e;
+    transform: none;
+  }
+
+  .header-tools .icon-button:first-child svg,
+  .header-tools .icon-button:first-child:hover svg {
+    transform: none;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — OFFICIAL SIZE GUIDE
+============================================================ */
+
+.desiglov-size-guide {
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+
+.desiglov-size-guide-heading {
+  max-width: 650px;
+  margin: 0 auto 38px;
+  text-align: center;
+}
+
+
+.desiglov-size-guide-heading > span {
+  display: block;
+  margin-bottom: 12px;
+
+  color: var(--gold-dark);
+
+  font-size: 9px;
+  font-weight: 600;
+
+  letter-spacing: 3px;
+}
+
+
+.desiglov-size-guide-heading h2 {
+  margin: 0 0 14px;
+
+  color: var(--text);
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size: clamp(30px, 4vw, 48px);
+
+  font-weight: 400;
+}
+
+
+.desiglov-size-guide-heading p {
+  max-width: 560px;
+  margin: auto;
+
+  color: #776d68;
+
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+
+.desiglov-size-table-wrap {
+  width: 100%;
+
+  overflow-x: auto;
+
+  border: 1px solid #e6dcd6;
+
+  border-radius: 18px;
+
+  background: white;
+
+  box-shadow:
+    0 18px 50px
+    rgba(43, 34, 29, 0.055);
+}
+
+
+.desiglov-size-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+
+.desiglov-size-table th,
+.desiglov-size-table td {
+  padding: 19px 15px;
+
+  text-align: center;
+
+  border-right:
+    1px solid #eee5df;
+
+  border-bottom:
+    1px solid #eee5df;
+}
+
+
+.desiglov-size-table th:last-child,
+.desiglov-size-table td:last-child {
+  border-right: 0;
+}
+
+
+.desiglov-size-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+
+/* BODY MEASUREMENTS heading */
+
+.desiglov-size-table .measurement-title-row th {
+  padding: 22px;
+
+  background: #201d1c;
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  letter-spacing: 2.5px;
+}
+
+
+/* SIZE / BUST / WAIST / HIP */
+
+.desiglov-size-table thead tr:nth-child(2) th {
+  padding: 20px 15px;
+
+  background: #292524;
+
+  color: white;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 2px;
+}
+
+
+/* table body */
+
+.desiglov-size-table tbody td {
+  color: #302b28;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+.desiglov-size-table tbody td:first-child {
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+}
+
+
+.desiglov-size-table tbody tr:nth-child(even) {
+  background: #f8f1ee;
+}
+
+
+.desiglov-size-table tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+
+.desiglov-size-table tbody tr {
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.desiglov-size-table tbody tr:hover {
+  background: #f2e6df;
+}
+
+
+/* measurement explanation */
+
+.desiglov-measure-help {
+  margin-top: 32px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 14px;
+}
+
+
+.desiglov-measure-help > div {
+  padding: 24px;
+
+  border: 1px solid #eadfd9;
+
+  border-radius: 14px;
+
+  background: #fbf8f5;
+}
+
+
+.desiglov-measure-help strong {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: var(--gold-dark);
+
+  font-size: 9px;
+
+  letter-spacing: 2px;
+}
+
+
+.desiglov-measure-help p {
+  margin: 0;
+
+  color: #6f6661;
+
+  font-size: 12px;
+
+  line-height: 1.7;
+}
+
+
+@media (max-width: 650px) {
+
+  .desiglov-size-guide-heading {
+    margin-bottom: 25px;
+  }
+
+
+  .desiglov-size-table th,
+  .desiglov-size-table td {
+    padding: 15px 9px;
+  }
+
+
+  .desiglov-size-table .measurement-title-row th {
+    padding: 18px 10px;
+
+    font-size: 10px;
+
+    letter-spacing: 1.7px;
+  }
+
+
+  .desiglov-size-table thead tr:nth-child(2) th {
+    padding: 16px 8px;
+
+    font-size: 9px;
+
+    letter-spacing: 1px;
+  }
+
+
+  .desiglov-size-table tbody td {
+    font-size: 12px;
+  }
+
+
+  .desiglov-measure-help {
+    grid-template-columns: 1fr;
+
+    gap: 8px;
+  }
+
+
+  .desiglov-measure-help > div {
+    padding: 18px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — SIZE GUIDE PAGE FIX
+============================================================ */
+
+.size-guide-page {
+  min-height: 70vh;
+  padding-bottom: 100px;
+  background: #fff;
+}
+
+
+.size-guide-hero {
+  padding:
+    85px
+    24px
+    70px;
+
+  text-align: center;
+
+  background: #faf6f2;
+
+  border-bottom:
+    1px solid
+    #eee3dc;
+}
+
+
+.size-guide-eyebrow {
+  display: block;
+
+  margin-bottom: 20px;
+
+  color:
+    var(--gold-dark);
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  letter-spacing: 4px;
+}
+
+
+.size-guide-hero h1 {
+  margin:
+    0
+    0
+    18px;
+
+  color:
+    #292421;
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size:
+    clamp(
+      46px,
+      6vw,
+      74px
+    );
+
+  font-weight: 400;
+
+  line-height: 1;
+}
+
+
+.size-guide-hero p {
+  max-width: 560px;
+
+  margin: auto;
+
+  color:
+    #766c67;
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size: 16px;
+
+  line-height: 1.7;
+}
+
+
+.size-guide-page
+.desiglov-size-guide {
+  width:
+    min(
+      900px,
+      calc(100% - 48px)
+    );
+
+  margin:
+    65px
+    auto
+    0;
+}
+
+
+.size-guide-note {
+  max-width: 650px;
+
+  margin:
+    28px
+    auto
+    0;
+
+  color:
+    #887e78;
+
+  font-size: 11px;
+
+  line-height: 1.8;
+
+  text-align: center;
+}
+
+
+@media (max-width: 650px) {
+
+  .size-guide-page {
+    padding-bottom: 65px;
+  }
+
+
+  .size-guide-hero {
+    padding:
+      55px
+      20px
+      48px;
+  }
+
+
+  .size-guide-hero h1 {
+    font-size: 44px;
+  }
+
+
+  .size-guide-hero p {
+    font-size: 14px;
+  }
+
+
+  .size-guide-page
+  .desiglov-size-guide {
+    width:
+      calc(100% - 28px);
+
+    margin-top: 35px;
+  }
+
+}
+
+
+
+/* ============================================================
+   DESIGLOV — PRODUCT DELIVERY PIN CHECKER
+============================================================ */
+
+.delivery-box {
+  grid-template-columns: 35px minmax(0, 1fr);
+  align-items: start;
+  padding: 24px;
+}
+
+.delivery-content {
+  min-width: 0;
+}
+
+.delivery-content > strong {
+  display: block;
+  margin-top: 1px;
+  color: #332e2b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.delivery-content > p {
+  margin-top: 7px;
+}
+
+
+/* PIN INPUT */
+
+.delivery-pin-checker {
+  width: 100%;
+  max-width: 390px;
+
+  display: flex;
+  align-items: stretch;
+
+  margin-top: 16px;
+
+  background: #fff;
+
+  border:
+    1px solid
+    #ddd0c8;
+
+  border-radius: 4px;
+
+  overflow: hidden;
+
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.delivery-pin-checker:focus-within {
+  border-color: var(--gold-dark);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(184, 128, 92, 0.08);
+}
+
+.delivery-pin-checker input {
+  min-width: 0;
+  flex: 1;
+
+  height: 46px;
+
+  padding:
+    0
+    15px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #302b28;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  letter-spacing: 0.3px;
+}
+
+.delivery-pin-checker input::placeholder {
+  color: #9a908a;
+}
+
+.delivery-pin-checker button {
+  min-width: 86px;
+
+  padding:
+    0
+    18px;
+
+  border: 0;
+  border-left:
+    1px solid
+    #ddd0c8;
+
+  background: transparent;
+
+  color: var(--gold-dark);
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.6px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.delivery-pin-checker button:hover {
+  background: #211e1c;
+  color: #fff;
+}
+
+
+/* DELIVERY RESULT */
+
+.delivery-result {
+  max-width: 390px;
+
+  display: grid;
+
+  grid-template-columns:
+    25px
+    1fr;
+
+  align-items: start;
+
+  gap: 9px;
+
+  margin-top: 13px;
+
+  padding:
+    12px
+    14px;
+
+  border-radius: 3px;
+}
+
+.delivery-result > span {
+  width: 21px;
+  height: 21px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.delivery-result strong {
+  display: block;
+
+  font-size: 10px;
+
+  font-weight: 600;
+}
+
+.delivery-result p {
+  margin:
+    3px
+    0
+    0;
+
+  font-size: 9px;
+
+  line-height: 1.5;
+}
+
+.delivery-result.available {
+  background: #eef4ed;
+  color: #38513b;
+}
+
+.delivery-result.available > span {
+  background: #526f56;
+  color: #fff;
+}
+
+.delivery-result.available p {
+  color: #657668;
+}
+
+.delivery-result.invalid {
+  background: #f8eeee;
+  color: #7c4646;
+}
+
+.delivery-result.invalid > span {
+  background: #9b5d5d;
+  color: #fff;
+}
+
+.delivery-result.invalid p {
+  color: #8c6b6b;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+
+  .delivery-box {
+    grid-template-columns:
+      28px
+      minmax(0, 1fr);
+
+    gap: 12px;
+
+    padding: 18px;
+  }
+
+  .delivery-pin-checker {
+    max-width: none;
+  }
+
+  .delivery-pin-checker input {
+    height: 44px;
+    font-size: 11px;
+  }
+
+  .delivery-pin-checker button {
+    min-width: 76px;
+
+    padding:
+      0
+      12px;
+
+    font-size: 8px;
+  }
+
+  .delivery-result {
+    max-width: none;
+  }
+}
+
+
+
+/* ============================================================
+   DESIGLOV — FOUNDER CONTACT PAGE
+============================================================ */
+
+.founders-section {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 10px 0 70px;
+}
+
+.founders-heading {
+  max-width: 620px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.founders-heading > span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--gold-dark);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
+
+.founders-heading p {
+  margin: 0;
+  color: #756b66;
+  font-family: "Playfair Display", serif;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.founders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.founder-card {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: 42% 58%;
+  overflow: hidden;
+  border: 1px solid #e5d8d0;
+  border-radius: 18px;
+  background: #fffdfb;
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.founder-card:hover {
+  transform: translateY(-5px);
+  border-color: #d7b7a4;
+  box-shadow: 0 20px 45px rgba(42, 32, 27, 0.08);
+}
+
+.founder-photo {
+  position: relative;
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      145deg,
+      #f3e5dc 0%,
+      #ead3c5 52%,
+      #dcb9a4 100%
+    );
+}
+
+.founder-photo::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 50%;
+}
+
+.founder-photo::after {
+  content: "PHOTO";
+  position: absolute;
+  bottom: 22px;
+  color: rgba(74, 55, 45, .55);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.founder-photo > span {
+  position: relative;
+  z-index: 1;
+  color: white;
+  font-family: "Playfair Display", serif;
+  font-size: 48px;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.founder-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 38px 34px;
+}
+
+.founder-details > small {
+  margin-bottom: 13px;
+  color: var(--gold-dark);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2.7px;
+}
+
+.founder-details h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Playfair Display", serif;
+  font-size: clamp(24px, 2vw, 31px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.founder-role {
+  min-height: 42px;
+  margin: 12px 0 25px;
+  color: #776c66;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.founder-phone {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.founder-phone-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: white;
+  font-size: 15px;
+  transition:
+    transform .25s ease,
+    background .25s ease;
+}
+
+.founder-phone:hover .founder-phone-icon {
+  transform: scale(1.08);
+  background: var(--gold-dark);
+}
+
+.founder-phone > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.founder-phone small {
+  color: #9a8e87;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.founder-phone strong {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .4px;
+}
+
+.founder-contact-note {
+  max-width: 650px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 42px auto 0;
+  text-align: left;
+}
+
+.founder-contact-note > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  border: 1px solid #dfc9bc;
+  border-radius: 50%;
+  color: var(--gold-dark);
+  font-family: "Playfair Display", serif;
+  font-size: 13px;
+}
+
+.founder-contact-note p {
+  margin: 0;
+  color: #81756f;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 850px) {
+
+  .founders-section {
+    width: min(100% - 28px, 600px);
+    padding-bottom: 50px;
+  }
+
+  .founders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-card {
+    grid-template-columns: 150px 1fr;
+    min-height: 220px;
+  }
+
+  .founder-photo {
+    min-height: 220px;
+  }
+
+  .founder-photo::before {
+    width: 100px;
+    height: 100px;
+  }
+
+  .founder-photo > span {
+    font-size: 34px;
+  }
+
+  .founder-details {
+    padding: 27px 24px;
+  }
+}
+
+
+@media (max-width: 520px) {
+
+  .founders-heading {
+    margin-bottom: 28px;
+  }
+
+  .founder-card {
+    grid-template-columns: 115px 1fr;
+    border-radius: 13px;
+  }
+
+  .founder-photo {
+    min-height: 210px;
+  }
+
+  .founder-photo::before {
+    width: 75px;
+    height: 75px;
+  }
+
+  .founder-photo > span {
+    font-size: 27px;
+  }
+
+  .founder-photo::after {
+    bottom: 15px;
+    font-size: 6px;
+  }
+
+  .founder-details {
+    padding: 23px 18px;
+  }
+
+  .founder-details h2 {
+    font-size: 20px;
+  }
+
+  .founder-role {
+    min-height: auto;
+    margin: 9px 0 18px;
+    font-size: 9px;
+  }
+
+  .founder-phone-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .founder-phone strong {
+    font-size: 11px;
+  }
+
+  .founder-contact-note {
+    margin-top: 30px;
+  }
+}
+
+
+
+/* ============================================================
+   DESIGLOV — FOUNDER CONTACT CARDS
+============================================================ */
+
+.founders-section {
+  margin-top: 52px;
+}
+
+.founders-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 25px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--champagne);
+}
+
+.founders-heading > span {
+  color: var(--gold-dark);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2.6px;
+}
+
+.founders-heading p {
+  margin: 0;
+  color: #81766f;
+  font-size: 11px;
+}
+
+.founders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.founder-card {
+  display: grid;
+  grid-template-columns: 185px minmax(0, 1fr);
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--champagne);
+  background: #fff;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.founder-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 38px rgba(49, 39, 33, 0.08);
+}
+
+.founder-photo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  overflow: hidden;
+  background: #eee8e3;
+}
+
+.founder-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.45s ease;
+}
+
+.founder-card:hover .founder-photo img {
+  transform: scale(1.025);
+}
+
+.founder-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 28px 26px;
+}
+
+.founder-details > small {
+  color: var(--gold-dark);
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.founder-details h2 {
+  margin: 12px 0 8px;
+  font-family: "Playfair Display", serif;
+  font-size: 25px;
+  line-height: 1.12;
+  font-weight: 400;
+}
+
+.founder-role {
+  min-height: 34px;
+  margin: 0 0 20px;
+  color: #786e68;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.founder-phone {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: fit-content;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.founder-phone-icon {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--champagne);
+  border-radius: 50%;
+  font-size: 15px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.founder-phone:hover .founder-phone-icon {
+  background: var(--ink);
+  color: #fff;
+}
+
+.founder-phone > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.founder-phone small {
+  color: #9a8e86;
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+}
+
+.founder-phone strong {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.founder-contact-note {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 38px;
+  padding: 22px 0;
+  border-top: 1px solid var(--champagne);
+  border-bottom: 1px solid var(--champagne);
+}
+
+.founder-contact-note > span {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: 12px;
+}
+
+.founder-contact-note p {
+  margin: 0;
+  color: #756b65;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+
+/* TABLET */
+
+@media (max-width: 900px) {
+
+  .founders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-card {
+    grid-template-columns: 210px 1fr;
+  }
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  .founders-section {
+    margin-top: 35px;
+  }
+
+  .founders-heading {
+    display: block;
+  }
+
+  .founders-heading p {
+    margin-top: 9px;
+  }
+
+  .founders-grid {
+    gap: 18px;
+  }
+
+  .founder-card {
+    grid-template-columns: 120px minmax(0, 1fr);
+    min-height: 180px;
+  }
+
+  .founder-photo {
+    min-height: 180px;
+  }
+
+  .founder-details {
+    padding: 20px 16px;
+  }
+
+  .founder-details h2 {
+    margin: 9px 0 6px;
+    font-size: 19px;
+  }
+
+  .founder-role {
+    min-height: auto;
+    margin: 7px 0 15px;
+    font-size: 9px;
+  }
+
+  .founder-phone-icon {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    font-size: 13px;
+  }
+
+  .founder-phone strong {
+    font-size: 10px;
+  }
+
+  .founder-contact-note {
+    margin-top: 28px;
+  }
+
+}
+
+
+/* REMOVE DECORATIVE CIRCLE FROM FOUNDER PHOTOS */
+.founder-photo::before,
+.founder-photo::after {
+  display: none !important;
+  content: none !important;
+}
+
+
+
+/* ============================================================
+   DESIGLOV — PREMIUM ELLIPSOID IMAGE EFFECT
+   ============================================================ */
+
+/* Main homepage hero image */
+.hero-media {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Give the hero image an elegant elliptical presentation */
+.hero-media img {
+  transition:
+    transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s ease;
+}
+
+/* Category/product image cards */
+.category-card {
+  overflow: hidden;
+}
+
+.category-card img {
+  transition:
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s ease;
+}
+
+
+/* ------------------------------------------------------------
+   ELLIPSE EFFECT
+   ------------------------------------------------------------ */
+
+.hero-media img,
+.category-card img {
+  clip-path: ellipse(72% 68% at 50% 50%);
+}
+
+
+/* ------------------------------------------------------------
+   LOAD ANIMATION
+   ------------------------------------------------------------ */
+
+@keyframes desiglovEllipseReveal {
+  0% {
+    clip-path: ellipse(18% 12% at 50% 50%);
+    transform: scale(1.12);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    clip-path: ellipse(72% 68% at 50% 50%);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.hero-media img {
+  animation:
+    desiglovEllipseReveal
+    1.35s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+
+/* Category images appear one after another */
+
+.category-card img {
+  animation:
+    desiglovEllipseReveal
+    1.15s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.category-card:nth-child(1) img {
+  animation-delay: 0.08s;
+}
+
+.category-card:nth-child(2) img {
+  animation-delay: 0.18s;
+}
+
+.category-card:nth-child(3) img {
+  animation-delay: 0.28s;
+}
+
+
+/* ------------------------------------------------------------
+   HOVER ANIMATION
+   ------------------------------------------------------------ */
+
+.hero-media:hover img,
+.category-card:hover img {
+  transform: scale(1.045);
+  filter: brightness(1.025) contrast(1.015);
+}
+
+
+/* ------------------------------------------------------------
+   SUBTLE FLOATING EFFECT ON HERO
+   ------------------------------------------------------------ */
+
+@keyframes desiglovHeroFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+
+/* Keep motion accessible */
+@media (prefers-reduced-motion: reduce) {
+
+  .hero-media img,
+  .category-card img {
+    animation: none !important;
+    transition: none !important;
+  }
+
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE — slightly softer ellipse
+   ------------------------------------------------------------ */
+
+@media (max-width: 650px) {
+
+  .hero-media img,
+  .category-card img {
+    clip-path: ellipse(78% 70% at 50% 50%);
+  }
+
+  @keyframes desiglovEllipseReveal {
+    0% {
+      clip-path: ellipse(25% 18% at 50% 50%);
+      transform: scale(1.08);
+      opacity: 0;
+    }
+
+    100% {
+      clip-path: ellipse(78% 70% at 50% 50%);
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+}
+
