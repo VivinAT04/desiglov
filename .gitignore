@@ -62,3 +62,5 @@ frontend/.env.*
 backend/.env
 backend/.env.*
 !backend/.env.example
+database-backups/
+frontend/.env.local
