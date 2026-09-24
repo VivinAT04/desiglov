@@ -3841,6 +3841,21 @@ function CheckoutPage({
   const [paymentMethod, setPaymentMethod] =
     useState("RAZORPAY");
 
+  const [couponInput, setCouponInput] =
+    useState("");
+
+  const [appliedCoupon, setAppliedCoupon] =
+    useState(null);
+
+  const [applyingCoupon, setApplyingCoupon] =
+    useState(false);
+
+  const [couponError, setCouponError] =
+    useState("");
+
+  const [couponMessage, setCouponMessage] =
+    useState("");
+
   const [addressForm, setAddressForm] =
     useState({
       fullName: "",
@@ -4023,6 +4038,130 @@ function CheckoutPage({
   }
 
 
+  async function applyCoupon() {
+    const code =
+      couponInput
+        .trim()
+        .toUpperCase();
+
+    if (!code) {
+      setCouponError(
+        "Enter a discount code."
+      );
+      setCouponMessage("");
+      return;
+    }
+
+    if (!selectedAddress) {
+      setCouponError(
+        "Please select a delivery address first."
+      );
+      setCouponMessage("");
+      return;
+    }
+
+    if (items.length === 0) {
+      setCouponError(
+        "Your shopping bag is empty."
+      );
+      return;
+    }
+
+    const orderItems =
+      items.map((item) => ({
+        productId:
+          item.product.id,
+
+        size:
+          item.size,
+
+        quantity:
+          item.quantity,
+      }));
+
+    try {
+      setApplyingCoupon(true);
+      setCouponError("");
+      setCouponMessage("");
+
+      const result =
+        await orderApi.validateCoupon({
+          code,
+
+          addressId:
+            selectedAddress,
+
+          paymentMethod,
+
+          items:
+            orderItems,
+        });
+
+      setAppliedCoupon({
+        code:
+          result.code || code,
+
+        discountINR:
+          Number(
+            result.discountINR ||
+            0
+          ),
+
+        discountedSubtotalINR:
+          Number(
+            result.discountedSubtotalINR ??
+            totalINR
+          ),
+
+        shippingINR:
+          Number(
+            result.shippingINR ??
+            0
+          ),
+
+        codFeeINR:
+          Number(
+            result.codFeeINR ??
+            0
+          ),
+
+        totalINR:
+          Number(
+            result.totalINR ??
+            totalINR
+          ),
+      });
+
+      setCouponInput(
+        result.code || code
+      );
+
+      setCouponMessage(
+        `${result.code || code} applied successfully.`
+      );
+
+    } catch (err) {
+      setAppliedCoupon(null);
+
+      setCouponError(
+        err.message ||
+        "This discount code could not be applied."
+      );
+
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
+
+
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+    setCouponMessage("");
+  }
+
+
   async function placeOrder() {
     if (!selectedAddress) {
       setError(
@@ -4061,10 +4200,16 @@ function CheckoutPage({
           await orderApi.create({
             addressId:
               selectedAddress,
+
             paymentMethod:
               "COD",
+
             items:
               orderItems,
+
+            couponCode:
+              appliedCoupon?.code ||
+              "",
           });
 
         setSuccessOrder(
@@ -4107,10 +4252,16 @@ function CheckoutPage({
         await orderApi.create({
           addressId:
             selectedAddress,
+
           paymentMethod:
             "RAZORPAY",
+
           items:
             orderItems,
+
+          couponCode:
+            appliedCoupon?.code ||
+            "",
         });
 
       if (
@@ -4394,22 +4545,56 @@ function CheckoutPage({
     normalisedState ===
       "tn";
 
+  const discountAmount =
+    appliedCoupon
+      ? Number(
+          appliedCoupon.discountINR ||
+          0
+        )
+      : 0;
+
+  const discountedSubtotal =
+    Math.max(
+      0,
+      subtotal -
+      discountAmount
+    );
+
   const shipping =
-    subtotal >= 2999
-      ? 0
-      : isTamilNadu
-        ? 70
-        : 99;
+    appliedCoupon
+      ? Number(
+          appliedCoupon.shippingINR ??
+          0
+        )
+      : discountedSubtotal >= 2999
+        ? 0
+        : isTamilNadu
+          ? 70
+          : 99;
 
   const codFee =
     paymentMethod === "COD"
-      ? 30
+      ? appliedCoupon
+        ? Number(
+            appliedCoupon.codFeeINR ??
+            30
+          )
+        : 30
       : 0;
 
   const finalTotal =
-    subtotal +
-    shipping +
-    codFee;
+    appliedCoupon
+      ? Number(
+          appliedCoupon.totalINR ??
+          (
+            discountedSubtotal +
+            shipping +
+            codFee
+          )
+        )
+      : discountedSubtotal +
+        shipping +
+        codFee;
 
 
   return (
@@ -4877,6 +5062,100 @@ function CheckoutPage({
             </strong>
 
           </div>
+
+
+          <div className="checkout-coupon">
+
+            <div className="checkout-coupon-title">
+              DISCOUNT CODE
+            </div>
+
+            <div className="checkout-coupon-controls">
+
+              <input
+                type="text"
+                value={couponInput}
+                placeholder="Enter code"
+                maxLength={50}
+                disabled={
+                  applyingCoupon ||
+                  Boolean(appliedCoupon)
+                }
+                onChange={(event) => {
+                  setCouponInput(
+                    event.target.value
+                      .toUpperCase()
+                  );
+
+                  setCouponError("");
+                  setCouponMessage("");
+                }}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !appliedCoupon
+                  ) {
+                    event.preventDefault();
+                    applyCoupon();
+                  }
+                }}
+              />
+
+              {appliedCoupon ? (
+                <button
+                  type="button"
+                  onClick={removeCoupon}
+                >
+                  REMOVE
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={
+                    applyingCoupon ||
+                    !couponInput.trim()
+                  }
+                  onClick={applyCoupon}
+                >
+                  {applyingCoupon
+                    ? "APPLYING..."
+                    : "APPLY"}
+                </button>
+              )}
+
+            </div>
+
+            {couponError && (
+              <div className="checkout-coupon-error">
+                {couponError}
+              </div>
+            )}
+
+            {couponMessage && (
+              <div className="checkout-coupon-success">
+                {couponMessage}
+              </div>
+            )}
+
+          </div>
+
+
+          {appliedCoupon && (
+            <div className="checkout-price-row checkout-discount-row">
+
+              <span>
+                Discount ({appliedCoupon.code})
+              </span>
+
+              <strong>
+                -₹
+                {discountAmount.toLocaleString(
+                  "en-IN"
+                )}
+              </strong>
+
+            </div>
+          )}
 
 
           <div className="checkout-price-row">
@@ -6631,6 +6910,787 @@ function AccountPage({
   );
 }
 
+function AdminDiscountCodesPanel() {
+  const emptyForm = {
+    code: "",
+    discountType: "PERCENTAGE",
+    discountValue: "",
+    minimumOrderINR: "0",
+    expiresAt: "",
+    active: true,
+  };
+
+  const [codes, setCodes] =
+    useState([]);
+
+  const [form, setForm] =
+    useState(emptyForm);
+
+  const [editingId, setEditingId] =
+    useState(null);
+
+  const [loadingCodes, setLoadingCodes] =
+    useState(true);
+
+  const [savingCode, setSavingCode] =
+    useState(false);
+
+  const [codeMessage, setCodeMessage] =
+    useState("");
+
+  const [codeError, setCodeError] =
+    useState("");
+
+
+  async function loadCodes() {
+    try {
+      setLoadingCodes(true);
+      setCodeError("");
+
+      const result =
+        await adminApi.discountCodes();
+
+      setCodes(
+        result.discountCodes ||
+        []
+      );
+
+    } catch (err) {
+      setCodeError(
+        err.message ||
+        "Could not load discount codes."
+      );
+
+    } finally {
+      setLoadingCodes(false);
+    }
+  }
+
+
+  useEffect(() => {
+    loadCodes();
+  }, []);
+
+
+  function resetForm() {
+    setEditingId(null);
+
+    setForm({
+      ...emptyForm,
+    });
+  }
+
+
+  function editCode(code) {
+    setEditingId(
+      code.id
+    );
+
+    setForm({
+      code:
+        code.code || "",
+
+      discountType:
+        code.discountType ||
+        "PERCENTAGE",
+
+      discountValue:
+        String(
+          code.discountValue ??
+          ""
+        ),
+
+      minimumOrderINR:
+        String(
+          code.minimumOrderINR ??
+          0
+        ),
+
+      expiresAt:
+        code.expiresAt
+          ? new Date(
+              code.expiresAt
+            )
+              .toISOString()
+              .slice(0, 16)
+          : "",
+
+      active:
+        Boolean(
+          code.active
+        ),
+    });
+
+    setCodeMessage("");
+    setCodeError("");
+  }
+
+
+  async function saveCode(event) {
+    event.preventDefault();
+
+    const code =
+      form.code
+        .trim()
+        .toUpperCase();
+
+    const discountValue =
+      Number(
+        form.discountValue
+      );
+
+    const minimumOrderINR =
+      Number(
+        form.minimumOrderINR ||
+        0
+      );
+
+    if (!code) {
+      setCodeError(
+        "Enter a discount code."
+      );
+      return;
+    }
+
+    if (
+      !Number.isInteger(
+        discountValue
+      ) ||
+      discountValue <= 0
+    ) {
+      setCodeError(
+        "Enter a valid discount value."
+      );
+      return;
+    }
+
+    if (
+      form.discountType ===
+        "PERCENTAGE" &&
+      discountValue > 100
+    ) {
+      setCodeError(
+        "Percentage cannot exceed 100%."
+      );
+      return;
+    }
+
+    if (
+      !Number.isInteger(
+        minimumOrderINR
+      ) ||
+      minimumOrderINR < 0
+    ) {
+      setCodeError(
+        "Enter a valid minimum order."
+      );
+      return;
+    }
+
+    const payload = {
+      code,
+
+      discountType:
+        form.discountType,
+
+      discountValue,
+
+      minimumOrderINR,
+
+      expiresAt:
+        form.expiresAt
+          ? new Date(
+              form.expiresAt
+            ).toISOString()
+          : null,
+
+      active:
+        Boolean(
+          form.active
+        ),
+    };
+
+    try {
+      setSavingCode(true);
+      setCodeError("");
+      setCodeMessage("");
+
+      if (editingId) {
+        await adminApi
+          .updateDiscountCode(
+            editingId,
+            payload
+          );
+
+        setCodeMessage(
+          `${code} updated successfully.`
+        );
+
+      } else {
+        await adminApi
+          .createDiscountCode(
+            payload
+          );
+
+        setCodeMessage(
+          `${code} created successfully.`
+        );
+      }
+
+      resetForm();
+
+      await loadCodes();
+
+    } catch (err) {
+      setCodeError(
+        err.message ||
+        "Could not save discount code."
+      );
+
+    } finally {
+      setSavingCode(false);
+    }
+  }
+
+
+  async function toggleCode(code) {
+    try {
+      setCodeError("");
+      setCodeMessage("");
+
+      await adminApi
+        .updateDiscountCode(
+          code.id,
+          {
+            code:
+              code.code,
+
+            discountType:
+              code.discountType,
+
+            discountValue:
+              Number(
+                code.discountValue
+              ),
+
+            minimumOrderINR:
+              Number(
+                code.minimumOrderINR ||
+                0
+              ),
+
+            expiresAt:
+              code.expiresAt ||
+              null,
+
+            active:
+              !code.active,
+          }
+        );
+
+      setCodeMessage(
+        code.active
+          ? `${code.code} deactivated.`
+          : `${code.code} activated.`
+      );
+
+      await loadCodes();
+
+    } catch (err) {
+      setCodeError(
+        err.message ||
+        "Could not update discount code."
+      );
+    }
+  }
+
+
+  async function deleteCode(code) {
+    if (
+      !window.confirm(
+        `Delete discount code ${code.code}?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setCodeError("");
+      setCodeMessage("");
+
+      await adminApi
+        .deleteDiscountCode(
+          code.id
+        );
+
+      if (
+        editingId ===
+        code.id
+      ) {
+        resetForm();
+      }
+
+      setCodeMessage(
+        `${code.code} deleted.`
+      );
+
+      await loadCodes();
+
+    } catch (err) {
+      setCodeError(
+        err.message ||
+        "Could not delete discount code."
+      );
+    }
+  }
+
+
+  return (
+    <section className="admin-discounts">
+
+      <div className="admin-discount-header">
+
+        <small>
+          PROMOTIONS
+        </small>
+
+        <h2>
+          Discount Codes
+        </h2>
+
+        <p>
+          Create percentage or fixed discounts
+          customers can use at checkout.
+        </p>
+
+      </div>
+
+
+      {codeMessage && (
+        <div className="discount-admin-message success">
+          {codeMessage}
+        </div>
+      )}
+
+
+      {codeError && (
+        <div className="discount-admin-message error">
+          {codeError}
+        </div>
+      )}
+
+
+      <form
+        className="admin-discount-form"
+        onSubmit={saveCode}
+      >
+
+        <div className="admin-discount-form-title">
+
+          <h3>
+            {editingId
+              ? "Edit Discount"
+              : "Create Discount"}
+          </h3>
+
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+            >
+              CANCEL EDIT
+            </button>
+          )}
+
+        </div>
+
+
+        <div className="admin-discount-grid">
+
+          <label>
+
+            <span>
+              DISCOUNT CODE
+            </span>
+
+            <input
+              type="text"
+              value={form.code}
+              maxLength={50}
+              placeholder="WELCOME10"
+              onChange={(event) =>
+                setForm(
+                  (current) => ({
+                    ...current,
+
+                    code:
+                      event.target.value
+                        .toUpperCase()
+                        .replace(
+                          /\s+/g,
+                          ""
+                        ),
+                  })
+                )
+              }
+            />
+
+          </label>
+
+
+          <label>
+
+            <span>
+              DISCOUNT TYPE
+            </span>
+
+            <select
+              value={
+                form.discountType
+              }
+              onChange={(event) =>
+                setForm(
+                  (current) => ({
+                    ...current,
+
+                    discountType:
+                      event.target.value,
+                  })
+                )
+              }
+            >
+
+              <option value="PERCENTAGE">
+                Percentage (%)
+              </option>
+
+              <option value="FIXED">
+                Fixed amount (₹)
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <label>
+
+            <span>
+              VALUE
+            </span>
+
+            <input
+              type="number"
+              min="1"
+              max={
+                form.discountType ===
+                "PERCENTAGE"
+                  ? 100
+                  : undefined
+              }
+              step="1"
+              value={
+                form.discountValue
+              }
+              placeholder={
+                form.discountType ===
+                "PERCENTAGE"
+                  ? "10"
+                  : "200"
+              }
+              onChange={(event) =>
+                setForm(
+                  (current) => ({
+                    ...current,
+
+                    discountValue:
+                      event.target.value,
+                  })
+                )
+              }
+            />
+
+          </label>
+
+
+          <label>
+
+            <span>
+              MINIMUM ORDER ₹
+            </span>
+
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={
+                form.minimumOrderINR
+              }
+              onChange={(event) =>
+                setForm(
+                  (current) => ({
+                    ...current,
+
+                    minimumOrderINR:
+                      event.target.value,
+                  })
+                )
+              }
+            />
+
+          </label>
+
+
+          <label>
+
+            <span>
+              EXPIRY
+            </span>
+
+            <input
+              type="datetime-local"
+              value={
+                form.expiresAt
+              }
+              onChange={(event) =>
+                setForm(
+                  (current) => ({
+                    ...current,
+
+                    expiresAt:
+                      event.target.value,
+                  })
+                )
+              }
+            />
+
+          </label>
+
+
+          <label className="admin-discount-active">
+
+            <input
+              type="checkbox"
+              checked={
+                form.active
+              }
+              onChange={(event) =>
+                setForm(
+                  (current) => ({
+                    ...current,
+
+                    active:
+                      event.target.checked,
+                  })
+                )
+              }
+            />
+
+            <span>
+              ACTIVE
+            </span>
+
+          </label>
+
+        </div>
+
+
+        <button
+          type="submit"
+          className="admin-discount-save"
+          disabled={savingCode}
+        >
+          {savingCode
+            ? "SAVING..."
+            : editingId
+              ? "UPDATE DISCOUNT"
+              : "CREATE DISCOUNT"}
+        </button>
+
+      </form>
+
+
+      <div className="admin-discount-list">
+
+        <div className="admin-discount-list-title">
+
+          <h3>
+            Current Codes
+          </h3>
+
+          <strong>
+            {codes.length} CODE
+            {codes.length === 1
+              ? ""
+              : "S"}
+          </strong>
+
+        </div>
+
+
+        {loadingCodes ? (
+
+          <div className="admin-discount-empty">
+            Loading discount codes...
+          </div>
+
+        ) : codes.length === 0 ? (
+
+          <div className="admin-discount-empty">
+            No discount codes yet.
+          </div>
+
+        ) : (
+
+          <div className="admin-discount-table-wrap">
+
+            <table className="admin-discount-table">
+
+              <thead>
+                <tr>
+                  <th>CODE</th>
+                  <th>DISCOUNT</th>
+                  <th>MINIMUM</th>
+                  <th>EXPIRY</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {codes.map(
+                  (code) => {
+
+                    const expired =
+                      code.expiresAt &&
+                      new Date(
+                        code.expiresAt
+                      ).getTime() <=
+                        Date.now();
+
+                    const status =
+                      !code.active
+                        ? "INACTIVE"
+                        : expired
+                          ? "EXPIRED"
+                          : "ACTIVE";
+
+                    return (
+                      <tr key={code.id}>
+
+                        <td>
+                          <strong>
+                            {code.code}
+                          </strong>
+                        </td>
+
+                        <td>
+                          {code.discountType ===
+                          "PERCENTAGE"
+                            ? `${code.discountValue}%`
+                            : `₹${Number(
+                                code.discountValue
+                              ).toLocaleString(
+                                "en-IN"
+                              )}`}
+                        </td>
+
+                        <td>
+                          {Number(
+                            code.minimumOrderINR ||
+                            0
+                          ) === 0
+                            ? "NONE"
+                            : `₹${Number(
+                                code.minimumOrderINR
+                              ).toLocaleString(
+                                "en-IN"
+                              )}`}
+                        </td>
+
+                        <td>
+                          {code.expiresAt
+                            ? new Date(
+                                code.expiresAt
+                              ).toLocaleString(
+                                "en-IN"
+                              )
+                            : "NO EXPIRY"}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`discount-status ${status.toLowerCase()}`}
+                          >
+                            {status}
+                          </span>
+                        </td>
+
+                        <td>
+
+                          <div className="discount-actions">
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                editCode(
+                                  code
+                                )
+                              }
+                            >
+                              EDIT
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleCode(
+                                  code
+                                )
+                              }
+                            >
+                              {code.active
+                                ? "DEACTIVATE"
+                                : "ACTIVATE"}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() =>
+                                deleteCode(
+                                  code
+                                )
+                              }
+                            >
+                              DELETE
+                            </button>
+
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    );
+                  }
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </div>
+
+    </section>
+  );
+}
+
+
 function AdminPage({
   navigate,
 }) {
@@ -7555,7 +8615,25 @@ function AdminPage({
             Products
           </button>
 
-        </nav>
+
+
+          <button
+            className={
+              tab ===
+              "discounts"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              changeTab(
+                "discounts"
+              )
+            }
+          >
+            Discount Codes
+          </button>
+
+</nav>
 
 
         <button
@@ -7584,10 +8662,13 @@ function AdminPage({
               {tab ===
               "dashboard"
                 ? "Dashboard"
-                : tab
-                    .charAt(0)
-                    .toUpperCase() +
-                  tab.slice(1)}
+                : tab ===
+                    "discounts"
+                  ? "Discount Codes"
+                  : tab
+                      .charAt(0)
+                      .toUpperCase() +
+                    tab.slice(1)}
             </h1>
 
           </div>
@@ -7630,6 +8711,12 @@ function AdminPage({
           <div className="auth-message error">
             {error}
           </div>
+        )}
+
+
+        {tab ===
+          "discounts" && (
+          <AdminDiscountCodesPanel />
         )}
 
 
@@ -10907,7 +11994,7 @@ function Footer({
           INDIA
         </span>
       </div>
-    
+
         <div className="footer-legal-links">
 
           <button

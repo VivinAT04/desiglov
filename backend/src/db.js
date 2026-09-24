@@ -874,6 +874,75 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
+  // DISCOUNT CODES
+  // =========================================================
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS discount_codes (
+      id UUID PRIMARY KEY,
+
+      code VARCHAR(50)
+        NOT NULL,
+
+      discount_type VARCHAR(20)
+        NOT NULL
+        CHECK (
+          discount_type IN (
+            'PERCENTAGE',
+            'FIXED'
+          )
+        ),
+
+      discount_value INTEGER
+        NOT NULL
+        CHECK (
+          discount_value > 0
+        ),
+
+      minimum_order_inr INTEGER
+        NOT NULL
+        DEFAULT 0
+        CHECK (
+          minimum_order_inr >= 0
+        ),
+
+      expires_at TIMESTAMPTZ,
+
+      active BOOLEAN
+        NOT NULL
+        DEFAULT TRUE,
+
+      created_at TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
+
+      updated_at TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS discount_codes_code_unique
+    ON discount_codes (
+      UPPER(code)
+    );
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS discount_code VARCHAR(50);
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS discount_inr INTEGER
+    NOT NULL
+    DEFAULT 0;
+  `);
+
+
+  // =========================================================
   // ORDER ITEMS
   // =========================================================
 

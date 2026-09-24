@@ -19,6 +19,13 @@ const orderSchema = z.object({
     "RAZORPAY",
   ]),
 
+  couponCode: z
+    .string()
+    .trim()
+    .max(50)
+    .optional()
+    .default(""),
+
   items: z
     .array(
       z.object({
@@ -121,6 +128,149 @@ function calculatePaymentFee(
 }
 
 
+function normaliseCouponCode(
+  value
+) {
+  return String(value || "")
+    .trim()
+    .toUpperCase();
+}
+
+
+async function calculateCouponDiscount(
+  client,
+  couponCode,
+  subtotal
+) {
+  const code =
+    normaliseCouponCode(
+      couponCode
+    );
+
+  if (!code) {
+    return {
+      code: null,
+      discount: 0,
+      discountedSubtotal:
+        subtotal,
+    };
+  }
+
+  const result =
+    await client.query(
+      `
+      SELECT
+        code,
+        discount_type,
+        discount_value,
+        minimum_order_inr,
+        expires_at,
+        active
+      FROM discount_codes
+      WHERE UPPER(code) = UPPER($1)
+      LIMIT 1
+      `,
+      [code]
+    );
+
+  if (!result.rowCount) {
+    const error =
+      new Error(
+        "Invalid discount code."
+      );
+
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const coupon =
+    result.rows[0];
+
+  if (!coupon.active) {
+    const error =
+      new Error(
+        "This discount code is not active."
+      );
+
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (
+    coupon.expires_at &&
+    new Date(
+      coupon.expires_at
+    ).getTime() <= Date.now()
+  ) {
+    const error =
+      new Error(
+        "This discount code has expired."
+      );
+
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const minimum =
+    Number(
+      coupon.minimum_order_inr ||
+      0
+    );
+
+  if (subtotal < minimum) {
+    const error =
+      new Error(
+        `Minimum order value for ${code} is ₹${minimum.toLocaleString("en-IN")}.`
+      );
+
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const value =
+    Number(
+      coupon.discount_value
+    );
+
+  let discount;
+
+  if (
+    coupon.discount_type ===
+    "PERCENTAGE"
+  ) {
+    discount =
+      Math.round(
+        subtotal *
+        value /
+        100
+      );
+  } else {
+    discount = value;
+  }
+
+  discount =
+    Math.max(
+      0,
+      Math.min(
+        subtotal,
+        discount
+      )
+    );
+
+  return {
+    code:
+      normaliseCouponCode(
+        coupon.code
+      ),
+
+    discount,
+
+    discountedSubtotal:
+      subtotal - discount,
+  };
+}
+
+
 function getRazorpayMode() {
   return (
     process.env.RAZORPAY_MODE ||
@@ -186,6 +336,7 @@ async function validateOrder(
   addressId,
   items,
   paymentMethod,
+  couponCode = "",
   lockProducts = false
 ) {
   const addressResult =
@@ -402,9 +553,16 @@ async function validateOrder(
     });
   }
 
+  const coupon =
+    await calculateCouponDiscount(
+      client,
+      couponCode,
+      subtotal
+    );
+
   const shipping =
     calculateShipping(
-      subtotal,
+      coupon.discountedSubtotal,
       address.state
     );
 
@@ -414,7 +572,7 @@ async function validateOrder(
     );
 
   const total =
-    subtotal +
+    coupon.discountedSubtotal +
     shipping +
     paymentFee;
 
@@ -422,6 +580,16 @@ async function validateOrder(
     address,
     validatedItems,
     subtotal,
+
+    discountCode:
+      coupon.code,
+
+    discount:
+      coupon.discount,
+
+    discountedSubtotal:
+      coupon.discountedSubtotal,
+
     shipping,
     paymentFee,
     total,
@@ -622,6 +790,135 @@ async function reduceStock(
 
 
 // ===========================================================
+// VALIDATE DISCOUNT CODE
+// ===========================================================
+
+router.post(
+  "/validate-coupon",
+  requireAuth,
+  async (
+    req,
+    res,
+    next
+  ) => {
+    const schema =
+      z.object({
+        code:
+          z.string()
+            .trim()
+            .min(
+              1,
+              "Enter a discount code."
+            )
+            .max(50),
+
+        addressId:
+          z.string()
+            .uuid(),
+
+        paymentMethod:
+          z.enum([
+            "COD",
+            "RAZORPAY",
+          ]),
+
+        items:
+          z.array(
+            z.object({
+              productId:
+                z.number()
+                  .int()
+                  .positive(),
+
+              size:
+                z.string()
+                  .min(1)
+                  .max(50),
+
+              quantity:
+                z.number()
+                  .int()
+                  .min(1)
+                  .max(10),
+            })
+          )
+          .min(
+            1,
+            "Your bag is empty."
+          ),
+      });
+
+    const parsed =
+      schema.safeParse(
+        req.body
+      );
+
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({
+          error:
+            parsed.error
+              .issues[0]
+              ?.message ||
+            "Please check the discount code.",
+        });
+    }
+
+    const client =
+      await pool.connect();
+
+    try {
+      const validation =
+        await validateOrder(
+          client,
+          req.userId,
+          parsed.data.addressId,
+          parsed.data.items,
+          parsed.data.paymentMethod,
+          parsed.data.code,
+          false
+        );
+
+      return res.json({
+        valid: true,
+
+        code:
+          validation.discountCode,
+
+        subtotalINR:
+          validation.subtotal,
+
+        discountINR:
+          validation.discount,
+
+        discountedSubtotalINR:
+          validation.discountedSubtotal,
+
+        shippingINR:
+          validation.shipping,
+
+        codFeeINR:
+          validation.paymentFee,
+
+        totalINR:
+          validation.total,
+
+        message:
+          `${validation.discountCode} applied successfully.`,
+      });
+
+    } catch (error) {
+      next(error);
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// ===========================================================
 // CREATE ORDER
 //
 // COD:
@@ -660,6 +957,7 @@ router.post(
     const {
       addressId,
       paymentMethod,
+      couponCode,
       items,
     } = parsed.data;
 
@@ -684,6 +982,7 @@ router.post(
           addressId,
           items,
           paymentMethod,
+          couponCode,
           true
         );
 
@@ -691,6 +990,9 @@ router.post(
         address,
         validatedItems,
         subtotal,
+        discountCode,
+        discount,
+        discountedSubtotal,
         shipping,
         paymentFee,
         total,
@@ -723,6 +1025,8 @@ router.post(
               payment_status,
               payment_method,
               subtotal_inr,
+              discount_code,
+              discount_inr,
               shipping_inr,
               cod_fee_inr,
               total_inr
@@ -738,7 +1042,9 @@ router.post(
               $5,
               $6,
               $7,
-              $8
+              $8,
+              $9,
+              $10
             )
             RETURNING *
             `,
@@ -748,6 +1054,8 @@ router.post(
               req.userId,
               addressId,
               subtotal,
+              discountCode,
+              discount,
               shipping,
               paymentFee,
               total,
@@ -797,6 +1105,14 @@ router.post(
 
               subtotalINR:
                 subtotal,
+
+              discountCode,
+
+              discountINR:
+                discount,
+
+              discountedSubtotalINR:
+                discountedSubtotal,
 
               shippingINR:
                 shipping,
@@ -857,6 +1173,8 @@ router.post(
           payment_status,
           payment_method,
           subtotal_inr,
+          discount_code,
+          discount_inr,
           shipping_inr,
           cod_fee_inr,
           total_inr,
@@ -876,6 +1194,8 @@ router.post(
           $6,
           $7,
           $8,
+          $9,
+          $10,
           NULL,
           TRUE,
           NOW() + INTERVAL '15 minutes'
@@ -887,6 +1207,8 @@ router.post(
           req.userId,
           addressId,
           subtotal,
+          discountCode,
+          discount,
           shipping,
           paymentFee,
           total,

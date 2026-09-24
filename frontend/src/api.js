@@ -180,10 +180,32 @@ export const orderApi = {
     );
   },
 
+  validateCoupon({
+    code,
+    addressId,
+    paymentMethod,
+    items,
+  }) {
+    return request(
+      "/orders/validate-coupon",
+      {
+        method: "POST",
+        body:
+          JSON.stringify({
+            code,
+            addressId,
+            paymentMethod,
+            items,
+          }),
+      }
+    );
+  },
+
   create({
     addressId,
     paymentMethod,
     items,
+    couponCode = "",
   }) {
     return request(
       "/orders",
@@ -194,6 +216,7 @@ export const orderApi = {
             addressId,
             paymentMethod,
             items,
+            couponCode,
           }),
       }
     );
@@ -245,6 +268,54 @@ export const adminApi = {
   dashboard() {
     return request(
       "/admin/dashboard"
+    );
+  },
+
+  discountCodes() {
+    return request(
+      "/admin/discount-codes"
+    );
+  },
+
+  createDiscountCode(
+    data
+  ) {
+    return request(
+      "/admin/discount-codes",
+      {
+        method: "POST",
+        body:
+          JSON.stringify(
+            data
+          ),
+      }
+    );
+  },
+
+  updateDiscountCode(
+    id,
+    data
+  ) {
+    return request(
+      `/admin/discount-codes/${id}`,
+      {
+        method: "PATCH",
+        body:
+          JSON.stringify(
+            data
+          ),
+      }
+    );
+  },
+
+  deleteDiscountCode(
+    id
+  ) {
+    return request(
+      `/admin/discount-codes/${id}`,
+      {
+        method: "DELETE",
+      }
     );
   },
 

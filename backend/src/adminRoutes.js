@@ -33,6 +33,418 @@ router.use(
 );
 
 
+
+
+// ===========================================================
+// DISCOUNT CODES
+// ===========================================================
+
+const discountCodeSchema =
+  z.object({
+    code:
+      z.string()
+        .trim()
+        .min(
+          1,
+          "Discount code is required."
+        )
+        .max(50),
+
+    discountType:
+      z.enum([
+        "PERCENTAGE",
+        "FIXED",
+      ]),
+
+    discountValue:
+      z.coerce
+        .number()
+        .int()
+        .positive(
+          "Discount value must be greater than zero."
+        ),
+
+    minimumOrderINR:
+      z.coerce
+        .number()
+        .int()
+        .min(0)
+        .default(0),
+
+    expiresAt:
+      z.union([
+        z.string(),
+        z.null(),
+      ])
+        .optional(),
+
+    active:
+      z.boolean()
+        .default(true),
+  })
+  .superRefine(
+    (
+      value,
+      ctx
+    ) => {
+      if (
+        value.discountType ===
+          "PERCENTAGE" &&
+        value.discountValue > 100
+      ) {
+        ctx.addIssue({
+          code:
+            z.ZodIssueCode.custom,
+
+          path: [
+            "discountValue",
+          ],
+
+          message:
+            "Percentage discount cannot be more than 100%.",
+        });
+      }
+
+      if (
+        value.expiresAt &&
+        Number.isNaN(
+          new Date(
+            value.expiresAt
+          ).getTime()
+        )
+      ) {
+        ctx.addIssue({
+          code:
+            z.ZodIssueCode.custom,
+
+          path: [
+            "expiresAt",
+          ],
+
+          message:
+            "Please enter a valid expiry date.",
+        });
+      }
+    }
+  );
+
+
+function adminDiscountCode(
+  row
+) {
+  return {
+    id:
+      row.id,
+
+    code:
+      row.code,
+
+    discountType:
+      row.discount_type,
+
+    discountValue:
+      Number(
+        row.discount_value
+      ),
+
+    minimumOrderINR:
+      Number(
+        row.minimum_order_inr ||
+        0
+      ),
+
+    expiresAt:
+      row.expires_at,
+
+    active:
+      Boolean(
+        row.active
+      ),
+
+    createdAt:
+      row.created_at,
+
+    updatedAt:
+      row.updated_at,
+  };
+}
+
+
+router.get(
+  "/discount-codes",
+  async (
+    req,
+    res,
+    next
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          SELECT *
+          FROM discount_codes
+          ORDER BY created_at DESC
+          `
+        );
+
+      return res.json({
+        discountCodes:
+          result.rows.map(
+            adminDiscountCode
+          ),
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
+router.post(
+  "/discount-codes",
+  async (
+    req,
+    res,
+    next
+  ) => {
+    const parsed =
+      discountCodeSchema
+        .safeParse(
+          req.body
+        );
+
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({
+          error:
+            parsed.error
+              .issues[0]
+              ?.message ||
+            "Please check the discount code.",
+        });
+    }
+
+    const data =
+      parsed.data;
+
+    const code =
+      data.code
+        .trim()
+        .toUpperCase();
+
+    try {
+      const result =
+        await pool.query(
+          `
+          INSERT INTO discount_codes (
+            id,
+            code,
+            discount_type,
+            discount_value,
+            minimum_order_inr,
+            expires_at,
+            active
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7
+          )
+          RETURNING *
+          `,
+          [
+            crypto.randomUUID(),
+            code,
+            data.discountType,
+            data.discountValue,
+            data.minimumOrderINR,
+            data.expiresAt
+              ? new Date(
+                  data.expiresAt
+                )
+              : null,
+            data.active,
+          ]
+        );
+
+      return res
+        .status(201)
+        .json({
+          message:
+            `${code} created.`,
+
+          discountCode:
+            adminDiscountCode(
+              result.rows[0]
+            ),
+        });
+
+    } catch (error) {
+      if (
+        error?.code === "23505"
+      ) {
+        return res
+          .status(409)
+          .json({
+            error:
+              "That discount code already exists.",
+          });
+      }
+
+      next(error);
+    }
+  }
+);
+
+
+router.patch(
+  "/discount-codes/:id",
+  async (
+    req,
+    res,
+    next
+  ) => {
+    const parsed =
+      discountCodeSchema
+        .safeParse(
+          req.body
+        );
+
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({
+          error:
+            parsed.error
+              .issues[0]
+              ?.message ||
+            "Please check the discount code.",
+        });
+    }
+
+    const data =
+      parsed.data;
+
+    const code =
+      data.code
+        .trim()
+        .toUpperCase();
+
+    try {
+      const result =
+        await pool.query(
+          `
+          UPDATE discount_codes
+          SET
+            code = $1,
+            discount_type = $2,
+            discount_value = $3,
+            minimum_order_inr = $4,
+            expires_at = $5,
+            active = $6,
+            updated_at = NOW()
+          WHERE id = $7
+          RETURNING *
+          `,
+          [
+            code,
+            data.discountType,
+            data.discountValue,
+            data.minimumOrderINR,
+            data.expiresAt
+              ? new Date(
+                  data.expiresAt
+                )
+              : null,
+            data.active,
+            req.params.id,
+          ]
+        );
+
+      if (!result.rowCount) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "Discount code not found.",
+          });
+      }
+
+      return res.json({
+        message:
+          `${code} updated.`,
+
+        discountCode:
+          adminDiscountCode(
+            result.rows[0]
+          ),
+      });
+
+    } catch (error) {
+      if (
+        error?.code === "23505"
+      ) {
+        return res
+          .status(409)
+          .json({
+            error:
+              "That discount code already exists.",
+          });
+      }
+
+      next(error);
+    }
+  }
+);
+
+
+router.delete(
+  "/discount-codes/:id",
+  async (
+    req,
+    res,
+    next
+  ) => {
+    try {
+      const result =
+        await pool.query(
+          `
+          DELETE FROM discount_codes
+          WHERE id = $1
+          RETURNING id, code
+          `,
+          [
+            req.params.id,
+          ]
+        );
+
+      if (!result.rowCount) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "Discount code not found.",
+          });
+      }
+
+      return res.json({
+        message:
+          `${result.rows[0].code} deleted.`,
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
 // ===========================================================
 // ADMIN SESSION CHECK
 // ===========================================================

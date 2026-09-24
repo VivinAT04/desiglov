@@ -13437,3 +13437,312 @@ input:disabled {
     font-size: 0.7em;
   }
 }
+
+
+/* DESIGLOV DISCOUNT CODES */
+
+.checkout-coupon {
+  margin: 18px 0;
+  padding: 18px 0;
+  border-top: 1px solid #e7ddd7;
+  border-bottom: 1px solid #e7ddd7;
+}
+
+.checkout-coupon-title {
+  margin-bottom: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.checkout-coupon-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.checkout-coupon-controls input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #d8ccc5;
+  background: #fff;
+  font: inherit;
+  text-transform: uppercase;
+}
+
+.checkout-coupon-controls button {
+  min-width: 90px;
+  height: 44px;
+  padding: 0 15px;
+  border: 1px solid #211d1a;
+  background: #211d1a;
+  color: #fff;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.checkout-coupon-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkout-coupon-error,
+.checkout-coupon-success {
+  margin-top: 9px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.checkout-coupon-error {
+  color: #9d4037;
+}
+
+.checkout-coupon-success {
+  color: #58744f;
+}
+
+.checkout-discount-row strong {
+  color: #a34f38;
+}
+
+
+.admin-discounts {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-discount-header,
+.admin-discount-form,
+.admin-discount-list {
+  padding: 30px;
+  border: 1px solid #e4d8d0;
+  background: #fff;
+}
+
+.admin-discount-header small {
+  color: #b77857;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.admin-discount-header h2 {
+  margin: 10px 0 8px;
+  font-family: Georgia, serif;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.admin-discount-header p {
+  margin: 0;
+  color: #746b66;
+}
+
+.discount-admin-message {
+  padding: 14px 16px;
+  border: 1px solid;
+  font-size: 12px;
+}
+
+.discount-admin-message.success {
+  border-color: #bfd0b8;
+  background: #f2f7ef;
+  color: #55714c;
+}
+
+.discount-admin-message.error {
+  border-color: #dfbbb5;
+  background: #fbf1ef;
+  color: #994a41;
+}
+
+.admin-discount-form-title,
+.admin-discount-list-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.admin-discount-form-title h3,
+.admin-discount-list-title h3 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.admin-discount-form-title button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.admin-discount-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-discount-grid label:not(.admin-discount-active) {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-discount-grid label > span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.admin-discount-grid input[type="text"],
+.admin-discount-grid input[type="number"],
+.admin-discount-grid input[type="datetime-local"],
+.admin-discount-grid select {
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #d8ccc5;
+  border-radius: 0;
+  background: #fff;
+  color: #211d1a;
+  font: inherit;
+}
+
+.admin-discount-active {
+  display: flex;
+  align-items: center;
+  align-self: end;
+  gap: 10px;
+  min-height: 48px;
+}
+
+.admin-discount-save {
+  margin-top: 22px;
+  padding: 14px 20px;
+  border: 1px solid #211d1a;
+  background: #211d1a;
+  color: #fff;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.admin-discount-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-discount-empty {
+  padding: 25px 0;
+  color: #746b66;
+}
+
+.admin-discount-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-discount-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-discount-table th,
+.admin-discount-table td {
+  padding: 15px 11px;
+  border-bottom: 1px solid #eee5df;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin-discount-table th {
+  color: #857972;
+  font-size: 8px;
+  letter-spacing: 0.13em;
+}
+
+.admin-discount-table td {
+  font-size: 11px;
+}
+
+.discount-status {
+  display: inline-block;
+  padding: 6px 8px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.discount-status.active {
+  background: #edf3e9;
+  color: #55714c;
+}
+
+.discount-status.inactive {
+  background: #efedeb;
+  color: #746b66;
+}
+
+.discount-status.expired {
+  background: #f7e9e6;
+  color: #994a41;
+}
+
+.discount-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.discount-actions button {
+  padding: 7px 8px;
+  border: 1px solid #d1c5be;
+  background: #fff;
+  color: #211d1a;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.discount-actions button.danger {
+  border-color: #dbaea7;
+  color: #994a41;
+}
+
+
+@media (max-width: 760px) {
+
+  .admin-discount-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-discount-header,
+  .admin-discount-form,
+  .admin-discount-list {
+    padding: 20px;
+  }
+
+  .admin-discount-form-title,
+  .admin-discount-list-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .checkout-coupon-controls {
+    flex-direction: column;
+  }
+
+  .checkout-coupon-controls button {
+    width: 100%;
+  }
+}
