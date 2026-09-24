@@ -271,20 +271,24 @@ export async function requireAdmin(
 
 export async function writeAdminAudit({
   adminUserId,
+  adminEmail = null,
   action,
   entityType,
   entityId = null,
-  details = {},
+  metadata = {},
+  ipAddress = null,
 }) {
   await pool.query(
     `
     INSERT INTO admin_audit_log (
       id,
       admin_user_id,
+      admin_email,
       action,
       entity_type,
       entity_id,
-      details
+      metadata,
+      ip_address
     )
     VALUES (
       gen_random_uuid(),
@@ -292,17 +296,21 @@ export async function writeAdminAudit({
       $2,
       $3,
       $4,
-      $5::jsonb
+      $5,
+      $6::jsonb,
+      $7
     )
     `,
     [
       adminUserId,
+      adminEmail,
       action,
       entityType,
       entityId,
       JSON.stringify(
-        details
+        metadata
       ),
+      ipAddress,
     ]
   );
 }

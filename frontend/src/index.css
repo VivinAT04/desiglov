@@ -12877,3 +12877,491 @@ button:first-child {
     width: 100%;
   }
 }
+
+
+/* ============================================================
+   DESIGLOV ORDER TRACKING
+   ============================================================ */
+
+.delivery-tracking {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #eadfd8;
+  background: #fffdfb;
+}
+
+.delivery-tracking-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.delivery-tracking-heading > div {
+  display: grid;
+  gap: 6px;
+}
+
+.delivery-tracking-heading small,
+.tracking-awb small,
+.delivery-tracking-cancelled small,
+.admin-tracking-title small,
+.admin-tracking-fields label > span {
+  color: var(--gold-dark);
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+}
+
+.delivery-tracking-heading strong,
+.delivery-tracking-cancelled strong {
+  font-family:
+    "Playfair Display",
+    serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.delivery-tracking-heading > span {
+  padding: 6px 10px;
+  border: 1px solid #e4dad4;
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.tracking-timeline {
+  display: grid;
+  grid-template-columns:
+    repeat(4, 1fr);
+  margin: 5px 0 24px;
+}
+
+.tracking-stage {
+  min-width: 0;
+  text-align: center;
+}
+
+.tracking-stage-track {
+  position: relative;
+  display: flex;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+}
+
+.tracking-stage-track::before,
+.tracking-stage-track::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 50%;
+  height: 1px;
+  background: #ddd6d2;
+}
+
+.tracking-stage-track::before {
+  left: 0;
+}
+
+.tracking-stage-track::after {
+  right: 0;
+}
+
+.tracking-stage:first-child
+.tracking-stage-track::before {
+  display: none;
+}
+
+.tracking-stage:last-child
+.tracking-stage-track::after {
+  display: none;
+}
+
+.tracking-stage.complete
+.tracking-stage-track::before,
+.tracking-stage.complete
+.tracking-stage-track::after {
+  background:
+    var(--gold-dark);
+}
+
+.tracking-stage.complete +
+.tracking-stage:not(.complete)
+.tracking-stage-track::before {
+  background:
+    var(--gold-dark);
+}
+
+.tracking-dot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d6cec9;
+  border-radius: 50%;
+  background: #fff;
+  color: #fff;
+  font-size: 9px;
+}
+
+.tracking-stage.complete
+.tracking-dot {
+  border-color:
+    var(--gold-dark);
+  background:
+    var(--gold-dark);
+}
+
+.tracking-stage-label {
+  display: block;
+  margin-top: 7px;
+  color: #9a908a;
+  font-size: 7px;
+  line-height: 1.4;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.tracking-stage.complete
+.tracking-stage-label {
+  color: var(--ink);
+}
+
+.tracking-awb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 25px;
+  padding-top: 18px;
+  border-top:
+    1px solid #eee6e1;
+}
+
+.tracking-awb > div {
+  display: grid;
+  gap: 6px;
+}
+
+.tracking-awb strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tracking-awb a {
+  margin-left: auto;
+  padding: 11px 15px;
+  border:
+    1px solid var(--ink);
+  color: var(--ink);
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-decoration: none;
+}
+
+.tracking-awaiting {
+  padding-top: 16px;
+  margin: 0;
+  border-top:
+    1px solid #eee6e1;
+  color: #887d77;
+  font-size: 9px;
+}
+
+.tracking-mobile-note {
+  margin: 14px 0 0;
+  color: #978b84;
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.delivery-tracking-cancelled {
+  display: grid;
+  gap: 7px;
+  color: #984f4f;
+}
+
+
+/* ADMIN DELIVERY TRACKING */
+
+.admin-tracking-panel {
+  width: 100%;
+  padding: 18px;
+  border:
+    1px solid #eadfd8;
+  background: #fffdfb;
+}
+
+.admin-tracking-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content:
+    space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.admin-tracking-title > div {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-tracking-title strong {
+  font-family:
+    "Playfair Display",
+    serif;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.admin-tracking-title > span {
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.admin-tracking-stages {
+  display: grid;
+  grid-template-columns:
+    repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-tracking-stages button {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px;
+  border:
+    1px solid #ded5cf;
+  background: #fff;
+  color: #8c817b;
+  cursor: pointer;
+  font-size: 7px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.admin-tracking-stages button span {
+  display: flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  border:
+    1px solid #d6cec9;
+  border-radius: 50%;
+  font-size: 8px;
+}
+
+.admin-tracking-stages
+button.active {
+  border-color:
+    var(--gold-dark);
+  background: #faf6ef;
+  color: var(--ink);
+}
+
+.admin-tracking-stages
+button.active span {
+  border-color:
+    var(--gold-dark);
+  background:
+    var(--gold-dark);
+  color: #fff;
+}
+
+.admin-tracking-fields {
+  display: grid;
+  grid-template-columns:
+    160px
+    minmax(180px, 1fr)
+    auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.admin-tracking-fields label {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-tracking-fields input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border:
+    1px solid
+    var(--champagne);
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  font-size: 10px;
+}
+
+.admin-tracking-fields
+input:disabled {
+  background: #f7f3ef;
+  color: #81766f;
+}
+
+.admin-save-tracking {
+  min-height: 42px;
+  padding: 0 16px;
+  border:
+    1px solid var(--ink);
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+}
+
+.admin-save-tracking:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.admin-cancel-order {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9b5a5a;
+  cursor: pointer;
+  font-size: 7px;
+  letter-spacing: 1px;
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .delivery-tracking {
+    padding: 16px 10px;
+  }
+
+  .delivery-tracking-heading {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tracking-stage-label {
+    font-size: 6px;
+  }
+
+  .tracking-awb {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tracking-awb a {
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .admin-tracking-stages {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .admin-tracking-fields {
+    grid-template-columns: 1fr;
+  }
+}
+/* ORDER TRACKING DESKTOP LAYOUT FIX */
+
+/*
+ * The delivery tracking component needs the full order-card width.
+ * Previously .admin-order-controls forced it into a 250px column.
+ */
+.admin-order-controls {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+/* Never allow the tracking panel to overflow its parent. */
+.admin-tracking-panel {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Keep all four delivery stages on one clean desktop row. */
+.admin-tracking-stages {
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-tracking-stages button {
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/*
+ * Courier + AWB + Save button.
+ * AWB receives the flexible space.
+ */
+.admin-tracking-fields {
+  width: 100%;
+  grid-template-columns:
+    minmax(140px, 0.7fr)
+    minmax(220px, 1fr)
+    auto;
+}
+
+/* Prevent inputs from forcing the grid wider. */
+.admin-tracking-fields label,
+.admin-tracking-fields input {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Payment/status information stays outside the tracking controls. */
+.admin-order-controls > div {
+  min-width: 0;
+}
+
+/* Tablet */
+@media (max-width: 1050px) {
+  .admin-tracking-stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-tracking-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-save-tracking {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .admin-order-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tracking-stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-tracking-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-save-tracking {
+    grid-column: auto;
+    width: 100%;
+  }
+}

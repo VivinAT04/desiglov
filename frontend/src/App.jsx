@@ -4917,6 +4917,393 @@ function CheckoutBlock({
 
 
 
+
+const DELIVERY_TRACKING_STAGES = [
+  {
+    key: "PLACED",
+    label: "Order Placed",
+  },
+  {
+    key: "DISPATCHED",
+    label: "Dispatched",
+  },
+  {
+    key: "ON_THE_WAY",
+    label: "On the Way",
+  },
+  {
+    key: "DELIVERED",
+    label: "Delivered",
+  },
+];
+
+function deliveryTrackingIndex(status) {
+  if (status === "DELIVERED") {
+    return 3;
+  }
+
+  if (
+    status === "ON_THE_WAY" ||
+    status === "SHIPPED"
+  ) {
+    return 2;
+  }
+
+  if (status === "DISPATCHED") {
+    return 1;
+  }
+
+  return 0;
+}
+
+function customerTrackingStatus(status) {
+  if (status === "DELIVERED") {
+    return "Delivered";
+  }
+
+  if (
+    status === "ON_THE_WAY" ||
+    status === "SHIPPED"
+  ) {
+    return "On the Way";
+  }
+
+  if (status === "DISPATCHED") {
+    return "Dispatched";
+  }
+
+  if (status === "CANCELLED") {
+    return "Cancelled";
+  }
+
+  return "Order Placed";
+}
+
+function OrderTrackingTimeline({
+  order,
+}) {
+  if (order.status === "CANCELLED") {
+    return (
+      <div className="delivery-tracking delivery-tracking-cancelled">
+        <small>
+          DELIVERY TRACKING
+        </small>
+
+        <strong>
+          Order Cancelled
+        </strong>
+      </div>
+    );
+  }
+
+  const activeIndex =
+    deliveryTrackingIndex(
+      order.status
+    );
+
+  return (
+    <div className="delivery-tracking">
+      <div className="delivery-tracking-heading">
+        <div>
+          <small>
+            DELIVERY TRACKING
+          </small>
+
+          <strong>
+            {customerTrackingStatus(
+              order.status
+            )}
+          </strong>
+        </div>
+
+        <span>
+          Delhivery
+        </span>
+      </div>
+
+      <div className="tracking-timeline">
+        {DELIVERY_TRACKING_STAGES.map(
+          (stage, index) => {
+            const complete =
+              index <= activeIndex;
+
+            return (
+              <div
+                key={stage.key}
+                className={`tracking-stage ${
+                  complete
+                    ? "complete"
+                    : ""
+                }`}
+              >
+                <div className="tracking-stage-track">
+                  <span className="tracking-dot">
+                    {complete
+                      ? "✓"
+                      : ""}
+                  </span>
+                </div>
+
+                <span className="tracking-stage-label">
+                  {stage.label}
+                </span>
+              </div>
+            );
+          }
+        )}
+      </div>
+
+      {order.awbNumber ? (
+        <div className="tracking-awb">
+          <div>
+            <small>
+              COURIER
+            </small>
+
+            <strong>
+              {order.courier ||
+                "Delhivery"}
+            </strong>
+          </div>
+
+          <div>
+            <small>
+              AWB NUMBER
+            </small>
+
+            <strong>
+              {order.awbNumber}
+            </strong>
+          </div>
+
+          <a
+            href="https://www.delhivery.com/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            TRACK WITH DELHIVERY
+          </a>
+        </div>
+      ) : (
+        <p className="tracking-awaiting">
+          Tracking number will appear here
+          once your parcel is on the way.
+        </p>
+      )}
+
+      <p className="tracking-mobile-note">
+        Delivery updates may also be sent
+        to the WhatsApp/mobile number
+        provided with your order by the
+        courier.
+      </p>
+    </div>
+  );
+}
+
+function AdminOrderTracking({
+  order,
+  onSave,
+}) {
+  const normalisedStatus =
+    order.status === "SHIPPED"
+      ? "ON_THE_WAY"
+      : [
+          "PLACED",
+          "DISPATCHED",
+          "ON_THE_WAY",
+          "DELIVERED",
+          "CANCELLED",
+        ].includes(order.status)
+        ? order.status
+        : "PLACED";
+
+  const [status, setStatus] =
+    useState(normalisedStatus);
+
+  const [awbNumber, setAwbNumber] =
+    useState(
+      order.awbNumber || ""
+    );
+
+  const [saving, setSaving] =
+    useState(false);
+
+  async function save() {
+    if (
+      status === "ON_THE_WAY" &&
+      !awbNumber.trim()
+    ) {
+      window.alert(
+        "Enter the Delhivery AWB number before marking this order On the Way."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      await onSave(
+        order.id,
+        status,
+        awbNumber.trim()
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="admin-tracking-panel">
+      <div className="admin-tracking-title">
+        <div>
+          <small>
+            DELIVERY TRACKING
+          </small>
+
+          <strong>
+            Delhivery
+          </strong>
+        </div>
+
+        <span>
+          {customerTrackingStatus(
+            status
+          )}
+        </span>
+      </div>
+
+      <div className="admin-tracking-stages">
+        {DELIVERY_TRACKING_STAGES.map(
+          (stage, index) => {
+            const active =
+              index <=
+              deliveryTrackingIndex(
+                status
+              );
+
+            return (
+              <button
+                type="button"
+                key={stage.key}
+                className={
+                  active
+                    ? "active"
+                    : ""
+                }
+                onClick={async () => {
+                  if (saving) {
+                    return;
+                  }
+
+                  if (
+                    stage.key ===
+                      "ON_THE_WAY" &&
+                    !awbNumber.trim()
+                  ) {
+                    window.alert(
+                      "Enter the Delhivery AWB number first, then click On the Way."
+                    );
+                    return;
+                  }
+
+                  const previousStatus =
+                    status;
+
+                  setStatus(
+                    stage.key
+                  );
+
+                  try {
+                    setSaving(true);
+
+                    await onSave(
+                      order.id,
+                      stage.key,
+                      awbNumber.trim()
+                    );
+                  } catch (err) {
+                    setStatus(
+                      previousStatus
+                    );
+
+                    window.alert(
+                      err.message ||
+                        "Could not update order tracking."
+                    );
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
+              >
+                <span>
+                  {active
+                    ? "✓"
+                    : index + 1}
+                </span>
+
+                {stage.label}
+              </button>
+            );
+          }
+        )}
+      </div>
+
+      <div className="admin-tracking-fields">
+        <label>
+          <span>
+            COURIER
+          </span>
+
+          <input
+            value="Delhivery"
+            disabled
+          />
+        </label>
+
+        <label>
+          <span>
+            AWB NUMBER
+          </span>
+
+          <input
+            value={awbNumber}
+            onChange={(event) =>
+              setAwbNumber(
+                event.target.value
+              )
+            }
+            placeholder="Enter Delhivery AWB"
+          />
+        </label>
+
+        <button
+          type="button"
+          className="admin-save-tracking"
+          onClick={save}
+          disabled={saving}
+        >
+          {saving
+            ? "SAVING..."
+            : "SAVE TRACKING"}
+        </button>
+      </div>
+
+      <button
+        type="button"
+        className="admin-cancel-order"
+        onClick={() =>
+          setStatus("CANCELLED")
+        }
+      >
+        MARK AS CANCELLED
+      </button>
+    </div>
+  );
+}
+
+
 function AccountPage({
   navigate,
 }) {
@@ -5607,6 +5994,10 @@ function AccountPage({
                           </span>
                         </div>
                       </div>
+
+                      <OrderTrackingTimeline
+                        order={order}
+                      />
 
                       {Array.isArray(order.items) &&
                       order.items.length > 0 ? (
@@ -6432,14 +6823,19 @@ function AdminPage({
 
   async function updateStatus(
     orderId,
-    status
+    status,
+    awbNumber = null
   ) {
 
     try {
 
+      setMessage("");
+      setError("");
+
       await adminApi.updateOrderStatus(
         orderId,
-        status
+        status,
+        awbNumber
       );
 
 
@@ -6461,6 +6857,8 @@ function AdminPage({
       setError(
         err.message
       );
+
+      throw err;
     }
   }
 
@@ -7398,43 +7796,10 @@ function AdminPage({
 
                         ORDER STATUS
 
-                        <select
-                          value={
-                            order.status
-                          }
-                          onChange={(e) =>
-                            updateStatus(
-                              order.id,
-                              e.target.value
-                            )
-                          }
-                        >
-
-                          <option value="PLACED">
-                            Placed
-                          </option>
-
-                          <option value="CONFIRMED">
-                            Confirmed
-                          </option>
-
-                          <option value="PACKED">
-                            Packed
-                          </option>
-
-                          <option value="SHIPPED">
-                            Shipped
-                          </option>
-
-                          <option value="DELIVERED">
-                            Delivered
-                          </option>
-
-                          <option value="CANCELLED">
-                            Cancelled
-                          </option>
-
-                        </select>
+                        <AdminOrderTracking
+                            order={order}
+                            onSave={updateStatus}
+                          />
 
                       </label>
 

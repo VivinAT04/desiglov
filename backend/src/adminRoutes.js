@@ -759,9 +759,18 @@ const statusSchema =
         "CONFIRMED",
         "PACKED",
         "SHIPPED",
+        "DISPATCHED",
+        "ON_THE_WAY",
         "DELIVERED",
         "CANCELLED",
       ]),
+
+    awbNumber:
+      z.string()
+        .trim()
+        .max(120)
+        .optional()
+        .nullable(),
   });
 
 
@@ -794,6 +803,46 @@ router.patch(
       }
 
 
+      if (
+        parsed.data.status === "ON_THE_WAY" &&
+        !String(parsed.data.awbNumber || "").trim()
+      ) {
+        const existing =
+          await pool.query(
+            `
+            SELECT awb_number
+            FROM orders
+            WHERE id = $1
+            `,
+            [req.params.id]
+          );
+
+        if (
+          existing.rowCount === 0
+        ) {
+          return res
+            .status(404)
+            .json({
+              error:
+                "Order not found.",
+            });
+        }
+
+        if (
+          !String(
+            existing.rows[0].awb_number || ""
+          ).trim()
+        ) {
+          return res
+            .status(400)
+            .json({
+              error:
+                "Enter the Delhivery AWB number before marking the order On the Way.",
+            });
+        }
+      }
+
+
       const result =
         await pool.query(
           `
@@ -801,17 +850,27 @@ router.patch(
 
           SET
             status = $1,
+            awb_number =
+              CASE
+                WHEN $2::text IS NULL
+                  THEN awb_number
+                ELSE NULLIF(TRIM($2::text), '')
+              END,
+            courier = 'Delhivery',
             updated_at = NOW()
 
-          WHERE id = $2
+          WHERE id = $3
 
           RETURNING
             id,
             order_number,
-            status
+            status,
+            courier,
+            awb_number
           `,
           [
             parsed.data.status,
+            parsed.data.awbNumber ?? null,
             req.params.id,
           ]
         );
@@ -831,29 +890,47 @@ router.patch(
       }
 
 
-      await writeAdminAudit(
-        req,
-        {
-          action:
-            "ORDER_STATUS_CHANGED",
+      await writeAdminAudit({
+        adminUserId:
+          req.admin?.id ||
+          req.userId ||
+          null,
 
-          entityType:
-            "order",
+        adminEmail:
+          req.admin?.email ||
+          req.userEmail ||
+          null,
 
-          entityId:
-            result.rows[0].id,
+        action:
+          "ORDER_STATUS_CHANGED",
 
-          metadata: {
-            orderNumber:
-              result.rows[0]
-                .order_number,
+        entityType:
+          "order",
 
-            status:
-              result.rows[0]
-                .status,
-          },
-        }
-      );
+        entityId:
+          result.rows[0].id,
+
+        metadata: {
+          orderNumber:
+            result.rows[0]
+              .order_number,
+
+          status:
+            result.rows[0]
+              .status,
+
+          courier:
+            result.rows[0]
+              .courier,
+
+          awbNumber:
+            result.rows[0]
+              .awb_number,
+        },
+
+        ipAddress:
+          req.ip || null,
+      });
 
 
       return res.json({
@@ -869,6 +946,14 @@ router.patch(
           status:
             result.rows[0]
               .status,
+
+          courier:
+            result.rows[0]
+              .courier || "Delhivery",
+
+          awbNumber:
+            result.rows[0]
+              .awb_number || "",
         },
       });
 
