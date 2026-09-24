@@ -392,6 +392,18 @@ export const adminApi = {
     );
   },
 
+  setProductCover(
+    id,
+    index
+  ) {
+    return request(
+      `/admin/products/${id}/images/${index}/cover`,
+      {
+        method: "PATCH",
+      }
+    );
+  },
+
   removeProductImage(
     id,
     index
@@ -432,5 +444,50 @@ export const productApi = {
         slug
       )}`
     );
+  },
+};
+
+
+
+
+// ============================================================
+// PRODUCT REVIEWS
+// ============================================================
+
+export const reviewApi = {
+  list(productId) {
+    return request(
+      `/reviews/product/${productId}`
+    );
+  },
+
+  save(productId, { rating, comment }) {
+    return request(
+      `/reviews/product/${productId}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          rating,
+          comment,
+        }),
+      }
+    );
+  },
+};
+
+// ============================================================
+// FEEDBACK
+// ============================================================
+
+export const feedbackApi = {
+  send({ name, email, comments }) {
+    return request("/feedback", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        email,
+        comments,
+      }),
+    });
   },
 };
