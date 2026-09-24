@@ -273,6 +273,39 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
+  // TIMED PRODUCT SALES
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS sale_price_inr INTEGER;
+  `);
+
+  await pool.query(`
+    ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ;
+  `);
+
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'products_sale_price_nonnegative'
+      ) THEN
+        ALTER TABLE products
+        ADD CONSTRAINT products_sale_price_nonnegative
+        CHECK (
+          sale_price_inr IS NULL
+          OR sale_price_inr >= 0
+        );
+      END IF;
+    END
+    $$;
+  `);
+
+  // =========================================================
   // PRODUCT REVIEWS
   // =========================================================
 
