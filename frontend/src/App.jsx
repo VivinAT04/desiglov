@@ -8053,7 +8053,7 @@ function ContactPage() {
       role: "Associate Software Engineer at Accenture",
       phone: "9344921188",
       phoneLink: "tel:+919344921188",
-      image: "/Founder1.png",
+      image: "/Founder1.jpg",
     },
     {
       number: "02",
