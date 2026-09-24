@@ -256,7 +256,8 @@ export const adminApi = {
 
   updateOrderStatus(
     id,
-    status
+    status,
+    awbNumber = null
   ) {
     return request(
       `/admin/orders/${id}/status`,
@@ -265,6 +266,7 @@ export const adminApi = {
         body:
           JSON.stringify({
             status,
+            awbNumber,
           }),
       }
     );

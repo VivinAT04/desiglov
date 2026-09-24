@@ -763,6 +763,23 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
+  // DELIVERY TRACKING
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS courier VARCHAR(80)
+    NOT NULL
+    DEFAULT 'Delhivery';
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS awb_number VARCHAR(120);
+  `);
+
+
+  // =========================================================
   // RAZORPAY PAYMENT REFERENCES
   // =========================================================
 

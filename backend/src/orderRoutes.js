@@ -1754,6 +1754,8 @@ router.get(
             o.id,
             o.order_number,
             o.status,
+            o.courier,
+            o.awb_number,
             o.payment_status,
             o.payment_method,
             o.subtotal_inr,
@@ -1818,6 +1820,12 @@ router.get(
 
           status:
             order.status,
+
+          courier:
+            order.courier || "Delhivery",
+
+          awbNumber:
+            order.awb_number || "",
 
           paymentStatus:
             order.payment_status,
