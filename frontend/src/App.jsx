@@ -2304,11 +2304,28 @@ function ProductCard({
           {product.name}
         </h3>
 
-        <strong>
-          {formatMoney(
-            product.priceINR,
-            country
+        <strong className="store-price-row">
+          {product.oldPriceINR && (
+            <span className="sale-original-price">
+              {formatMoney(
+                product.oldPriceINR,
+                country
+              )}
+            </span>
           )}
+
+          <span
+            className={
+              product.oldPriceINR
+                ? "sale-current-price sale-active-price"
+                : "sale-current-price"
+            }
+          >
+            {formatMoney(
+              product.priceINR,
+              country
+            )}
+          </span>
         </strong>
       </button>
     </article>
@@ -2669,11 +2686,28 @@ function ProductPage({
             </span>
           </div>
 
-          <div className="product-price">
-            {formatMoney(
-              product.priceINR,
-              country
+          <div className="product-price sale-detail-price">
+            {product.oldPriceINR && (
+              <span className="sale-original-price">
+                {formatMoney(
+                  product.oldPriceINR,
+                  country
+                )}
+              </span>
             )}
+
+            <span
+              className={
+                product.oldPriceINR
+                  ? "sale-current-price sale-active-price"
+                  : "sale-current-price"
+              }
+            >
+              {formatMoney(
+                product.priceINR,
+                country
+              )}
+            </span>
           </div>
 
           <p className="tax-note">
@@ -3557,11 +3591,28 @@ function CartLine({
           }
         </p>
 
-        <strong>
-          {formatMoney(
-            product.priceINR,
-            country
+        <strong className="cart-sale-price">
+          {product.oldPriceINR && (
+            <span className="sale-original-price">
+              {formatMoney(
+                product.oldPriceINR,
+                country
+              )}
+            </span>
           )}
+
+          <span
+            className={
+              product.oldPriceINR
+                ? "sale-current-price sale-active-price"
+                : "sale-current-price"
+            }
+          >
+            {formatMoney(
+              product.priceINR,
+              country
+            )}
+          </span>
         </strong>
 
         <div className="quantity">
@@ -6589,6 +6640,9 @@ function AdminPage({
     category: "Kurtis",
     subcategory: "",
     priceINR: "",
+    saleEnabled: false,
+    salePriceINR: "",
+    saleEndsAt: "",
     stock: "",
     badge: "",
     colour: "",
@@ -6921,6 +6975,29 @@ function AdminPage({
           ""
         ),
 
+      saleEnabled:
+        Boolean(
+          product.salePriceINR &&
+          product.saleEndsAt &&
+          new Date(product.saleEndsAt).getTime() > Date.now()
+        ),
+
+      salePriceINR:
+        product.salePriceINR
+          ? String(product.salePriceINR)
+          : "",
+
+      saleEndsAt:
+        product.saleEndsAt &&
+        new Date(product.saleEndsAt).getTime() > Date.now()
+          ? new Date(
+              new Date(product.saleEndsAt).getTime() -
+              new Date(product.saleEndsAt).getTimezoneOffset() * 60000
+            )
+              .toISOString()
+              .slice(0, 16)
+          : "",
+
       stock:
         String(
           product.stock ??
@@ -7050,6 +7127,18 @@ function AdminPage({
           Number(
             productForm.priceINR
           ),
+
+        salePriceINR:
+          productForm.saleEnabled &&
+          productForm.salePriceINR !== ""
+            ? Number(productForm.salePriceINR)
+            : null,
+
+        saleEndsAt:
+          productForm.saleEnabled &&
+          productForm.saleEndsAt
+            ? new Date(productForm.saleEndsAt).toISOString()
+            : null,
 
         stock:
           Number(
@@ -8254,6 +8343,146 @@ function AdminPage({
                     />
 
                   </label>
+
+                  <div
+                    className="editor-full"
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.12)",
+                      borderRadius: "14px",
+                      padding: "16px",
+                      background: "#fffaf7",
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        marginBottom: productForm.saleEnabled
+                          ? "16px"
+                          : "0",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={productForm.saleEnabled}
+                        onChange={(e) => {
+                          const enabled = e.target.checked;
+
+                          setProductForm((current) => ({
+                            ...current,
+                            saleEnabled: enabled,
+                            salePriceINR: enabled
+                              ? current.salePriceINR
+                              : "",
+                            saleEndsAt: enabled
+                              ? current.saleEndsAt
+                              : "",
+                          }));
+                        }}
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                        }}
+                      />
+
+                      <strong>
+                        LIMITED-TIME DISCOUNT
+                      </strong>
+                    </label>
+
+                    {productForm.saleEnabled && (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(190px, 1fr))",
+                          gap: "14px",
+                        }}
+                      >
+                        <label>
+                          DISCOUNT PRICE ₹
+
+                          <input
+                            required
+                            type="number"
+                            min="1"
+                            max={
+                              Number(productForm.priceINR) > 1
+                                ? Number(productForm.priceINR) - 1
+                                : undefined
+                            }
+                            value={
+                              productForm.salePriceINR
+                            }
+                            onChange={(e) =>
+                              updateForm(
+                                "salePriceINR",
+                                e.target.value
+                              )
+                            }
+                            placeholder="399"
+                          />
+                        </label>
+
+                        <label>
+                          SALE ENDS
+
+                          <input
+                            required
+                            type="datetime-local"
+                            value={
+                              productForm.saleEndsAt
+                            }
+                            min={(() => {
+                              const date = new Date(
+                                Date.now() + 60 * 1000
+                              );
+
+                              return new Date(
+                                date.getTime() -
+                                date.getTimezoneOffset() * 60000
+                              )
+                                .toISOString()
+                                .slice(0, 16);
+                            })()}
+                            max={(() => {
+                              const date = new Date(
+                                Date.now() +
+                                7 * 24 * 60 * 60 * 1000
+                              );
+
+                              return new Date(
+                                date.getTime() -
+                                date.getTimezoneOffset() * 60000
+                              )
+                                .toISOString()
+                                .slice(0, 16);
+                            })()}
+                            onChange={(e) =>
+                              updateForm(
+                                "saleEndsAt",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </label>
+
+                        <p
+                          style={{
+                            gridColumn: "1 / -1",
+                            margin: 0,
+                            fontSize: "12px",
+                            opacity: 0.7,
+                          }}
+                        >
+                          Maximum sale duration is 7 days.
+                          The normal price returns automatically
+                          when the timer ends.
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
 
                   <label>

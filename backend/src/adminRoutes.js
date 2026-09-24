@@ -327,6 +327,26 @@ const productSchema =
           "Price cannot be negative."
         ),
 
+    salePriceINR:
+      z
+        .union([
+          z.coerce.number().int().positive(),
+          z.literal(""),
+          z.null(),
+        ])
+        .optional()
+        .default(null),
+
+    saleEndsAt:
+      z
+        .union([
+          z.string(),
+          z.literal(""),
+          z.null(),
+        ])
+        .optional()
+        .default(null),
+
     stock:
       z
         .coerce
@@ -1167,6 +1187,52 @@ router.post(
       const data =
         parsed.data;
 
+      const salePriceINR =
+        data.salePriceINR === "" ||
+        data.salePriceINR === null ||
+        data.salePriceINR === undefined
+          ? null
+          : Number(data.salePriceINR);
+
+      const saleEndsAt =
+        data.saleEndsAt
+          ? new Date(data.saleEndsAt)
+          : null;
+
+      if (
+        salePriceINR !== null &&
+        salePriceINR >= Number(data.priceINR)
+      ) {
+        return res.status(400).json({
+          error: "Discount price must be lower than the normal price.",
+        });
+      }
+
+      if (
+        (salePriceINR === null) !==
+        (saleEndsAt === null)
+      ) {
+        return res.status(400).json({
+          error: "Add both a discount price and sale end time.",
+        });
+      }
+
+      if (saleEndsAt) {
+        const now = Date.now();
+        const end = saleEndsAt.getTime();
+        const maximum = now + 7 * 24 * 60 * 60 * 1000;
+
+        if (
+          Number.isNaN(end) ||
+          end <= now ||
+          end > maximum
+        ) {
+          return res.status(400).json({
+            error: "Sale must end in the future and within 7 days.",
+          });
+        }
+      }
+
 
       const sizes =
         parseSizes(
@@ -1302,6 +1368,8 @@ router.post(
             category,
             subcategory,
             price_inr,
+            sale_price_inr,
+            sale_ends_at,
             stock,
             badge,
             colour,
@@ -1326,9 +1394,11 @@ router.post(
             $10,
             $11,
             $12,
-            $13::jsonb,
-            $14::jsonb,
-            $15
+            $13,
+            $14,
+            $15::jsonb,
+            $16::jsonb,
+            $17
           )
 
           RETURNING *
@@ -1342,6 +1412,10 @@ router.post(
               ? data.subcategory || null
               : null,
             data.priceINR,
+            salePriceINR,
+            saleEndsAt
+              ? saleEndsAt.toISOString()
+              : null,
             data.stock,
             data.badge || null,
             data.colour || null,
@@ -1482,6 +1556,52 @@ router.patch(
       const data =
         parsed.data;
 
+      const salePriceINR =
+        data.salePriceINR === "" ||
+        data.salePriceINR === null ||
+        data.salePriceINR === undefined
+          ? null
+          : Number(data.salePriceINR);
+
+      const saleEndsAt =
+        data.saleEndsAt
+          ? new Date(data.saleEndsAt)
+          : null;
+
+      if (
+        salePriceINR !== null &&
+        salePriceINR >= Number(data.priceINR)
+      ) {
+        return res.status(400).json({
+          error: "Discount price must be lower than the normal price.",
+        });
+      }
+
+      if (
+        (salePriceINR === null) !==
+        (saleEndsAt === null)
+      ) {
+        return res.status(400).json({
+          error: "Add both a discount price and sale end time.",
+        });
+      }
+
+      if (saleEndsAt) {
+        const now = Date.now();
+        const end = saleEndsAt.getTime();
+        const maximum = now + 7 * 24 * 60 * 60 * 1000;
+
+        if (
+          Number.isNaN(end) ||
+          end <= now ||
+          end > maximum
+        ) {
+          return res.status(400).json({
+            error: "Sale must end in the future and within 7 days.",
+          });
+        }
+      }
+
 
       const current =
         await pool.query(
@@ -1578,16 +1698,18 @@ router.patch(
             category = $3,
             subcategory = $4,
             price_inr = $5,
-            stock = $6,
-            badge = $7,
-            colour = $8,
-            material = $9,
-            description = $10,
-            sizes = $11::jsonb,
-            active = $12,
+            sale_price_inr = $6,
+            sale_ends_at = $7,
+            stock = $8,
+            badge = $9,
+            colour = $10,
+            material = $11,
+            description = $12,
+            sizes = $13::jsonb,
+            active = $14,
             updated_at = NOW()
 
-          WHERE id = $13
+          WHERE id = $15
 
           RETURNING *
           `,
@@ -1599,6 +1721,10 @@ router.patch(
               ? data.subcategory || null
               : null,
             data.priceINR,
+            salePriceINR,
+            saleEndsAt
+              ? saleEndsAt.toISOString()
+              : null,
             data.stock,
             data.badge || null,
             data.colour || null,

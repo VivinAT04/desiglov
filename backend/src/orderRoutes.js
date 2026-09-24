@@ -278,6 +278,8 @@ async function validateOrder(
           slug,
           name,
           price_inr,
+          sale_price_inr,
+          sale_ends_at,
           stock,
           reserved_stock,
           active,
@@ -375,15 +377,28 @@ async function validateOrder(
       throw error;
     }
 
+    const saleIsActive =
+      product.sale_price_inr !== null &&
+      product.sale_price_inr !== undefined &&
+      product.sale_ends_at &&
+      new Date(product.sale_ends_at).getTime() > Date.now();
+
+    const effectivePriceINR =
+      saleIsActive
+        ? Number(product.sale_price_inr)
+        : Number(product.price_inr);
+
     subtotal +=
-      Number(
-        product.price_inr
-      ) *
+      effectivePriceINR *
       item.quantity;
 
     validatedItems.push({
       requested: item,
-      product,
+      product: {
+        ...product,
+        effective_price_inr:
+          effectivePriceINR,
+      },
     });
   }
 
@@ -454,7 +469,7 @@ async function insertOrderItems(
         item.product.slug,
         item.requested.size,
         item.requested.quantity,
-        item.product.price_inr,
+        item.product.effective_price_inr,
       ]
     );
   }

@@ -99,10 +99,34 @@ export function publicProduct(
       row.subcategory || "",
 
     priceINR:
-      row.price_inr,
+      row.sale_price_inr !== null &&
+      row.sale_price_inr !== undefined &&
+      row.sale_ends_at &&
+      new Date(row.sale_ends_at).getTime() > Date.now()
+        ? row.sale_price_inr
+        : row.price_inr,
 
     oldPriceINR:
-      null,
+      row.sale_price_inr !== null &&
+      row.sale_price_inr !== undefined &&
+      row.sale_ends_at &&
+      new Date(row.sale_ends_at).getTime() > Date.now()
+        ? row.price_inr
+        : null,
+
+    salePriceINR:
+      row.sale_price_inr,
+
+    saleEndsAt:
+      row.sale_ends_at,
+
+    saleActive:
+      Boolean(
+        row.sale_price_inr !== null &&
+        row.sale_price_inr !== undefined &&
+        row.sale_ends_at &&
+        new Date(row.sale_ends_at).getTime() > Date.now()
+      ),
 
     stock:
       row.stock,

@@ -13365,3 +13365,75 @@ input:disabled {
     width: 100%;
   }
 }
+
+
+/* ==========================================================
+   DESIGLOV LIMITED-TIME SALE PRICE
+   ========================================================== */
+
+.store-price-row,
+.cart-sale-price,
+.sale-detail-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sale-original-price {
+  position: relative;
+  display: inline-block;
+  color: #77716d;
+  font-weight: 500;
+  opacity: 0.9;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #77716d;
+}
+
+.sale-current-price {
+  display: inline-block;
+}
+
+.sale-active-price {
+  color: #c7192d;
+  font-weight: 700;
+}
+
+.sale-detail-price {
+  gap: 12px;
+}
+
+.sale-detail-price .sale-original-price {
+  font-size: 0.72em;
+  font-weight: 500;
+}
+
+.sale-detail-price .sale-active-price {
+  font-size: 1em;
+  font-weight: 700;
+}
+
+.store-price-row .sale-original-price {
+  font-size: 0.88em;
+}
+
+.store-price-row .sale-active-price {
+  font-weight: 700;
+}
+
+.cart-sale-price .sale-original-price {
+  font-size: 0.88em;
+}
+
+@media (max-width: 700px) {
+  .store-price-row,
+  .cart-sale-price,
+  .sale-detail-price {
+    gap: 7px;
+  }
+
+  .sale-detail-price .sale-original-price {
+    font-size: 0.7em;
+  }
+}
