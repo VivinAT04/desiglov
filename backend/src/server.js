@@ -235,10 +235,21 @@ app.use(
   ) => {
     console.error(error);
 
-    res.status(500).json({
-      error:
-        "Something went wrong. Please try again.",
-    });
+    const statusCode =
+      Number(error?.statusCode) || 500;
+
+    const safeMessage =
+      statusCode >= 400 &&
+      statusCode < 500 &&
+      error?.message
+        ? error.message
+        : "Something went wrong. Please try again.";
+
+    res
+      .status(statusCode)
+      .json({
+        error: safeMessage,
+      });
   }
 );
 
