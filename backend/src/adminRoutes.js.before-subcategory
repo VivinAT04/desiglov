@@ -309,14 +309,6 @@ const productSchema =
         )
         .max(120),
 
-    subcategory:
-      z
-        .string()
-        .trim()
-        .max(120)
-        .optional()
-        .default(""),
-
     priceINR:
       z
         .coerce
@@ -1215,7 +1207,6 @@ router.post(
             slug,
             name,
             category,
-            subcategory,
             price_inr,
             stock,
             badge,
@@ -1240,10 +1231,9 @@ router.post(
             $9,
             $10,
             $11,
-            $12,
+            $12::jsonb,
             $13::jsonb,
-            $14::jsonb,
-            $15
+            $14
           )
 
           RETURNING *
@@ -1253,9 +1243,6 @@ router.post(
             slug,
             data.name,
             data.category,
-            data.category === "Jewellery"
-              ? data.subcategory || null
-              : null,
             data.priceINR,
             data.stock,
             data.badge || null,
@@ -1491,18 +1478,17 @@ router.patch(
             slug = $1,
             name = $2,
             category = $3,
-            subcategory = $4,
-            price_inr = $5,
-            stock = $6,
-            badge = $7,
-            colour = $8,
-            material = $9,
-            description = $10,
-            sizes = $11::jsonb,
-            active = $12,
+            price_inr = $4,
+            stock = $5,
+            badge = $6,
+            colour = $7,
+            material = $8,
+            description = $9,
+            sizes = $10::jsonb,
+            active = $11,
             updated_at = NOW()
 
-          WHERE id = $13
+          WHERE id = $12
 
           RETURNING *
           `,
@@ -1510,9 +1496,6 @@ router.patch(
             slug,
             data.name,
             data.category,
-            data.category === "Jewellery"
-              ? data.subcategory || null
-              : null,
             data.priceINR,
             data.stock,
             data.badge || null,
@@ -1784,148 +1767,6 @@ router.post(
 
         message:
           "Images uploaded.",
-
-        product:
-          publicProduct(
-            result.rows[0]
-          ),
-      });
-
-    } catch (error) {
-
-      next(error);
-    }
-  }
-);
-
-
-// ===========================================================
-// SET PRODUCT COVER IMAGE
-// ===========================================================
-
-router.patch(
-  "/products/:id/images/:index/cover",
-  async (
-    req,
-    res,
-    next
-  ) => {
-
-    try {
-
-      const current =
-        await pool.query(
-          `
-          SELECT *
-
-          FROM products
-
-          WHERE id = $1
-
-          LIMIT 1
-          `,
-          [
-            req.params.id,
-          ]
-        );
-
-
-      if (
-        current.rowCount ===
-        0
-      ) {
-
-        return res
-          .status(404)
-          .json({
-            error:
-              "Product not found.",
-          });
-      }
-
-
-      const images =
-        Array.isArray(
-          current.rows[0]
-            .images
-        )
-          ? [
-              ...current
-                .rows[0]
-                .images,
-            ]
-          : [];
-
-
-      const index =
-        Number(
-          req.params.index
-        );
-
-
-      if (
-        !Number.isInteger(
-          index
-        ) ||
-        index < 0 ||
-        index >=
-          images.length
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "Invalid image.",
-          });
-      }
-
-
-      if (index !== 0) {
-
-        const selectedImage =
-          images.splice(
-            index,
-            1
-          )[0];
-
-        images.unshift(
-          selectedImage
-        );
-      }
-
-
-      const result =
-        await pool.query(
-          `
-          UPDATE products
-
-          SET
-            images = $1::jsonb,
-            image_path = $2,
-            updated_at = NOW()
-
-          WHERE id = $3
-
-          RETURNING *
-          `,
-          [
-            JSON.stringify(
-              images
-            ),
-
-            images[0] ||
-              null,
-
-            req.params.id,
-          ]
-        );
-
-
-      return res.json({
-
-        message:
-          "Cover image updated.",
 
         product:
           publicProduct(

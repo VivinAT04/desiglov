@@ -273,58 +273,6 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
-  // PRODUCT REVIEWS
-  // =========================================================
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS product_reviews (
-      id UUID PRIMARY KEY,
-
-      product_id INTEGER
-        NOT NULL
-        REFERENCES products(id)
-        ON DELETE CASCADE,
-
-      user_id UUID
-        NOT NULL
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-      rating INTEGER
-        NOT NULL
-        CHECK (
-          rating >= 1
-          AND rating <= 5
-        ),
-
-      comment TEXT
-        NOT NULL,
-
-      created_at TIMESTAMPTZ
-        NOT NULL
-        DEFAULT NOW(),
-
-      updated_at TIMESTAMPTZ
-        NOT NULL
-        DEFAULT NOW(),
-
-      UNIQUE (
-        product_id,
-        user_id
-      )
-    );
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS product_reviews_product_index
-    ON product_reviews (
-      product_id,
-      updated_at DESC
-    );
-  `);
-
-
-  // =========================================================
   // SEED PRODUCTS
   //
   // Price, stock and active are NOT overwritten on restart.

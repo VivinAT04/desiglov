@@ -10,6 +10,8 @@ import {
   orderApi,
   adminApi,
   productApi,
+  feedbackApi,
+  reviewApi
 } from "./api.js";
 
 import { supabase } from "./lib/supabase.js";
@@ -152,6 +154,7 @@ const FALLBACK_PRODUCTS = [
     slug: "hoops-and-gems",
     name: "Hoops & Gems",
     category: "Jewellery",
+    subcategory: "Earrings",
     priceINR: 229,
     badge: "TRENDING",
     colour: "Gold",
@@ -171,6 +174,7 @@ const FALLBACK_PRODUCTS = [
     slug: "tri-heart",
     name: "Tri Heart",
     category: "Jewellery",
+    subcategory: "Earrings",
     priceINR: 299,
     badge: "NEW",
     colour: "Gold",
@@ -191,6 +195,7 @@ const FALLBACK_PRODUCTS = [
     slug: "spikes",
     name: "Spikes",
     category: "Jewellery",
+    subcategory: "Earrings",
     priceINR: 479,
     badge: "STATEMENT",
     colour: "Gold",
@@ -205,11 +210,65 @@ const FALLBACK_PRODUCTS = [
   },
 ];
 
+
+const CLOTHING_CATEGORIES = [
+  "Kurtis",
+  "Short Tops",
+  "Coord Sets",
+  "3 Piece Sets",
+  "Anarkali Sets",
+];
+
+const CLOTHING_SEARCH_TERMS = [
+  "dress",
+  "dresses",
+  "clothes",
+  "clothing",
+  "outfit",
+  "outfits",
+  "wear",
+  "womens wear",
+  "women's wear",
+];
+
+function isClothingSearch(value) {
+  const query = String(value || "")
+    .trim()
+    .toLowerCase();
+
+  return CLOTHING_SEARCH_TERMS.includes(query);
+}
+
+function productMatchesSearch(product, value) {
+  const query = String(value || "")
+    .trim()
+    .toLowerCase();
+
+  if (!query) {
+    return false;
+  }
+
+  const searchableText = [
+    product?.name,
+    product?.category,
+    product?.colour,
+    product?.material,
+    product?.description,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return searchableText.includes(query);
+}
+
+
 const CATEGORIES = [
   "Kurtis",
   "Short Tops",
   "Coord Sets",
   "3 Piece Sets",
+  "Anarkali Sets",
   "Jewellery",
 ];
 
@@ -798,6 +857,15 @@ function App() {
 
   } else if (
     pathname ===
+    "/feedback"
+  ) {
+
+    page = (
+      <FeedbackPage />
+    );
+
+  } else if (
+    pathname ===
     "/delivery"
   ) {
 
@@ -1119,7 +1187,24 @@ function Header({
               }
               placeholder="Search products..."
               aria-label="Search products"
-            />
+            onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  search.trim()
+                ) {
+                  event.preventDefault();
+
+                  navigate(
+                    `/shop?search=${encodeURIComponent(
+                      search.trim()
+                    )}`
+                  );
+
+                  setSearchOpen(false);
+                  setSearch("");
+                }
+              }}
+              />
 
             {search && (
               <button
@@ -1144,41 +1229,6 @@ function Header({
               ×
             </button>
 
-            {search.trim() && (
-              <div className="navbar-search-results">
-                {products
-                  .filter((product) =>
-                    `${product.name} ${product.category} ${product.colour}`
-                      .toLowerCase()
-                      .includes(search.toLowerCase())
-                  )
-                  .slice(0, 6)
-                  .map((product) => (
-                    <button
-                      type="button"
-                      key={product.id}
-                      className="navbar-search-result"
-                      onClick={() => {
-                        openProduct(product);
-                        setSearch("");
-                        setSearchOpen(false);
-                      }}
-                    >
-                      {product.images?.[0] && (
-                        <img
-                          src={product.images[0]}
-                          alt=""
-                        />
-                      )}
-
-                      <span>
-                        <strong>{product.name}</strong>
-                        <small>{product.category}</small>
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            )}
           </div>
         </div>
 
@@ -1697,10 +1747,52 @@ function ShopPage({
   const initialCategory =
     params.get("category");
 
+  const initialSubcategory =
+    params.get("subcategory") || "";
+
+  const shopSearch =
+    (params.get("search") || "")
+      .trim()
+      .toLowerCase();
+
+  const searchJewellerySubcategory =
+    {
+      earing: "Earrings",
+      earings: "Earrings",
+      earring: "Earrings",
+      earrings: "Earrings",
+      chain: "Chains",
+      chains: "Chains",
+      bracelet: "Bracelets",
+      bracelets: "Bracelets",
+    }[shopSearch] || "";
+
+  const searchIsJewellery =
+    shopSearch === "jewellery" ||
+    shopSearch === "jewelry" ||
+    Boolean(
+      searchJewellerySubcategory
+    );
+
   const [category, setCategory] =
     useState(
-      initialCategory || ""
+      initialCategory ||
+      (
+        searchIsJewellery
+          ? "Jewellery"
+          : ""
+      )
     );
+
+  const [subcategory, setSubcategory] =
+    useState(
+      initialSubcategory ||
+      searchJewellerySubcategory ||
+      ""
+    );
+
+  const [manualFilter, setManualFilter] =
+    useState(false);
 
   const [sort, setSort] =
     useState("featured");
@@ -1709,8 +1801,21 @@ function ShopPage({
     useState(false);
 
   useEffect(() => {
+    setManualFilter(false);
+
     setCategory(
-      initialCategory || ""
+      initialCategory ||
+      (
+        searchIsJewellery
+          ? "Jewellery"
+          : ""
+      )
+    );
+
+    setSubcategory(
+      initialSubcategory ||
+      searchJewellerySubcategory ||
+      ""
     );
   }, [route]);
 
@@ -1723,12 +1828,74 @@ function ShopPage({
               product.category ===
                 category;
 
+            const subcategoryMatch =
+              !subcategory ||
+              product.subcategory ===
+                subcategory;
+
+            const queryText =
+              [
+                product.name,
+                product.category,
+                product.subcategory,
+                product.colour,
+                product.material,
+                product.description,
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+            const dressSearch =
+              [
+                "dress",
+                "dresses",
+                "clothes",
+                "clothing",
+                "outfit",
+                "outfits",
+                "wear",
+              ].includes(shopSearch);
+
+            const jewellerySearchMap = {
+              earing: "Earrings",
+              earings: "Earrings",
+              earring: "Earrings",
+              earrings: "Earrings",
+              chain: "Chains",
+              chains: "Chains",
+              bracelet: "Bracelets",
+              bracelets: "Bracelets",
+            };
+
+            const jewellerySubcategory =
+              jewellerySearchMap[
+                shopSearch
+              ] || "";
+
+            const searchMatch =
+              manualFilter ||
+              !shopSearch ||
+              jewellerySubcategory ||
+              searchIsJewellery ||
+              (
+                dressSearch
+                  ? CLOTHING_CATEGORIES.includes(
+                      product.category
+                    )
+                  : queryText.includes(
+                      shopSearch
+                    )
+              );
+
             const stockMatch =
               !stockOnly ||
               product.stock > 0;
 
             return (
               categoryMatch &&
+              subcategoryMatch &&
+              searchMatch &&
               stockMatch
             );
           }
@@ -1770,6 +1937,9 @@ function ShopPage({
     }, [
       products,
       category,
+      subcategory,
+      shopSearch,
+      manualFilter,
       sort,
       stockOnly,
     ]);
@@ -1780,7 +1950,11 @@ function ShopPage({
         eyebrow="THE DESIGLOV COLLECTION"
         title={
           category ||
-          "Shop the edit."
+          (
+            shopSearch
+              ? `Results for "${params.get("search")}"`
+              : "Shop the edit."
+          )
         }
         text="Discover pieces chosen to make everyday dressing feel special."
       />
@@ -1831,12 +2005,10 @@ function ShopPage({
 
             <button
               onClick={() => {
-                setCategory(
-                  ""
-                );
-                setStockOnly(
-                  false
-                );
+                setCategory("");
+                setSubcategory("");
+                setStockOnly(false);
+                setManualFilter(true);
               }}
             >
               CLEAR ALL
@@ -1856,38 +2028,93 @@ function ShopPage({
                   category ===
                   ""
                 }
-                onChange={() =>
-                  setCategory(
-                    ""
-                  )
-                }
+                onChange={() => {
+                  setCategory("");
+                  setSubcategory("");
+                  setManualFilter(true);
+                }}
               />
               All
             </label>
 
             {CATEGORIES.map(
               (item) => (
-                <label
-                  key={
-                    item
+                <div
+                  key={item}
+                  className={
+                    item === "Jewellery"
+                      ? "jewellery-filter-group"
+                      : ""
                   }
                 >
-                  <input
-                    type="radio"
-                    name="category"
-                    checked={
-                      category ===
-                      item
-                    }
-                    onChange={() =>
-                      setCategory(
-                        item
-                      )
-                    }
-                  />
+                  <label>
+                    <input
+                      type="radio"
+                      name="category"
+                      checked={
+                        category === item
+                      }
+                      onChange={() => {
+                        setCategory(item);
+                        setSubcategory("");
+                        setManualFilter(true);
+                      }}
+                    />
 
-                  {item}
-                </label>
+                    {item}
+                  </label>
+
+                  {item === "Jewellery" &&
+                    category ===
+                      "Jewellery" && (
+                      <div
+                        className="jewellery-subfilters"
+                        style={{
+                          paddingLeft: "28px",
+                          display: "grid",
+                          gap: "10px",
+                          marginTop: "8px",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        {[
+                          "Earrings",
+                          "Chains",
+                          "Bracelets",
+                        ].map(
+                          (subItem) => (
+                            <label
+                              key={
+                                subItem
+                              }
+                            >
+                              <input
+                                type="radio"
+                                name="jewellery-subcategory"
+                                checked={
+                                  subcategory ===
+                                  subItem
+                                }
+                                onChange={() => {
+                                  setCategory(
+                                    "Jewellery"
+                                  );
+                                  setSubcategory(
+                                    subItem
+                                  );
+                                  setManualFilter(
+                                    true
+                                  );
+                                }}
+                              />
+
+                              {subItem}
+                            </label>
+                          )
+                        )}
+                      </div>
+                    )}
+                </div>
               )
             )}
           </div>
@@ -2128,6 +2355,183 @@ function ProductPage({
 
   const [sizeError, setSizeError] =
     useState(false);
+
+  // =========================================================
+  // PRODUCT REVIEWS
+  // =========================================================
+
+  const [reviewData, setReviewData] =
+    useState({
+      summary: {
+        count: 0,
+        average: 0,
+        breakdown: {
+          5: 0,
+          4: 0,
+          3: 0,
+          2: 0,
+          1: 0,
+        },
+      },
+      reviews: [],
+    });
+
+  const [reviewsLoading, setReviewsLoading] =
+    useState(true);
+
+  const [reviewRating, setReviewRating] =
+    useState(0);
+
+  const [reviewComment, setReviewComment] =
+    useState("");
+
+  const [reviewSubmitting, setReviewSubmitting] =
+    useState(false);
+
+  const [reviewMessage, setReviewMessage] =
+    useState("");
+
+  const [reviewError, setReviewError] =
+    useState("");
+
+  async function loadProductReviews() {
+    try {
+      setReviewsLoading(true);
+
+      const data =
+        await reviewApi.list(
+          product.id
+        );
+
+      setReviewData({
+        summary: data.summary || {
+          count: 0,
+          average: 0,
+          breakdown: {
+            5: 0,
+            4: 0,
+            3: 0,
+            2: 0,
+            1: 0,
+          },
+        },
+        reviews:
+          Array.isArray(data.reviews)
+            ? data.reviews
+            : [],
+      });
+    } catch (error) {
+      console.error(
+        "Unable to load reviews:",
+        error
+      );
+    } finally {
+      setReviewsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    setReviewRating(0);
+    setReviewComment("");
+    setReviewMessage("");
+    setReviewError("");
+
+    loadProductReviews();
+  }, [product.id]);
+
+  async function submitProductReview(event) {
+    event.preventDefault();
+
+    setReviewMessage("");
+    setReviewError("");
+
+    if (
+      reviewRating < 1 ||
+      reviewRating > 5
+    ) {
+      setReviewError(
+        "Please select a star rating."
+      );
+      return;
+    }
+
+    if (
+      reviewComment.trim().length < 3
+    ) {
+      setReviewError(
+        "Please write a short review."
+      );
+      return;
+    }
+
+    try {
+      setReviewSubmitting(true);
+
+      await reviewApi.save(
+        product.id,
+        {
+          rating: reviewRating,
+          comment:
+            reviewComment.trim(),
+        }
+      );
+
+      setReviewMessage(
+        "Thank you. Your review has been published."
+      );
+
+      setReviewRating(0);
+      setReviewComment("");
+
+      await loadProductReviews();
+    } catch (error) {
+      if (
+        error?.status === 401
+      ) {
+        setReviewError(
+          "Please sign in to write a review."
+        );
+      } else {
+        setReviewError(
+          error?.message ||
+            "Unable to submit your review."
+        );
+      }
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
+  const reviewSummary =
+    reviewData.summary || {};
+
+  const reviewCount =
+    Number(
+      reviewSummary.count || 0
+    );
+
+  const averageRating =
+    Number(
+      reviewSummary.average || 0
+    );
+
+  function reviewPercentage(star) {
+    if (!reviewCount) {
+      return 0;
+    }
+
+    const count =
+      Number(
+        reviewSummary.breakdown?.[
+          star
+        ] || 0
+      );
+
+    return Math.round(
+      (count / reviewCount) *
+        100
+    );
+  }
 
   const saved =
     wishlist.includes(
@@ -2534,6 +2938,363 @@ function ProductPage({
           </Accordion>
         </div>
       </section>
+
+      <section className="product-reviews-section">
+
+        <div className="product-reviews-heading">
+
+          <span>
+            CUSTOMER FEEDBACK
+          </span>
+
+          <h2>
+            Customer reviews.
+          </h2>
+
+          <p>
+            Real feedback from customers
+            about {product.name}.
+          </p>
+
+        </div>
+
+        {reviewsLoading ? (
+
+          <div className="reviews-loading">
+            Loading reviews...
+          </div>
+
+        ) : (
+
+          <div className="reviews-layout">
+
+            <div className="reviews-summary-card">
+
+              <div className="reviews-score">
+
+                <strong>
+                  {reviewCount
+                    ? averageRating.toFixed(
+                        1
+                      )
+                    : "0.0"}
+                </strong>
+
+                <div>
+
+                  <div
+                    className="display-stars"
+                    aria-label={
+                      `${averageRating.toFixed(
+                        1
+                      )} out of 5 stars`
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map(
+                      (star) => (
+                        <span
+                          key={star}
+                          className={
+                            star <=
+                            Math.round(
+                              averageRating
+                            )
+                              ? "filled"
+                              : ""
+                          }
+                        >
+                          ★
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  <p>
+                    {reviewCount === 1
+                      ? "1 customer review"
+                      : `${reviewCount} customer reviews`}
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="rating-breakdown">
+
+                {[5, 4, 3, 2, 1].map(
+                  (star) => {
+
+                    const percentage =
+                      reviewPercentage(
+                        star
+                      );
+
+                    return (
+                      <div
+                        className="rating-row"
+                        key={star}
+                      >
+
+                        <span>
+                          {star} star
+                        </span>
+
+                        <div className="rating-track">
+                          <div
+                            className="rating-fill"
+                            style={{
+                              width:
+                                `${percentage}%`,
+                            }}
+                          />
+                        </div>
+
+                        <span>
+                          {percentage}%
+                        </span>
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+
+            </div>
+
+            <div className="reviews-content">
+
+              <div className="write-review-card">
+
+                <div className="write-review-header">
+
+                  <div>
+                    <span>
+                      SHARE YOUR EXPERIENCE
+                    </span>
+
+                    <h3>
+                      Write a review
+                    </h3>
+                  </div>
+
+                </div>
+
+                <form
+                  onSubmit={
+                    submitProductReview
+                  }
+                >
+
+                  <label>
+                    YOUR RATING
+                  </label>
+
+                  <div
+                    className="review-star-picker"
+                    role="radiogroup"
+                    aria-label="Choose rating"
+                  >
+
+                    {[1, 2, 3, 4, 5].map(
+                      (star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          className={
+                            star <=
+                            reviewRating
+                              ? "selected"
+                              : ""
+                          }
+                          onClick={() =>
+                            setReviewRating(
+                              star
+                            )
+                          }
+                          aria-label={
+                            `${star} star rating`
+                          }
+                        >
+                          ★
+                        </button>
+                      )
+                    )}
+
+                  </div>
+
+                  <label
+                    htmlFor={
+                      `review-${product.id}`
+                    }
+                  >
+                    YOUR REVIEW
+                  </label>
+
+                  <textarea
+                    id={
+                      `review-${product.id}`
+                    }
+                    value={
+                      reviewComment
+                    }
+                    maxLength={1500}
+                    placeholder={
+                      `What did you think of ${product.name}?`
+                    }
+                    onChange={(event) =>
+                      setReviewComment(
+                        event.target.value
+                      )
+                    }
+                  />
+
+                  <div className="review-form-footer">
+
+                    <small>
+                      {
+                        reviewComment.length
+                      }
+                      /1500
+                    </small>
+
+                    <button
+                      type="submit"
+                      disabled={
+                        reviewSubmitting
+                      }
+                    >
+                      {reviewSubmitting
+                        ? "SUBMITTING..."
+                        : "SUBMIT REVIEW"}
+                    </button>
+
+                  </div>
+
+                  {reviewError && (
+                    <p className="review-form-error">
+                      {reviewError}
+                    </p>
+                  )}
+
+                  {reviewMessage && (
+                    <p className="review-form-success">
+                      {reviewMessage}
+                    </p>
+                  )}
+
+                </form>
+
+              </div>
+
+              <div className="customer-reviews-list">
+
+                {reviewData.reviews.length ===
+                0 ? (
+
+                  <div className="no-reviews">
+
+                    <span>
+                      ★★★★★
+                    </span>
+
+                    <h3>
+                      Be the first to review.
+                    </h3>
+
+                    <p>
+                      No customer reviews have
+                      been submitted for this
+                      product yet.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  reviewData.reviews.map(
+                    (review) => (
+
+                      <article
+                        className="customer-review"
+                        key={review.id}
+                      >
+
+                        <div className="customer-review-top">
+
+                          <div>
+
+                            <strong>
+                              {
+                                review.customerName
+                              }
+                            </strong>
+
+                            <div className="customer-review-stars">
+
+                              {[1, 2, 3, 4, 5].map(
+                                (star) => (
+                                  <span
+                                    key={star}
+                                    className={
+                                      star <=
+                                      Number(
+                                        review.rating
+                                      )
+                                        ? "filled"
+                                        : ""
+                                    }
+                                  >
+                                    ★
+                                  </span>
+                                )
+                              )}
+
+                            </div>
+
+                          </div>
+
+                          <time>
+                            {review.updatedAt
+                              ? new Date(
+                                  review.updatedAt
+                                ).toLocaleDateString(
+                                  "en-GB",
+                                  {
+                                    day:
+                                      "numeric",
+                                    month:
+                                      "long",
+                                    year:
+                                      "numeric",
+                                  }
+                                )
+                              : ""}
+                          </time>
+
+                        </div>
+
+                        <p>
+                          {review.comment}
+                        </p>
+
+                      </article>
+
+                    )
+                  )
+
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+      </section>
+
 
       {related.length >
         0 && (
@@ -5435,6 +6196,7 @@ function AdminPage({
   const EMPTY_PRODUCT = {
     name: "",
     category: "Kurtis",
+    subcategory: "",
     priceINR: "",
     stock: "",
     badge: "",
@@ -5751,6 +6513,10 @@ function AdminPage({
         product.category ||
         "Kurtis",
 
+      subcategory:
+        product.subcategory ||
+        "",
+
       priceINR:
         String(
           product.priceINR ??
@@ -5877,6 +6643,11 @@ function AdminPage({
         category:
           productForm.category,
 
+        subcategory:
+          productForm.category === "Jewellery"
+            ? productForm.subcategory
+            : "",
+
         priceINR:
           Number(
             productForm.priceINR
@@ -5969,6 +6740,60 @@ function AdminPage({
     } finally {
 
       setSavingProduct(false);
+    }
+  }
+
+
+  async function setCoverImage(
+    product,
+    index
+  ) {
+
+    if (index === 0) {
+      return;
+    }
+
+    try {
+
+      setError("");
+      setMessage("");
+
+      await adminApi.setProductCover(
+        product.id,
+        index
+      );
+
+      const refreshed =
+        await adminApi.products();
+
+      setProducts(
+        refreshed.products
+      );
+
+      const current =
+        refreshed.products.find(
+          (item) =>
+            item.id ===
+            product.id
+        );
+
+      if (current) {
+
+        setEditingProduct(
+          current
+        );
+      }
+
+      setMessage(
+        "Cover image updated."
+      );
+
+    } catch (error) {
+
+      setError(
+        error.message ||
+          "Unable to update cover image."
+      );
     }
   }
 
@@ -6953,12 +7778,25 @@ function AdminPage({
                       value={
                         productForm.category
                       }
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const nextCategory =
+                          e.target.value;
+
                         updateForm(
                           "category",
-                          e.target.value
-                        )
-                      }
+                          nextCategory
+                        );
+
+                        if (
+                          nextCategory !==
+                          "Jewellery"
+                        ) {
+                          updateForm(
+                            "subcategory",
+                            ""
+                          );
+                        }
+                      }}
                     >
 
                       <option value="Kurtis">
@@ -6977,6 +7815,10 @@ function AdminPage({
                         3 Piece Sets
                       </option>
 
+                      <option value="Anarkali Sets">
+                        Anarkali Sets
+                      </option>
+
                       <option value="Jewellery">
                         Jewellery
                       </option>
@@ -6984,6 +7826,47 @@ function AdminPage({
                     </select>
 
                   </label>
+
+
+                  {productForm.category ===
+                    "Jewellery" && (
+                    <label>
+
+                      SUBCATEGORY
+
+                      <select
+                        required
+                        value={
+                          productForm.subcategory
+                        }
+                        onChange={(e) =>
+                          updateForm(
+                            "subcategory",
+                            e.target.value
+                          )
+                        }
+                      >
+
+                        <option value="">
+                          Select jewellery type
+                        </option>
+
+                        <option value="Earrings">
+                          Earrings
+                        </option>
+
+                        <option value="Chains">
+                          Chains
+                        </option>
+
+                        <option value="Bracelets">
+                          Bracelets
+                        </option>
+
+                      </select>
+
+                    </label>
+                  )}
 
 
                   <label>
@@ -7194,6 +8077,25 @@ function AdminPage({
                                 }
                                 alt=""
                               />
+
+                              {index === 0 ? (
+                                <div className="cover-image-label">
+                                  COVER IMAGE
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="set-cover-button"
+                                  onClick={() =>
+                                    setCoverImage(
+                                      editingProduct,
+                                      index
+                                    )
+                                  }
+                                >
+                                  SET AS COVER
+                                </button>
+                              )}
 
                               <button
                                 type="button"
@@ -8136,137 +9038,416 @@ function ContactPage() {
 }
 
 
-function DeliveryPage() {
+function FeedbackPage() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    comments: "",
+  });
 
+  /*
+   * Automatically pre-fill the email address when the
+   * customer is already signed in with Supabase.
+   */
+  useEffect(() => {
+    let active = true;
+
+    async function loadLoggedInEmail() {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error(
+            "Unable to load feedback account email:",
+            error
+          );
+          return;
+        }
+
+        const user =
+          session?.user;
+
+        const accountEmail =
+          user?.email?.trim() || "";
+
+        /*
+         * Supabase may store the customer's name under
+         * full_name, name, display_name or first/last name,
+         * depending on how the account was created.
+         */
+        const metadata =
+          user?.user_metadata || {};
+
+        const accountName =
+          (
+            metadata.full_name ||
+            metadata.name ||
+            metadata.display_name ||
+            [
+              metadata.first_name,
+              metadata.last_name,
+            ]
+              .filter(Boolean)
+              .join(" ")
+          )
+            ?.trim() || "";
+
+        if (active) {
+          setForm((current) => ({
+            ...current,
+
+            name:
+              current.name ||
+              accountName,
+
+            email:
+              current.email ||
+              accountEmail,
+          }));
+        }
+      } catch (error) {
+        console.error(
+          "Unable to pre-fill feedback email:",
+          error
+        );
+      }
+    }
+
+    loadLoggedInEmail();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const [sending, setSending] = useState(false);
+
+  const [message, setMessage] = useState({
+    type: "",
+    text: "",
+  });
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    if (message.text) {
+      setMessage({
+        type: "",
+        text: "",
+      });
+    }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (
+      !form.name.trim() ||
+      !form.email.trim() ||
+      !form.comments.trim()
+    ) {
+      setMessage({
+        type: "error",
+        text: "Please complete all fields.",
+      });
+
+      return;
+    }
+
+    setSending(true);
+
+    setMessage({
+      type: "",
+      text: "",
+    });
+
+    try {
+      await feedbackApi.send({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        comments: form.comments.trim(),
+      });
+
+      setForm({
+        name: "",
+        email: "",
+        comments: "",
+      });
+
+      setMessage({
+        type: "success",
+        text: "Thank you for your feedback. Your message has been sent to the DEsiglov team.",
+      });
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text:
+          error?.message ||
+          "We couldn't send your feedback. Please try again.",
+      });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <InformationPage
+      eyebrow="FEEDBACK"
+      title="We'd love to hear from you."
+      intro="Your feedback helps us improve the DEsiglov experience."
+    >
+      <section className="feedback-section">
+        <div className="feedback-heading">
+          <span>SHARE YOUR THOUGHTS</span>
+
+          <p>
+            Tell us about your experience,
+            a product you received, or anything
+            we can improve.
+          </p>
+        </div>
+
+        <form
+          className="feedback-form"
+          onSubmit={handleSubmit}
+        >
+          <div className="feedback-field">
+            <label htmlFor="feedback-name">
+              Name
+            </label>
+
+            <input
+              id="feedback-name"
+              name="name"
+              type="text"
+              placeholder="Your name"
+              value={form.name}
+              onChange={handleChange}
+              maxLength={100}
+              autoComplete="name"
+              required
+            />
+          </div>
+
+          <div className="feedback-field">
+            <label htmlFor="feedback-email">
+              Email
+            </label>
+
+            <input
+              id="feedback-email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={handleChange}
+              maxLength={320}
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div className="feedback-field">
+            <div className="feedback-label-row">
+              <label htmlFor="feedback-comments">
+                Comments
+              </label>
+
+              <span>
+                {form.comments.length}/3000
+              </span>
+            </div>
+
+            <textarea
+              id="feedback-comments"
+              name="comments"
+              placeholder="Share your feedback with us..."
+              value={form.comments}
+              onChange={handleChange}
+              maxLength={3000}
+              rows={7}
+              required
+            />
+          </div>
+
+          {message.text && (
+            <div
+              className={`feedback-message ${message.type}`}
+              role={
+                message.type === "error"
+                  ? "alert"
+                  : "status"
+              }
+            >
+              {message.text}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="feedback-submit"
+            disabled={sending}
+          >
+            {sending
+              ? "SENDING..."
+              : "SEND FEEDBACK"}
+          </button>
+        </form>
+      </section>
+    </InformationPage>
+  );
+}
+
+
+function DeliveryPage() {
   return (
     <InformationPage
       eyebrow="DELIVERY"
       title="From us to you."
-      intro="A simple overview of how DEsiglov delivery works."
+      intro="Everything you need to know about processing, dispatch and delivery of your DEsiglov order."
     >
-
       <InfoSection
         number="01"
-        title="Delivery locations"
+        title="Order Processing"
       >
         <p>
-          DEsiglov currently focuses on delivery across India. Available delivery options are confirmed during checkout.
+          Every order is carefully checked and packed before dispatch.
+          Orders are generally processed and dispatched within 1–3
+          business days after order confirmation.
         </p>
       </InfoSection>
-
 
       <InfoSection
         number="02"
-        title="Delivery charges"
+        title="Delivery Timeline"
       >
         <p>
-          Orders of ₹2,999 or more qualify for free standard delivery where available.
+          Delivery generally takes 2–7 business days after dispatch,
+          depending on destination and courier service.
         </p>
 
         <p>
-          Orders below the free-delivery threshold may include a delivery charge shown clearly before the order is placed.
+          Timelines may vary due to courier delays, holidays, weather
+          or circumstances beyond our control.
         </p>
       </InfoSection>
-
 
       <InfoSection
         number="03"
-        title="Processing"
+        title="Tracking & Address"
       >
         <p>
-          Orders are prepared after they are confirmed. Dispatch and delivery times can vary by destination, product availability and courier service.
+          Tracking details will be shared after dispatch.
         </p>
-      </InfoSection>
-
-
-      <InfoSection
-        number="04"
-        title="Tracking"
-      >
-        <p>
-          Once shipping notifications are connected, customers will receive dispatch and tracking information using the contact details associated with their order.
-        </p>
-      </InfoSection>
-
-
-      <div className="policy-note">
-        <strong>
-          Important
-        </strong>
 
         <p>
-          Final courier partners and exact delivery estimates should be added before production launch.
+          Customers should verify their address, pincode and contact
+          number before ordering. Address changes may not be possible
+          after dispatch.
         </p>
-      </div>
-
+      </InfoSection>
     </InformationPage>
   );
 }
 
 
 function ReturnsPage() {
-
   return (
     <InformationPage
-      eyebrow="RETURNS & REFUNDS"
-      title="When something is not right."
-      intro="Our returns process should be clear, fair and easy to understand."
+      eyebrow="RETURNS & EXCHANGES"
+      title="We want you to love what you receive."
+      intro="Every DEsiglov order goes through a careful quality-checking process before it is packed and dispatched."
     >
-
       <InfoSection
         number="01"
-        title="Return eligibility"
+        title="Our Quality Check"
       >
         <p>
-          Items must be unworn, unused and returned in their original condition with tags and packaging where applicable.
+          We check the product for visible defects, finishing and
+          overall condition before it leaves us.
         </p>
       </InfoSection>
-
 
       <InfoSection
         number="02"
-        title="Non-returnable items"
+        title="Size-related Issues"
       >
         <p>
-          Certain products may not be eligible for return for hygiene, customisation or other product-specific reasons. Any restriction should be shown clearly before purchase.
+          If the size received isn't the right fit, the customer may
+          request a size exchange/return within 7 days of delivery,
+          subject to eligibility and availability.
+        </p>
+
+        <p>
+          Customers should use the Size Guide before ordering.
         </p>
       </InfoSection>
-
 
       <InfoSection
         number="03"
-        title="Starting a return"
+        title="Eligible Product Condition"
       >
         <p>
-          Contact DEsiglov with your order number and the item you would like to return. Instructions will then be provided based on the order.
+          To be eligible for a size exchange or return, the product
+          must meet all of the following conditions:
         </p>
-      </InfoSection>
 
+        <ul>
+          <li>Unworn, unwashed and unaltered.</li>
+          <li>Original tags attached.</li>
+          <li>Original condition and packaging.</li>
+          <li>No stains, perfume, makeup or other signs of use.</li>
+        </ul>
+      </InfoSection>
 
       <InfoSection
         number="04"
-        title="Refunds"
+        title="Other Return Reasons"
       >
         <p>
-          Approved refunds should be issued using the appropriate method after returned items have been received and inspected.
+          As each order undergoes a complete quality check before
+          packing and dispatch, DEsiglov is unable to accept returns
+          or exchanges for reasons other than size-related issues.
         </p>
 
         <p>
-          Cash-on-delivery refund arrangements may require separate bank or UPI details from the customer.
+          This includes change of mind, colour preference, styling
+          preference or simply not liking the product after receiving
+          it. Customers are kindly requested to review product details,
+          measurements and the Size Guide before ordering.
         </p>
       </InfoSection>
 
-
-      <div className="policy-note">
-        <strong>
-          Final policy required before launch
-        </strong>
-
+      <InfoSection
+        number="05"
+        title="Size Availability"
+      >
         <p>
-          Confirm the exact return window, return shipping responsibility and refund processing period before accepting live orders.
+          Size exchanges are subject to availability. If the requested
+          replacement size is unavailable, the DEsiglov team will
+          contact the customer regarding the available resolution.
         </p>
-      </div>
+      </InfoSection>
 
+      <InfoSection
+        number="06"
+        title="Jewellery & Accessories"
+      >
+        <p>
+          Jewellery and accessories are non-returnable/non-exchangeable
+          due to hygiene and product-handling considerations, except
+          where the item received is incorrect or has an issue identified
+          upon delivery, subject to review.
+        </p>
+      </InfoSection>
     </InformationPage>
   );
 }
@@ -9058,11 +10239,21 @@ function Footer({
             Contact
           </button>
 
-          <button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/delivery")
+            }
+          >
             Delivery
           </button>
 
-          <button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/returns")
+            }
+          >
             Returns
           </button>
 
@@ -9073,6 +10264,15 @@ function Footer({
             }
           >
             Size Guide
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/feedback")
+            }
+          >
+            Feedback
           </button>
         </div>
 
@@ -9087,6 +10287,14 @@ function Footer({
             rel="noreferrer"
           >
             Instagram
+          </a>
+
+          <a
+            href="https://chat.whatsapp.com/IgWPbkO7SDd7S2EinQ56EW"
+            target="_blank"
+            rel="noreferrer"
+          >
+            WhatsApp
           </a>
         </div>
       </div>

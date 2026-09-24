@@ -273,58 +273,6 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
-  // PRODUCT REVIEWS
-  // =========================================================
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS product_reviews (
-      id UUID PRIMARY KEY,
-
-      product_id INTEGER
-        NOT NULL
-        REFERENCES products(id)
-        ON DELETE CASCADE,
-
-      user_id UUID
-        NOT NULL
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-      rating INTEGER
-        NOT NULL
-        CHECK (
-          rating >= 1
-          AND rating <= 5
-        ),
-
-      comment TEXT
-        NOT NULL,
-
-      created_at TIMESTAMPTZ
-        NOT NULL
-        DEFAULT NOW(),
-
-      updated_at TIMESTAMPTZ
-        NOT NULL
-        DEFAULT NOW(),
-
-      UNIQUE (
-        product_id,
-        user_id
-      )
-    );
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS product_reviews_product_index
-    ON product_reviews (
-      product_id,
-      updated_at DESC
-    );
-  `);
-
-
-  // =========================================================
   // SEED PRODUCTS
   //
   // Price, stock and active are NOT overwritten on restart.
@@ -873,19 +821,15 @@ export async function initialiseDatabase() {
   // ADMIN
   // =========================================================
 
-  const adminEmails =
-    String(
-      process.env.ADMIN_EMAILS ||
-      process.env.ADMIN_EMAIL ||
-      ""
-    )
-      .split(",")
-      .map((email) =>
-        email.trim().toLowerCase()
-      )
-      .filter(Boolean);
+  if (
+    process.env.ADMIN_EMAIL
+  ) {
 
-  if (adminEmails.length > 0) {
+    const adminEmail =
+      process.env.ADMIN_EMAIL
+        .trim()
+        .toLowerCase();
+
 
     const result =
       await pool.query(
@@ -896,19 +840,22 @@ export async function initialiseDatabase() {
           role = 'ADMIN',
           updated_at = NOW()
 
-        WHERE LOWER(email) = ANY($1::text[])
+        WHERE LOWER(email) = $1
 
         RETURNING email
         `,
         [
-          adminEmails,
+          adminEmail,
         ]
       );
 
 
-    for (const row of result.rows) {
+    if (
+      result.rowCount > 0
+    ) {
+
       console.log(
-        `✓ Admin enabled: ${row.email}`
+        `✓ Admin enabled: ${adminEmail}`
       );
     }
   }

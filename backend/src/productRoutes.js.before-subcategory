@@ -95,9 +95,6 @@ export function publicProduct(
     category:
       row.category,
 
-    subcategory:
-      row.subcategory || "",
-
     priceINR:
       row.price_inr,
 
