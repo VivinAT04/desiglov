@@ -486,6 +486,25 @@ function App() {
 
 
   useEffect(() => {
+
+    if (
+      "scrollRestoration" in
+      window.history
+    ) {
+      window.history.scrollRestoration =
+        "manual";
+    }
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+
+  }, []);
+
+
+  useEffect(() => {
     const listener = () => {
       setRoute(currentRoute());
     };
@@ -11307,7 +11326,7 @@ function ContactPage() {
     {
       number: "01",
       name: "Abinaya Parameswari B.S.",
-      role: "Associate Software Engineer at Accenture",
+      role: "Founder of DesiGlov",
       phone: "+91 93449 21188",
       phoneLink: "tel:+919344921188",
       image: "/Founder1.png",
@@ -11315,7 +11334,7 @@ function ContactPage() {
     {
       number: "02",
       name: "Harini M.",
-      role: "Software System Engineer at HP",
+      role: "Founder of DesiGlov",
       phone: "+91 72002 32989",
       phoneLink: "tel:+917200232989",
       image: "/Founder2.png",
@@ -11399,7 +11418,7 @@ function ContactPage() {
 
           <p>
             {contactView === "founders"
-              ? "Connect directly with the people behind DEsiglov."
+              ? "Connect directly with the people behind DesiGlov."
               : "Meet the team working behind DEsiglov."}
           </p>
 
@@ -11424,9 +11443,7 @@ function ContactPage() {
 
                   <div className="founder-details">
 
-                    <small>
-                      FOUNDER {founder.number}
-                    </small>
+
 
                     <h2>
                       {founder.name}
