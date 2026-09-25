@@ -11310,7 +11310,7 @@ function ContactPage() {
       role: "Associate Software Engineer at Accenture",
       phone: "+91 93449 21188",
       phoneLink: "tel:+919344921188",
-      image: "/Founder1.jpg",
+      image: "/Founder1.png",
     },
     {
       number: "02",
