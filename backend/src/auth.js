@@ -95,7 +95,12 @@ async function syncLocalUser(user) {
       ON CONFLICT (id)
       DO UPDATE SET
         full_name =
-          EXCLUDED.full_name,
+          CASE
+            WHEN users.full_name IS NULL
+              OR BTRIM(users.full_name) = ''
+              THEN EXCLUDED.full_name
+            ELSE users.full_name
+          END,
         email =
           EXCLUDED.email,
         role =

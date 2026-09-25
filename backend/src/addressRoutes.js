@@ -362,6 +362,172 @@ router.post(
 
 
 // ===========================================================
+// UPDATE ADDRESS
+// ===========================================================
+
+router.patch(
+  "/:id",
+  requireAuth,
+  async (
+    req,
+    res,
+    next
+  ) => {
+    const client =
+      await pool.connect();
+
+    try {
+      const parsed =
+        addressSchema.safeParse(
+          req.body
+        );
+
+      if (
+        !parsed.success
+      ) {
+        return res
+          .status(400)
+          .json({
+            error:
+              parsed.error
+                .issues[0]
+                ?.message ||
+              "Please check your address.",
+          });
+      }
+
+      const data =
+        parsed.data;
+
+      await client.query(
+        "BEGIN"
+      );
+
+      const existing =
+        await client.query(
+          `
+          SELECT *
+
+          FROM addresses
+
+          WHERE
+            id = $1
+            AND user_id = $2
+
+          LIMIT 1
+          `,
+          [
+            req.params.id,
+            req.userId,
+          ]
+        );
+
+      if (
+        existing.rowCount ===
+        0
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res
+          .status(404)
+          .json({
+            error:
+              "Address not found.",
+          });
+      }
+
+      const shouldDefault =
+        data.isDefault ||
+        existing.rows[0]
+          .is_default;
+
+      if (
+        shouldDefault
+      ) {
+        await client.query(
+          `
+          UPDATE addresses
+
+          SET
+            is_default = FALSE,
+            updated_at = NOW()
+
+          WHERE user_id = $1
+          `,
+          [
+            req.userId,
+          ]
+        );
+      }
+
+      const result =
+        await client.query(
+          `
+          UPDATE addresses
+
+          SET
+            full_name = $1,
+            phone = $2,
+            line1 = $3,
+            line2 = $4,
+            city = $5,
+            state = $6,
+            postal_code = $7,
+            country = $8,
+            is_default = $9,
+            updated_at = NOW()
+
+          WHERE
+            id = $10
+            AND user_id = $11
+
+          RETURNING *
+          `,
+          [
+            data.fullName,
+            data.phone,
+            data.line1,
+            data.line2 ||
+              null,
+            data.city,
+            data.state,
+            data.postalCode,
+            data.country,
+            shouldDefault,
+            req.params.id,
+            req.userId,
+          ]
+        );
+
+      await client.query(
+        "COMMIT"
+      );
+
+      return res.json({
+        message:
+          "Address updated.",
+
+        address:
+          publicAddress(
+            result.rows[0]
+          ),
+      });
+    } catch (error) {
+      await client.query(
+        "ROLLBACK"
+      );
+
+      next(error);
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+// ===========================================================
 // MAKE DEFAULT
 // ===========================================================
 

@@ -6354,6 +6354,47 @@ function AccountPage({
   const [orders, setOrders] =
     useState([]);
 
+  const [accountView, setAccountView] =
+    useState("home");
+
+  const [profile, setProfile] =
+    useState({
+      fullName: "",
+      phone: "",
+      email: "",
+      avatarUrl: "",
+    });
+
+  const [profileSaving, setProfileSaving] =
+    useState(false);
+
+  const [avatarSaving, setAvatarSaving] =
+    useState(false);
+
+  const [addressSaving, setAddressSaving] =
+    useState(false);
+
+  const [editingAddressId, setEditingAddressId] =
+    useState(null);
+
+  const emptyAddressForm = {
+    fullName: "",
+    phone: "",
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "India",
+    isDefault: false,
+  };
+
+  const [addressForm, setAddressForm] =
+    useState(emptyAddressForm);
+
+  const [showAddressForm, setShowAddressForm] =
+    useState(false);
+
   const [form, setForm] =
     useState({
       fullName: "",
@@ -6425,10 +6466,12 @@ function AccountPage({
           const [
             addressResult,
             orderResult,
+            profileResult,
           ] =
             await Promise.all([
               addressApi.list(),
               orderApi.list(),
+              authApi.me(),
             ]);
 
           if (!active) {
@@ -6450,6 +6493,27 @@ function AccountPage({
               ? orderResult.orders
               : []
           );
+
+          if (profileResult?.user) {
+            const backendUser =
+              profileResult.user;
+
+            setProfile({
+              fullName:
+                backendUser.fullName || "",
+              phone:
+                backendUser.phone || "",
+              email:
+                backendUser.email || "",
+              avatarUrl:
+                backendUser.avatarUrl || "",
+            });
+
+            setUser((current) => ({
+              ...(current || {}),
+              ...backendUser,
+            }));
+          }
         } else {
           setAddresses([]);
           setOrders([]);
@@ -6802,6 +6866,452 @@ function AccountPage({
     }
   }
 
+  function changeAccountView(
+    nextView
+  ) {
+    setAccountView(
+      nextView
+    );
+    setError("");
+    setMessage("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function updateProfileField(
+    event
+  ) {
+    const {
+      name,
+      value,
+    } =
+      event.target;
+
+    setProfile(
+      (current) => ({
+        ...current,
+        [name]: value,
+      })
+    );
+  }
+
+  async function saveProfile(
+    event
+  ) {
+    event.preventDefault();
+
+    setProfileSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const result =
+        await authApi.updateProfile({
+          fullName:
+            profile.fullName.trim(),
+          phone:
+            profile.phone.trim(),
+        });
+
+      if (
+        result?.user
+      ) {
+        setProfile({
+          fullName:
+            result.user.fullName || "",
+          phone:
+            result.user.phone || "",
+          email:
+            result.user.email || "",
+          avatarUrl:
+            result.user.avatarUrl || "",
+        });
+
+        setUser(
+          (current) => ({
+            ...(current || {}),
+            ...result.user,
+          })
+        );
+
+        try {
+          await supabase.auth.updateUser({
+            data: {
+              full_name:
+                result.user.fullName,
+            },
+          });
+        } catch (
+          metadataError
+        ) {
+          console.warn(
+            "Supabase display name sync failed:",
+            metadataError
+          );
+        }
+      }
+
+      setMessage(
+        "Your account details have been updated."
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not update your account."
+      );
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
+  async function uploadProfilePhoto(
+    event
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      ![
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+      ].includes(
+        file.type
+      )
+    ) {
+      setError(
+        "Please choose a JPG, PNG or WEBP image."
+      );
+      return;
+    }
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+      setError(
+        "Profile photo must be 5 MB or smaller."
+      );
+      return;
+    }
+
+    setAvatarSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const result =
+        await authApi.uploadAvatar(
+          file
+        );
+
+      if (
+        result?.user
+      ) {
+        setProfile(
+          (current) => ({
+            ...current,
+            avatarUrl:
+              result.user.avatarUrl ||
+              "",
+          })
+        );
+
+        setUser(
+          (current) => ({
+            ...(current || {}),
+            avatarUrl:
+              result.user.avatarUrl ||
+              "",
+          })
+        );
+      }
+
+      setMessage(
+        "Your profile photo has been updated."
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not upload your profile photo."
+      );
+    } finally {
+      setAvatarSaving(false);
+    }
+  }
+
+  async function removeProfilePhoto() {
+    setAvatarSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const result =
+        await authApi.removeAvatar();
+
+      setProfile(
+        (current) => ({
+          ...current,
+          avatarUrl:
+            result?.user?.avatarUrl ||
+            "",
+        })
+      );
+
+      setUser(
+        (current) => ({
+          ...(current || {}),
+          avatarUrl:
+            result?.user?.avatarUrl ||
+            "",
+        })
+      );
+
+      setMessage(
+        "Your profile photo has been removed."
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not remove your profile photo."
+      );
+    } finally {
+      setAvatarSaving(false);
+    }
+  }
+
+  function updateAddressField(
+    event
+  ) {
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } =
+      event.target;
+
+    setAddressForm(
+      (current) => ({
+        ...current,
+        [name]:
+          type === "checkbox"
+            ? checked
+            : value,
+      })
+    );
+  }
+
+  function startNewAddress() {
+    setEditingAddressId(
+      null
+    );
+
+    setAddressForm({
+      ...emptyAddressForm,
+      fullName:
+        profile.fullName ||
+        user?.fullName ||
+        "",
+      phone:
+        profile.phone ||
+        "",
+    });
+
+    setShowAddressForm(
+      true
+    );
+
+    setError("");
+    setMessage("");
+  }
+
+  function startEditAddress(
+    address
+  ) {
+    setEditingAddressId(
+      address.id
+    );
+
+    setAddressForm({
+      fullName:
+        address.fullName || "",
+      phone:
+        address.phone || "",
+      line1:
+        address.line1 || "",
+      line2:
+        address.line2 || "",
+      city:
+        address.city || "",
+      state:
+        address.state || "",
+      postalCode:
+        address.postalCode || "",
+      country:
+        address.country ||
+        "India",
+      isDefault:
+        Boolean(
+          address.isDefault
+        ),
+    });
+
+    setShowAddressForm(
+      true
+    );
+
+    setError("");
+    setMessage("");
+  }
+
+  function cancelAddressForm() {
+    setEditingAddressId(
+      null
+    );
+    setShowAddressForm(
+      false
+    );
+    setAddressForm({
+      ...emptyAddressForm,
+    });
+  }
+
+  async function refreshAddresses() {
+    const result =
+      await addressApi.list();
+
+    setAddresses(
+      Array.isArray(
+        result?.addresses
+      )
+        ? result.addresses
+        : []
+    );
+  }
+
+  async function saveAddress(
+    event
+  ) {
+    event.preventDefault();
+
+    setAddressSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      if (
+        editingAddressId
+      ) {
+        await addressApi.update(
+          editingAddressId,
+          addressForm
+        );
+
+        setMessage(
+          "Delivery address updated."
+        );
+      } else {
+        await addressApi.create(
+          addressForm
+        );
+
+        setMessage(
+          "Delivery address added."
+        );
+      }
+
+      await refreshAddresses();
+      cancelAddressForm();
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not save your address."
+      );
+    } finally {
+      setAddressSaving(false);
+    }
+  }
+
+  async function makeAddressDefault(
+    id
+  ) {
+    setAddressSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      await addressApi.makeDefault(
+        id
+      );
+
+      await refreshAddresses();
+
+      setMessage(
+        "Default delivery address updated."
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not update the default address."
+      );
+    } finally {
+      setAddressSaving(false);
+    }
+  }
+
+  async function deleteAddress(
+    id
+  ) {
+    if (
+      !window.confirm(
+        "Remove this saved delivery address?"
+      )
+    ) {
+      return;
+    }
+
+    setAddressSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      await addressApi.remove(
+        id
+      );
+
+      await refreshAddresses();
+
+      if (
+        editingAddressId ===
+        id
+      ) {
+        cancelAddressForm();
+      }
+
+      setMessage(
+        "Delivery address removed."
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+        "Could not remove the address."
+      );
+    } finally {
+      setAddressSaving(false);
+    }
+  }
+
   async function logout() {
     setSubmitting(true);
     setError("");
@@ -6864,532 +7374,1009 @@ function AccountPage({
   }
 
   if (user) {
+    const firstName =
+      user.fullName
+        ?.trim()
+        .split(/\s+/)[0] ||
+      "there";
+
+    const latestOrder =
+      orders.length > 0
+        ? orders[0]
+        : null;
+
     return (
-      <>
-        <PageHero
-          eyebrow="YOUR DesiGlov"
-          title={`Hello, ${
-            user.fullName
-              .split(" ")[0]
-          }.`}
-          text="Orders, addresses and account details."
-        />
+      <main className="account-dashboard">
 
-        <section className="account-page logged-account">
-          {message && (
-            <div className="auth-message success">
-              {message}
-            </div>
-          )}
+        <section className="account-dashboard-intro">
+          <div>
+            <p className="account-dashboard-eyebrow">
+              MY ACCOUNT
+            </p>
 
-          {error && (
-            <div className="auth-message error">
-              {error}
-            </div>
-          )}
+            <h1>
+              Welcome back, {firstName}.
+            </h1>
 
-          <div className="account-card">
-            <div className="account-card-number">
-              01
-            </div>
-
-            <div>
-              <small>
-                ACCOUNT DETAILS
-              </small>
-
-              <h2>
-                {user.fullName}
-              </h2>
-
-              <p>
-                {user.email}
-              </p>
-            </div>
+            <p className="account-dashboard-subtitle">
+              Manage your orders, delivery details and
+              account information in one place.
+            </p>
           </div>
 
-          <div className="account-section">
-            <div className="account-section-heading">
-              <div>
-                <span>
-                  02
-                </span>
+        </section>
 
+        {message && (
+          <div className="account-dashboard-message success">
+            {message}
+          </div>
+        )}
+
+        {error && (
+          <div className="account-dashboard-message error">
+            {error}
+          </div>
+        )}
+
+        <div className="account-premium-layout">
+
+          <aside
+            className={
+              accountView === "details"
+                ? "account-premium-photo-column account-premium-photo-column-details"
+                : "account-premium-photo-column"
+            }
+          >
+
+            <div className="account-premium-photo">
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt="Profile"
+                />
+              ) : (
+                <div className="account-premium-photo-fallback">
+                  {firstName
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )}
+            </div>
+
+            {accountView === "details" ? (
+              <div className="account-details-sidebar-photo-actions">
+                <label
+                  className={
+                    avatarSaving
+                      ? "account-premium-change-photo disabled"
+                      : "account-premium-change-photo"
+                  }
+                >
+                  {avatarSaving
+                    ? "UPLOADING..."
+                    : profile.avatarUrl
+                      ? "CHANGE PHOTO"
+                      : "UPLOAD PHOTO"}
+
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={uploadProfilePhoto}
+                    disabled={avatarSaving}
+                  />
+                </label>
+
+                {profile.avatarUrl && (
+                  <button
+                    type="button"
+                    className="account-premium-remove-photo"
+                    onClick={removeProfilePhoto}
+                    disabled={avatarSaving}
+                  >
+                    {avatarSaving
+                      ? "PLEASE WAIT..."
+                      : "REMOVE PHOTO"}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="account-premium-signout"
+                onClick={logout}
+                disabled={submitting}
+              >
+                {submitting
+                  ? "SIGNING OUT..."
+                  : "SIGN OUT"}
+              </button>
+            )}
+
+          </aside>
+
+
+          <div className="account-premium-main">
+
+            {accountView === "home" && (
+              <div className="account-premium-home">
+
+                <button
+                  type="button"
+                  className="account-premium-card"
+                  onClick={() =>
+                    changeAccountView(
+                      "details"
+                    )
+                  }
+                >
+                  <div className="account-premium-card-top">
+                    <span>
+                      ACCOUNT DETAILS
+                    </span>
+
+                    <span>
+                      01
+                    </span>
+                  </div>
+
+                  <div className="account-premium-card-body">
+                    <div>
+                      <h2>
+                        Your account.
+                      </h2>
+
+                      <p>
+                        Manage your personal details,
+                        profile photo, phone number and
+                        delivery addresses.
+                      </p>
+                    </div>
+
+                    <span className="account-premium-card-action">
+                      MANAGE ACCOUNT →
+                    </span>
+                  </div>
+                </button>
+
+
+                <button
+                  type="button"
+                  className="account-premium-card"
+                  onClick={() =>
+                    changeAccountView(
+                      "orders"
+                    )
+                  }
+                >
+                  <div className="account-premium-card-top">
+                    <span>
+                      ORDERS & TRACKING
+                    </span>
+
+                    <span>
+                      {String(
+                        orders.length
+                      ).padStart(
+                        2,
+                        "0"
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="account-premium-card-body">
+                    <div>
+                      <h2>
+                        {orders.length === 0
+                          ? "Your orders."
+                          : orders.length === 1
+                            ? "1 order."
+                            : `${orders.length} orders.`}
+                      </h2>
+
+                      <p>
+                        View your purchases and follow
+                        your delivery progress.
+                      </p>
+                    </div>
+
+                    <span className="account-premium-card-action">
+                      VIEW ORDERS →
+                    </span>
+                  </div>
+                </button>
+
+              </div>
+            )}
+
+            {accountView === "orders" && (
+            <section
+              id="account-orders"
+              className="account-dashboard-section"
+            >
+              <div className="account-view-back-row">
+                <button
+                  type="button"
+                  className="account-view-back account-view-back-button"
+                  onClick={() =>
+                    changeAccountView("home")
+                  }
+                >
+                  ← BACK TO ACCOUNT
+                </button>
+              </div>
+
+              <div className="account-dashboard-section-heading">
                 <div>
-                  <small>
-                    ORDERS
-                  </small>
+                  <span className="account-section-kicker">
+                    ORDERS & DELIVERY
+                  </span>
 
                   <h2>
                     Your orders
                   </h2>
+
+                  <p>
+                    View your purchases and follow
+                    delivery progress.
+                  </p>
                 </div>
+
+                <span className="account-section-count">
+                  {orders.length}{" "}
+                  {orders.length === 1
+                    ? "ORDER"
+                    : "ORDERS"}
+                </span>
               </div>
 
-              <strong>
-                {orders.length} ORDER
-                {orders.length === 1
-                  ? ""
-                  : "S"}
-              </strong>
-            </div>
+              {orders.length === 0 ? (
+                <div className="account-dashboard-empty">
+                  <span className="account-empty-symbol">
+                    ◇
+                  </span>
 
-            {orders.length === 0 ? (
-              <div className="account-empty-block">
-                <h3>No orders yet.</h3>
-                <p>
-                  Your completed orders will appear here.
-                </p>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gap: "18px",
-                  marginTop: "22px",
-                }}
-              >
-                {orders.map((order) => {
-                  const codFee =
-                    order.paymentMethod === "COD"
-                      ? Math.max(
-                          0,
-                          Number(order.totalINR || 0) -
-                            Number(order.subtotalINR || 0) -
-                            Number(order.shippingINR || 0)
-                        )
-                      : 0;
+                  <h3>
+                    No orders yet.
+                  </h3>
 
-                  return (
-                    <article
-                      key={order.id}
-                      style={{
-                        border: "1px solid #e7ddd7",
-                        background: "#fff",
-                        padding: "24px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          gap: "20px",
-                          flexWrap: "wrap",
-                          paddingBottom: "18px",
-                          borderBottom: "1px solid #eee6e1",
-                        }}
+                  <p>
+                    When you place an order, its
+                    products, payment information and
+                    delivery tracking will appear here.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="account-empty-action"
+                    onClick={() =>
+                      navigate("/shop")
+                    }
+                  >
+                    SHOP THE COLLECTION →
+                  </button>
+                </div>
+              ) : (
+                <div className="account-order-list">
+
+                  {orders.map((order) => {
+                    const codFee =
+                      order.paymentMethod ===
+                      "COD"
+                        ? Math.max(
+                            0,
+                            Number(
+                              order.totalINR ||
+                                0
+                            ) -
+                              Number(
+                                order.subtotalINR ||
+                                  0
+                              ) -
+                              Number(
+                                order.shippingINR ||
+                                  0
+                              )
+                          )
+                        : 0;
+
+                    return (
+                      <article
+                        key={order.id}
+                        className="account-order-card"
                       >
-                        <div>
-                          <small
-                            style={{
-                              display: "block",
-                              letterSpacing: "0.15em",
-                              marginBottom: "8px",
-                            }}
-                          >
-                            ORDER NUMBER
-                          </small>
+                        <header className="account-order-header">
 
-                          <h3 style={{ margin: 0 }}>
-                            {order.orderNumber}
-                          </h3>
-
-                          <p style={{ margin: "8px 0 0" }}>
-                            {order.createdAt
-                              ? new Date(
-                                  order.createdAt
-                                ).toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "long",
-                                  year: "numeric",
-                                })
-                              : ""}
-                          </p>
-                        </div>
-
-                        <div style={{ textAlign: "right" }}>
-                          <strong
-                            style={{
-                              display: "block",
-                              marginBottom: "7px",
-                            }}
-                          >
-                            {order.status}
-                          </strong>
-
-                          <span>
-                            {order.paymentMethod} ·{" "}
-                            {order.paymentStatus}
-                          </span>
-                        </div>
-                      </div>
-
-                      <OrderTrackingTimeline
-                        order={order}
-                      />
-
-                      {Array.isArray(order.items) &&
-                      order.items.length > 0 ? (
-                        <div
-                          style={{
-                            display: "grid",
-                            gap: "14px",
-                            padding: "18px 0",
-                          }}
-                        >
-                          {order.items.map((item, index) => (
-                            <div
-                              key={
-                                item.productId ||
-                                `${order.id}-${index}`
-                              }
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: "20px",
-                              }}
-                            >
-                              <div>
-                                <strong>
-                                  {item.productName}
-                                </strong>
-
-                                <div
-                                  style={{
-                                    marginTop: "5px",
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  {item.size
-                                    ? `Size ${item.size} · `
-                                    : ""}
-                                  Qty {item.quantity}
-                                </div>
-                              </div>
-
-                              <strong>
-                                ₹
-                                {(
-                                  Number(
-                                    item.unitPriceINR || 0
-                                  ) *
-                                  Number(item.quantity || 1)
-                                ).toLocaleString("en-IN")}
-                              </strong>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-
-                      <div
-                        style={{
-                          borderTop: "1px solid #eee6e1",
-                          paddingTop: "16px",
-                          display: "grid",
-                          gap: "9px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span>Subtotal</span>
-                          <span>
-                            ₹
-                            {Number(
-                              order.subtotalINR || 0
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span>Delivery</span>
-                          <span>
-                            ₹
-                            {Number(
-                              order.shippingINR || 0
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        {codFee > 0 ? (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span>COD convenience fee</span>
+                          <div className="account-order-number">
                             <span>
-                              ₹{codFee.toLocaleString("en-IN")}
+                              ORDER
                             </span>
+
+                            <strong>
+                              {order.orderNumber}
+                            </strong>
+
+                            <p>
+                              {order.createdAt
+                                ? new Date(
+                                    order.createdAt
+                                  ).toLocaleDateString(
+                                    "en-GB",
+                                    {
+                                      day:
+                                        "2-digit",
+                                      month:
+                                        "long",
+                                      year:
+                                        "numeric",
+                                    }
+                                  )
+                                : ""}
+                            </p>
+                          </div>
+
+                          <div className="account-order-state">
+                            <span
+                              className={`account-order-status account-order-status-${String(
+                                order.status ||
+                                  ""
+                              )
+                                .toLowerCase()
+                                .replaceAll(
+                                  "_",
+                                  "-"
+                                )}`}
+                            >
+                              {customerTrackingStatus(
+                                order.status
+                              )}
+                            </span>
+
+                            <small>
+                              {order.paymentMethod}
+                              {" · "}
+                              {order.paymentStatus}
+                            </small>
+                          </div>
+
+                        </header>
+
+                        <div className="account-order-tracking">
+                          <OrderTrackingTimeline
+                            order={order}
+                          />
+                        </div>
+
+                        {Array.isArray(
+                          order.items
+                        ) &&
+                        order.items.length >
+                          0 ? (
+                          <div className="account-order-products">
+
+                            {order.items.map(
+                              (
+                                item,
+                                index
+                              ) => (
+                                <div
+                                  className="account-order-product"
+                                  key={
+                                    item.productId ||
+                                    `${order.id}-${index}`
+                                  }
+                                >
+                                  <div>
+                                    <strong>
+                                      {
+                                        item.productName
+                                      }
+                                    </strong>
+
+                                    <span>
+                                      {item.size
+                                        ? `Size ${item.size} · `
+                                        : ""}
+                                      Qty{" "}
+                                      {
+                                        item.quantity
+                                      }
+                                    </span>
+                                  </div>
+
+                                  <strong>
+                                    ₹
+                                    {(
+                                      Number(
+                                        item.unitPriceINR ||
+                                          0
+                                      ) *
+                                      Number(
+                                        item.quantity ||
+                                          1
+                                      )
+                                    ).toLocaleString(
+                                      "en-IN"
+                                    )}
+                                  </strong>
+                                </div>
+                              )
+                            )}
+
                           </div>
                         ) : null}
 
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            borderTop: "1px solid #eee6e1",
-                            paddingTop: "13px",
-                            marginTop: "4px",
-                            fontSize: "18px",
-                          }}
-                        >
-                          <strong>Total</strong>
-                          <strong>
-                            ₹
-                            {Number(
-                              order.totalINR || 0
-                            ).toLocaleString("en-IN")}
-                          </strong>
+                        <div className="account-order-footer">
+
+                          <div className="account-order-costs">
+
+                            <div>
+                              <span>
+                                Subtotal
+                              </span>
+
+                              <span>
+                                ₹
+                                {Number(
+                                  order.subtotalINR ||
+                                    0
+                                ).toLocaleString(
+                                  "en-IN"
+                                )}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span>
+                                Delivery
+                              </span>
+
+                              <span>
+                                {Number(
+                                  order.shippingINR ||
+                                    0
+                                ) === 0
+                                  ? "Free"
+                                  : `₹${Number(
+                                      order.shippingINR ||
+                                        0
+                                    ).toLocaleString(
+                                      "en-IN"
+                                    )}`}
+                              </span>
+                            </div>
+
+                            {codFee > 0 && (
+                              <div>
+                                <span>
+                                  COD convenience fee
+                                </span>
+
+                                <span>
+                                  ₹
+                                  {codFee.toLocaleString(
+                                    "en-IN"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                          </div>
+
+                          <div className="account-order-total">
+                            <span>
+                              TOTAL
+                            </span>
+
+                            <strong>
+                              ₹
+                              {Number(
+                                order.totalINR ||
+                                  0
+                              ).toLocaleString(
+                                "en-IN"
+                              )}
+                            </strong>
+                          </div>
+
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
 
-          <div className="account-section">
-            <div className="account-section-heading">
-              <div>
-                <span>
-                  03
-                </span>
+                      </article>
+                    );
+                  })}
 
-                <div>
-                  <small>
-                    SAVED ADDRESSES
-                  </small>
-
-                  <h2>
-                    Delivery details
-                  </h2>
                 </div>
-              </div>
-            </div>
+              )}
+            </section>
+            )}
 
-            {addresses.length === 0 ? (
-              <div className="account-empty-block">
-                <h3>No saved address yet.</h3>
-                <p>
-                  Your delivery address can be added during checkout.
-                </p>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gap: "16px",
-                  marginTop: "22px",
-                }}
+            {accountView === "details" && (
+              <section
+                id="account-details"
+                className="account-management-page"
               >
-                {addresses.map((address) => (
-                  <article
-                    key={address.id}
-                    style={{
-                      border: "1px solid #e7ddd7",
-                      background: "#fff",
-                      padding: "24px",
-                    }}
+                <div className="account-view-back-row account-view-back-row-details">
+                  <button
+                    type="button"
+                    className="account-view-back account-view-back-button"
+                    onClick={() =>
+                      changeAccountView("home")
+                    }
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        gap: "20px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div>
-                        <h3 style={{ margin: "0 0 10px" }}>
-                          {address.fullName}
-                        </h3>
+                    ← BACK TO ACCOUNT
+                  </button>
+                </div>
 
-                        <p
-                          style={{
-                            margin: 0,
-                            lineHeight: 1.8,
-                          }}
-                        >
-                          {address.line1}
-                          <br />
+                <div className="account-management-header">
+                  <div>
+                    <span className="account-section-kicker">
+                      PROFILE
+                    </span>
 
-                          {address.line2 ? (
-                            <>
-                              {address.line2}
-                              <br />
-                            </>
-                          ) : null}
+                    <h2>
+                      Account details
+                    </h2>
 
-                          {address.city}, {address.state}{" "}
-                          {address.postalCode}
-                          <br />
+                    <p>
+                      Manage your personal information and
+                      delivery details.
+                    </p>
+                  </div>
+                </div>
 
-                          {address.country}
-                          <br />
+                <div className="account-profile-editor">
+                  <form
+                    className="account-profile-form"
+                    onSubmit={saveProfile}
+                  >
+                    <div className="account-form-grid">
+                      <div className="account-form-field full">
+                        <label htmlFor="account-profile-name">
+                          FULL NAME
+                        </label>
 
-                          {address.phone}
+                        <input
+                          id="account-profile-name"
+                          name="fullName"
+                          value={profile.fullName}
+                          onChange={updateProfileField}
+                          autoComplete="name"
+                          required
+                        />
+                      </div>
+
+                      <div className="account-form-field full">
+                        <label htmlFor="account-profile-phone">
+                          PHONE NUMBER
+                        </label>
+
+                        <input
+                          id="account-profile-phone"
+                          name="phone"
+                          type="tel"
+                          value={profile.phone}
+                          onChange={updateProfileField}
+                          autoComplete="tel"
+                          placeholder="+91 98765 43210"
+                        />
+                      </div>
+
+                      <div className="account-form-field full">
+                        <label htmlFor="account-profile-email">
+                          EMAIL ADDRESS
+                        </label>
+
+                        <input
+                          id="account-profile-email"
+                          type="email"
+                          value={
+                            profile.email ||
+                            user.email ||
+                            ""
+                          }
+                          autoComplete="email"
+                          disabled
+                        />
+
+                        <p className="account-form-note">
+                          This is the email used to securely
+                          sign in to your DesiGlov account.
                         </p>
                       </div>
-
-                      {address.isDefault ? (
-                        <strong
-                          style={{
-                            fontSize: "10px",
-                            letterSpacing: "0.15em",
-                            border: "1px solid #c9a58f",
-                            padding: "7px 10px",
-                          }}
-                        >
-                          DEFAULT
-                        </strong>
-                      ) : null}
                     </div>
-                  </article>
-                ))}
-              </div>
+
+                    <div className="account-form-actions">
+                      <button
+                        type="submit"
+                        className="account-primary-small"
+                        disabled={profileSaving}
+                      >
+                        {profileSaving
+                          ? "SAVING..."
+                          : "SAVE ACCOUNT DETAILS"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <div
+                  id="account-addresses"
+                  className="account-details-addresses"
+                >
+                  <div className="account-management-header account-details-address-header">
+                    <div>
+                      <span className="account-section-kicker">
+                        DELIVERY
+                      </span>
+
+                      <h2>
+                        Delivery addresses
+                      </h2>
+
+                      <p>
+                        Add and manage the addresses you use
+                        for your DesiGlov deliveries.
+                      </p>
+                    </div>
+
+                    {!showAddressForm && (
+                      <button
+                        type="button"
+                        className="account-primary-small"
+                        onClick={startNewAddress}
+                      >
+                        + ADD ADDRESS
+                      </button>
+                    )}
+                  </div>
+
+                  {showAddressForm && (
+                    <form
+                      className="account-address-form"
+                      onSubmit={saveAddress}
+                    >
+                      <div className="account-address-form-heading">
+                        <div>
+                          <span className="account-section-kicker">
+                            {editingAddressId
+                              ? "EDIT ADDRESS"
+                              : "NEW ADDRESS"}
+                          </span>
+
+                          <h3>
+                            {editingAddressId
+                              ? "Update delivery address"
+                              : "Add delivery address"}
+                          </h3>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="account-address-form-close"
+                          onClick={cancelAddressForm}
+                          aria-label="Close address form"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      <div className="account-form-grid">
+                        <div className="account-form-field">
+                          <label htmlFor="account-address-name">
+                            FULL NAME
+                          </label>
+
+                          <input
+                            id="account-address-name"
+                            name="fullName"
+                            value={addressForm.fullName}
+                            onChange={updateAddressField}
+                            autoComplete="name"
+                            required
+                          />
+                        </div>
+
+                        <div className="account-form-field">
+                          <label htmlFor="account-address-phone">
+                            PHONE NUMBER
+                          </label>
+
+                          <input
+                            id="account-address-phone"
+                            name="phone"
+                            type="tel"
+                            value={addressForm.phone}
+                            onChange={updateAddressField}
+                            autoComplete="tel"
+                            required
+                          />
+                        </div>
+
+                        <div className="account-form-field full">
+                          <label htmlFor="account-address-line1">
+                            ADDRESS LINE 1
+                          </label>
+
+                          <input
+                            id="account-address-line1"
+                            name="line1"
+                            value={addressForm.line1}
+                            onChange={updateAddressField}
+                            autoComplete="address-line1"
+                            required
+                          />
+                        </div>
+
+                        <div className="account-form-field full">
+                          <label htmlFor="account-address-line2">
+                            ADDRESS LINE 2
+                          </label>
+
+                          <input
+                            id="account-address-line2"
+                            name="line2"
+                            value={addressForm.line2}
+                            onChange={updateAddressField}
+                            autoComplete="address-line2"
+                            placeholder="Apartment, suite, landmark (optional)"
+                          />
+                        </div>
+
+                        <div className="account-form-field">
+                          <label htmlFor="account-address-city">
+                            CITY
+                          </label>
+
+                          <input
+                            id="account-address-city"
+                            name="city"
+                            value={addressForm.city}
+                            onChange={updateAddressField}
+                            autoComplete="address-level2"
+                            required
+                          />
+                        </div>
+
+                        <div className="account-form-field">
+                          <label htmlFor="account-address-state">
+                            STATE
+                          </label>
+
+                          <input
+                            id="account-address-state"
+                            name="state"
+                            value={addressForm.state}
+                            onChange={updateAddressField}
+                            autoComplete="address-level1"
+                            required
+                          />
+                        </div>
+
+                        <div className="account-form-field">
+                          <label htmlFor="account-address-postcode">
+                            POSTAL CODE
+                          </label>
+
+                          <input
+                            id="account-address-postcode"
+                            name="postalCode"
+                            value={addressForm.postalCode}
+                            onChange={updateAddressField}
+                            autoComplete="postal-code"
+                            required
+                          />
+                        </div>
+
+                        <div className="account-form-field">
+                          <label htmlFor="account-address-country">
+                            COUNTRY
+                          </label>
+
+                          <input
+                            id="account-address-country"
+                            name="country"
+                            value={addressForm.country}
+                            onChange={updateAddressField}
+                            autoComplete="country-name"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <label className="account-default-checkbox">
+                        <input
+                          type="checkbox"
+                          name="isDefault"
+                          checked={addressForm.isDefault}
+                          onChange={updateAddressField}
+                        />
+
+                        <span>
+                          Make this my default delivery address
+                        </span>
+                      </label>
+
+                      <div className="account-form-actions">
+                        <button
+                          type="submit"
+                          className="account-primary-small"
+                          disabled={addressSaving}
+                        >
+                          {addressSaving
+                            ? "SAVING..."
+                            : editingAddressId
+                              ? "SAVE CHANGES"
+                              : "SAVE ADDRESS"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="account-secondary-small"
+                          onClick={cancelAddressForm}
+                          disabled={addressSaving}
+                        >
+                          CANCEL
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {!showAddressForm &&
+                    addresses.length === 0 && (
+                      <div className="account-dashboard-empty account-details-address-empty">
+                        <span className="account-empty-symbol">
+                          ◇
+                        </span>
+
+                        <h3>
+                          No saved addresses.
+                        </h3>
+
+                        <p>
+                          Add a delivery address to make
+                          checkout quicker next time.
+                        </p>
+
+                        <button
+                          type="button"
+                          className="account-empty-action"
+                          onClick={startNewAddress}
+                        >
+                          ADD DELIVERY ADDRESS →
+                        </button>
+                      </div>
+                    )}
+
+                  {!showAddressForm &&
+                    addresses.length > 0 && (
+                      <div className="account-address-manager">
+                        {addresses.map(
+                          (
+                            address,
+                            index
+                          ) => (
+                            <article
+                              key={address.id}
+                              className="account-managed-address"
+                            >
+                              <div className="account-managed-address-top">
+                                <span>
+                                  ADDRESS{" "}
+                                  {String(
+                                    index + 1
+                                  ).padStart(
+                                    2,
+                                    "0"
+                                  )}
+                                </span>
+
+                                {address.isDefault && (
+                                  <small className="account-default-badge">
+                                    DEFAULT
+                                  </small>
+                                )}
+                              </div>
+
+                              <h3>
+                                {address.fullName}
+                              </h3>
+
+                              <p>
+                                {address.line1}
+                                <br />
+
+                                {address.line2 ? (
+                                  <>
+                                    {address.line2}
+                                    <br />
+                                  </>
+                                ) : null}
+
+                                {address.city},{" "}
+                                {address.state}{" "}
+                                {address.postalCode}
+                                <br />
+
+                                {address.country}
+                              </p>
+
+                              {address.phone && (
+                                <span className="account-managed-address-phone">
+                                  {address.phone}
+                                </span>
+                              )}
+
+                              <div className="account-address-actions">
+                                <button
+                                  type="button"
+                                  className="account-secondary-small"
+                                  onClick={() =>
+                                    startEditAddress(
+                                      address
+                                    )
+                                  }
+                                  disabled={
+                                    addressSaving
+                                  }
+                                >
+                                  EDIT
+                                </button>
+
+                                {!address.isDefault && (
+                                  <button
+                                    type="button"
+                                    className="account-secondary-small"
+                                    onClick={() =>
+                                      makeAddressDefault(
+                                        address.id
+                                      )
+                                    }
+                                    disabled={
+                                      addressSaving
+                                    }
+                                  >
+                                    SET DEFAULT
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  className="account-danger-small"
+                                  onClick={() =>
+                                    deleteAddress(
+                                      address.id
+                                    )
+                                  }
+                                  disabled={
+                                    addressSaving
+                                  }
+                                >
+                                  DELETE
+                                </button>
+                              </div>
+                            </article>
+                          )
+                        )}
+                      </div>
+                    )}
+                </div>
+
+                <div className="account-profile-security">
+                  <span>
+                    SECURE ACCOUNT
+                  </span>
+
+                  <p>
+                    Your orders, delivery addresses and account
+                    information are available only while you are
+                    securely signed in.
+                  </p>
+                </div>
+              </section>
             )}
+
           </div>
-
-          <button
-            className="account-logout"
-            type="button"
-            disabled={submitting}
-            onClick={logout}
-          >
-            {submitting
-              ? "SIGNING OUT..."
-              : "SIGN OUT"}
-          </button>
-        </section>
-      </>
-    );
-  }
-
-  if (
-    mode === "register" &&
-    registrationStep === "otp"
-  ) {
-    return (
-      <>
-        <PageHero
-          eyebrow="VERIFY YOUR EMAIL"
-          title="Enter your code."
-          text={`We sent an 8-digit verification code to ${pendingRegistrationEmail}.`}
-        />
-
-        <section className="account-page">
-          {message && (
-            <div className="auth-message success">
-              {message}
-            </div>
-          )}
-
-          {error && (
-            <div className="auth-message error">
-              {error}
-            </div>
-          )}
-
-          <form
-            className="auth-form"
-            onSubmit={
-              verifyRegistrationOtp
-            }
-          >
-            <label className="auth-field">
-              <span>
-                8-DIGIT CODE
-              </span>
-
-              <input
-                required
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength="8"
-                value={
-                  registrationOtp
-                }
-                onChange={(event) =>
-                  setRegistrationOtp(
-                    event.target.value
-                      .replace(
-                        /\D/g,
-                        ""
-                      )
-                      .slice(0, 8)
-                  )
-                }
-                placeholder="00000000"
-                style={{
-                  textAlign:
-                    "center",
-                  letterSpacing:
-                    "0.35em",
-                  fontSize:
-                    "1.35rem",
-                }}
-              />
-            </label>
-
-            <button
-              className="add-bag auth-submit"
-              disabled={submitting}
-            >
-              {submitting
-                ? "VERIFYING..."
-                : "VERIFY & CREATE ACCOUNT"}
-            </button>
-          </form>
-
-          <div className="account-switch">
-            Didn't receive the code?
-
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={
-                resendRegistrationOtp
-              }
-            >
-              Resend code
-            </button>
-          </div>
-
-          <div className="account-switch">
-            Wrong email?
-
-            <button
-              type="button"
-              onClick={() => {
-                setRegistrationStep(
-                  "details"
-                );
-                setRegistrationOtp(
-                  ""
-                );
-                setError("");
-                setMessage("");
-              }}
-            >
-              Change email
-            </button>
-          </div>
-        </section>
-      </>
+        </div>
+      </main>
     );
   }
 
@@ -12229,7 +13216,7 @@ function ContactPage() {
   {
     name: "Chithran V",
     role: "IT Team",
-    image: "/Cithran.jpg",
+    image: "/cithu.jpg",
     phone: "+91 93604 14757",
     phoneLink: "tel:+919360414757",
   },
@@ -12250,14 +13237,14 @@ function ContactPage() {
   {
     name: "Dharsana S",
     role: "Operations & Maintenance",
-    image: "/Dharsana.jpeg",
+    image: "/dhars.jpg",
     phone: "+91 88257 57382",
     phoneLink: "tel:+918825757382",
   },
   {
     name: "Akash M",
     role: "Marketing",
-    image: "/Akash.png",
+    image: "/akass.jpg",
     phone: "+91 93609 54821",
     phoneLink: "tel:+919360954821",
   },

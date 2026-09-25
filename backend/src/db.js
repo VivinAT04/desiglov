@@ -94,6 +94,23 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
+  // CUSTOMER PROFILE
+  // =========================================================
+
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS phone
+    VARCHAR(30);
+  `);
+
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS avatar_url
+    TEXT;
+  `);
+
+
+  // =========================================================
   // ADDRESSES
   // =========================================================
 

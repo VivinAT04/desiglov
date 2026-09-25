@@ -122,6 +122,46 @@ export const authApi = {
       "/auth/me"
     );
   },
+
+  updateProfile(profile) {
+    return request(
+      "/auth/me",
+      {
+        method: "PATCH",
+        body:
+          JSON.stringify(
+            profile
+          ),
+      }
+    );
+  },
+
+  uploadAvatar(file) {
+    const formData =
+      new FormData();
+
+    formData.append(
+      "photo",
+      file
+    );
+
+    return request(
+      "/auth/me/avatar",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+  },
+
+  removeAvatar() {
+    return request(
+      "/auth/me/avatar",
+      {
+        method: "DELETE",
+      }
+    );
+  },
 };
 
 
@@ -141,6 +181,19 @@ export const addressApi = {
       "/addresses",
       {
         method: "POST",
+        body:
+          JSON.stringify(
+            address
+          ),
+      }
+    );
+  },
+
+  update(id, address) {
+    return request(
+      `/addresses/${id}`,
+      {
+        method: "PATCH",
         body:
           JSON.stringify(
             address
