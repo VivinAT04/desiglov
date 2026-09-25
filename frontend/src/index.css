@@ -14736,3 +14736,199 @@ input:disabled {
     width: 100%;
   }
 }
+
+/* ============================================================
+   DESIGLOV — RESPONSIVE HEADER
+   Phone + Tablet refinement
+   ============================================================ */
+
+@media (max-width: 1020px) {
+  .header {
+    width: 100%;
+    min-height: 76px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-left: clamp(10px, 3vw, 20px);
+    padding-right: clamp(10px, 3vw, 20px);
+  }
+
+  .mobile-menu-button {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .header > .brand {
+    min-width: 0;
+    justify-self: center;
+    display: block;
+  }
+
+  .header > .brand .brand-word {
+    justify-content: center;
+    font-size: clamp(24px, 4vw, 29px);
+  }
+
+  .header > .brand .brand-line {
+    margin-top: 6px;
+    font-size: 5px;
+    letter-spacing: clamp(2px, 0.45vw, 3.5px);
+    white-space: nowrap;
+  }
+
+  .header-centre {
+    display: none;
+  }
+
+  .header-tools {
+    min-width: 0;
+    gap: 0;
+  }
+
+  .header-tools .icon-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .header-tools .icon-button svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .mobile-nav {
+    top: 110px;
+    max-height: calc(100dvh - 110px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px clamp(18px, 5vw, 36px) 24px;
+  }
+
+  .mobile-nav button {
+    min-height: 50px;
+    font-size: clamp(17px, 2.6vw, 20px);
+  }
+}
+
+
+/* Normal phones */
+@media (max-width: 600px) {
+  .announcement {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 12px;
+    gap: 0;
+    overflow: hidden;
+    font-size: 6px;
+    letter-spacing: 1.6px;
+    white-space: nowrap;
+  }
+
+  .header {
+    min-height: 70px;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .mobile-menu-button {
+    width: 40px;
+    height: 40px;
+    font-size: 19px;
+  }
+
+  .header > .brand .brand-word {
+    font-size: clamp(21px, 6.5vw, 27px);
+    letter-spacing: 0.5px;
+  }
+
+  .header > .brand .brand-line {
+    margin-top: 5px;
+    font-size: 4.5px;
+    letter-spacing: clamp(1.5px, 0.8vw, 2.7px);
+  }
+
+  .header-tools .icon-button {
+    width: 38px;
+    height: 40px;
+  }
+
+  .header-tools .icon-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .cart-count {
+    right: -1px;
+    top: 0;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 8px;
+  }
+
+  .mobile-nav {
+    top: 100px;
+    max-height: calc(100dvh - 100px);
+    padding: 6px 18px 22px;
+  }
+
+  .mobile-nav button {
+    min-height: 48px;
+    font-size: 17px;
+  }
+}
+
+
+/* Small phones */
+@media (max-width: 380px) {
+  .header {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    padding-left: 5px;
+    padding-right: 5px;
+    gap: 2px;
+  }
+
+  .mobile-menu-button {
+    width: 36px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .header > .brand .brand-word {
+    font-size: 21px;
+  }
+
+  .header > .brand .brand-line {
+    font-size: 4px;
+    letter-spacing: 1.4px;
+  }
+
+  .header-tools .icon-button {
+    width: 36px;
+  }
+
+  .header-tools .icon-button svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+
+/* Very narrow phones */
+@media (max-width: 340px) {
+  .header > .brand .brand-word {
+    font-size: 19px;
+  }
+
+  .header > .brand .brand-line {
+    font-size: 3.8px;
+    letter-spacing: 1px;
+  }
+
+  .header-tools .icon-button {
+    width: 34px;
+  }
+}
+
