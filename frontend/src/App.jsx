@@ -1478,31 +1478,92 @@ function Header({
               "Anarkali Sets",
               "/shop?category=Anarkali%20Sets",
             ],
-            [
-              "Jewellery",
-              "/shop?category=Jewellery",
-            ],
-            [
-              "Wishlist",
-              "/wishlist",
-            ],
-            [
-              "Account",
-              "/account",
-            ],
           ].map(
             ([label, path]) => (
               <button
-                key={
-                  label
-                }
+                key={label}
+                onClick={() => {
+                  navigate(path);
+                  setMobileOpen(false);
+                }}
+              >
+                {label}
+              </button>
+            )
+          )}
+
+          <details className="mobile-nav-jewellery">
+            <summary>
+              <span>Jewellery</span>
+              <span
+                className="mobile-nav-jewellery-arrow"
+                aria-hidden="true"
+              >
+                ⌄
+              </span>
+            </summary>
+
+            <div className="mobile-nav-jewellery-submenu">
+              <button
+                type="button"
                 onClick={() => {
                   navigate(
-                    path
+                    "/shop?category=Jewellery"
                   );
-                  setMobileOpen(
-                    false
+                  setMobileOpen(false);
+                }}
+              >
+                All Jewellery
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(
+                    "/shop?category=Jewellery&subcategory=Earrings"
                   );
+                  setMobileOpen(false);
+                }}
+              >
+                Earrings
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(
+                    "/shop?category=Jewellery&subcategory=Chains"
+                  );
+                  setMobileOpen(false);
+                }}
+              >
+                Chains
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(
+                    "/shop?category=Jewellery&subcategory=Bracelets"
+                  );
+                  setMobileOpen(false);
+                }}
+              >
+                Bracelets
+              </button>
+            </div>
+          </details>
+
+          {[
+            ["Wishlist", "/wishlist"],
+            ["Account", "/account"],
+          ].map(
+            ([label, path]) => (
+              <button
+                key={label}
+                onClick={() => {
+                  navigate(path);
+                  setMobileOpen(false);
                 }}
               >
                 {label}
