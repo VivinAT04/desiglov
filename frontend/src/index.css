@@ -14155,3 +14155,22 @@ input:disabled {
     width: 100% !important;
   }
 }
+
+
+/* ============================================================
+   DESIGLOV — CONTACT PAGE BOTTOM SPACING
+   ============================================================ */
+
+.founders-section {
+  padding-bottom: 80px;
+}
+
+.founder-contact-note {
+  margin-bottom: 0;
+}
+
+@media (max-width: 650px) {
+  .founders-section {
+    padding-bottom: 55px;
+  }
+}
