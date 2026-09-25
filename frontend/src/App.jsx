@@ -1169,6 +1169,14 @@ function Header({
 
             <button
               onClick={() =>
+                navigate("/shop?category=Anarkali%20Sets")
+              }
+            >
+              Anarkali Sets
+            </button>
+
+            <button
+              onClick={() =>
                 navigate("/shop?category=Jewellery")
               }
             >
@@ -1312,6 +1320,10 @@ function Header({
             [
               "3 Piece Sets",
               "/shop?category=3%20Piece%20Sets",
+            ],
+            [
+              "Anarkali Sets",
+              "/shop?category=Anarkali%20Sets",
             ],
             [
               "Jewellery",
