@@ -477,6 +477,22 @@ export const adminApi = {
     );
   },
 
+  moveProductImage(
+    id,
+    index,
+    direction
+  ) {
+    return request(
+      `/admin/products/${id}/images/${index}/move`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          direction,
+        }),
+      }
+    );
+  },
+
   removeProductImage(
     id,
     index

@@ -8360,6 +8360,53 @@ function AdminPage({
   }
 
 
+  async function moveImage(
+    product,
+    index,
+    direction
+  ) {
+    try {
+      setError("");
+      setMessage("");
+
+      await adminApi.moveProductImage(
+        product.id,
+        index,
+        direction
+      );
+
+      const refreshed =
+        await adminApi.products();
+
+      setProducts(
+        refreshed.products
+      );
+
+      const current =
+        refreshed.products.find(
+          (item) =>
+            item.id ===
+            product.id
+        );
+
+      if (current) {
+        setEditingProduct(
+          current
+        );
+      }
+
+      setMessage(
+        "Image order updated."
+      );
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to reorder image."
+      );
+    }
+  }
+
+
   async function removeImage(
     product,
     index
@@ -9774,11 +9821,46 @@ function AdminPage({
                                 alt=""
                               />
 
-                              {index === 0 ? (
-                                <div className="cover-image-label">
-                                  COVER IMAGE
-                                </div>
-                              ) : (
+                              <div className="admin-image-position">
+                                {index === 0
+                                  ? "1 · COVER"
+                                  : `POSITION ${index + 1}`}
+                              </div>
+
+                              <div className="admin-image-order-controls">
+                                <button
+                                  type="button"
+                                  disabled={index === 0}
+                                  onClick={() =>
+                                    moveImage(
+                                      editingProduct,
+                                      index,
+                                      "left"
+                                    )
+                                  }
+                                >
+                                  ←
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={
+                                    index ===
+                                    editingProduct.images.length - 1
+                                  }
+                                  onClick={() =>
+                                    moveImage(
+                                      editingProduct,
+                                      index,
+                                      "right"
+                                    )
+                                  }
+                                >
+                                  →
+                                </button>
+                              </div>
+
+                              {index !== 0 && (
                                 <button
                                   type="button"
                                   className="set-cover-button"
@@ -9795,6 +9877,7 @@ function AdminPage({
 
                               <button
                                 type="button"
+                                className="admin-image-remove"
                                 onClick={() =>
                                   removeImage(
                                     editingProduct,

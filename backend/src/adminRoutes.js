@@ -2565,6 +2565,108 @@ router.patch(
 
 
 // ===========================================================
+// REORDER PRODUCT IMAGE
+// ===========================================================
+
+router.patch(
+  "/products/:id/images/:index/move",
+  async (req, res, next) => {
+    try {
+      const current = await pool.query(
+        `
+          SELECT *
+          FROM products
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [req.params.id]
+      );
+
+      if (current.rowCount === 0) {
+        return res.status(404).json({
+          error: "Product not found.",
+        });
+      }
+
+      const images = Array.isArray(current.rows[0].images)
+        ? [...current.rows[0].images]
+        : [];
+
+      const index = Number(req.params.index);
+      const direction = req.body?.direction;
+
+      if (
+        !Number.isInteger(index) ||
+        index < 0 ||
+        index >= images.length
+      ) {
+        return res.status(400).json({
+          error: "Invalid image.",
+        });
+      }
+
+      if (
+        direction !== "left" &&
+        direction !== "right"
+      ) {
+        return res.status(400).json({
+          error: "Invalid move direction.",
+        });
+      }
+
+      const targetIndex =
+        direction === "left"
+          ? index - 1
+          : index + 1;
+
+      if (
+        targetIndex < 0 ||
+        targetIndex >= images.length
+      ) {
+        return res.status(400).json({
+          error: "Image cannot move further.",
+        });
+      }
+
+      [
+        images[index],
+        images[targetIndex],
+      ] = [
+        images[targetIndex],
+        images[index],
+      ];
+
+      const result = await pool.query(
+        `
+          UPDATE products
+          SET
+            images = $1::jsonb,
+            image_path = $2,
+            updated_at = NOW()
+          WHERE id = $3
+          RETURNING *
+        `,
+        [
+          JSON.stringify(images),
+          images[0] || null,
+          req.params.id,
+        ]
+      );
+
+      return res.json({
+        message: "Image order updated.",
+        product: publicProduct(
+          result.rows[0]
+        ),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
+// ===========================================================
 // REMOVE ONE IMAGE
 // ===========================================================
 

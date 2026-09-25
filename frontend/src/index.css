@@ -13966,3 +13966,62 @@ input:disabled {
     font-size: 12px;
   }
 }
+
+
+/* ============================================================
+   DESIGLOV — ADMIN PRODUCT IMAGE ORDER
+   ============================================================ */
+
+.admin-image-position {
+  width: 100%;
+  padding: 9px 8px;
+  border-top: 1px solid #eadbd1;
+  background: #f5eee8;
+  color: #9a6245;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.admin-image-order-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: #ffffff;
+}
+
+.existing-images .admin-image-order-controls button {
+  min-height: 34px;
+  background: #433b37;
+  font-size: 14px;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.existing-images .admin-image-order-controls button:hover:not(:disabled) {
+  background: #1f1b19;
+}
+
+.existing-images .admin-image-order-controls button:disabled {
+  background: #ddd6d1;
+  color: #aaa19b;
+  cursor: not-allowed;
+}
+
+.existing-images .set-cover-button {
+  background: #2a2523;
+}
+
+.existing-images .admin-image-remove {
+  background: #ffffff;
+  color: #7e6e65;
+  border-top: 1px solid #eadbd1;
+}
+
+.existing-images .admin-image-remove:hover {
+  background: #f8f3ef;
+  color: #8f4d36;
+}
+
