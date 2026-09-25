@@ -13907,3 +13907,62 @@ input:disabled {
 }
 
 
+
+/* ============================================================
+   DESIGLOV — DESKTOP NAVBAR ALIGNMENT
+   ============================================================ */
+
+@media (min-width: 1021px) {
+
+  .header {
+    grid-template-columns:
+      minmax(220px, 0.85fr)
+      minmax(680px, 2.6fr)
+      auto;
+    column-gap: 24px;
+    padding-left: 55px;
+    padding-right: 42px;
+  }
+
+  .header-centre {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .header-centre .desktop-nav {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .desktop-nav button {
+    flex: 0 0 auto;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .header-tools {
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 1021px) and (max-width: 1250px) {
+
+  .header {
+    grid-template-columns:
+      190px minmax(620px, 1fr) auto;
+    column-gap: 15px;
+    padding-left: 24px;
+    padding-right: 20px;
+  }
+
+  .header > .brand .brand-word {
+    font-size: 32px;
+  }
+
+  .desktop-nav button {
+    font-size: 12px;
+  }
+}
