@@ -15638,3 +15638,1494 @@ input:disabled {
   }
 }
 
+
+
+/* ============================================================
+   DESIGLOV — PROFESSIONAL RESPONSIVE FOOTER
+   Desktop + Tablet + Mobile
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   DESKTOP FOOTER
+   ------------------------------------------------------------ */
+
+@media (min-width: 769px) {
+
+  .footer {
+    width: 100%;
+    background: #1d1b1a;
+    color: #f7f2ee;
+  }
+
+  .footer-top {
+    display: grid;
+
+    grid-template-columns:
+      minmax(240px, 1.35fr)
+      minmax(140px, .75fr)
+      minmax(160px, .75fr)
+      minmax(140px, .65fr);
+
+    align-items: start;
+
+    gap: clamp(45px, 6vw, 100px);
+
+    padding:
+      68px
+      clamp(55px, 6vw, 95px)
+      62px;
+  }
+
+  .footer-brand {
+    max-width: 280px;
+  }
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size: clamp(34px, 3vw, 43px);
+    line-height: 1;
+  }
+
+  .footer-brand p {
+    margin:
+      20px
+      0
+      0;
+
+    max-width: 190px;
+
+    color: #b8aea8;
+
+    font-family:
+      "Playfair Display",
+      serif;
+
+    font-size: 16px;
+
+    line-height: 1.55;
+  }
+
+  .footer-column {
+    min-width: 0;
+  }
+
+  .footer-column h4 {
+    margin:
+      0
+      0
+      24px;
+
+    color: #c99170;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 3px;
+
+    text-transform: uppercase;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    display: block;
+
+    width: fit-content;
+
+    margin-bottom: 16px;
+
+    color: #bcb3ae;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+
+    transition:
+      color .2s ease,
+      transform .2s ease;
+  }
+
+  .footer-column button:hover,
+  .footer-column a:hover {
+    color: #ffffff;
+
+    transform:
+      translateX(3px);
+  }
+
+  .footer-bottom {
+    min-height: 66px;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      auto
+      1fr;
+
+    align-items: center;
+
+    gap: 30px;
+
+    padding:
+      0
+      clamp(55px, 6vw, 95px);
+
+    border-top:
+      1px solid
+      rgba(255, 255, 255, .09);
+
+    color: #c1b7b1;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: 2px;
+
+    text-transform: uppercase;
+  }
+
+  .footer-bottom > :first-child {
+    justify-self: start;
+  }
+
+  .footer-bottom > :nth-child(2) {
+    justify-self: center;
+  }
+
+  .footer-bottom > :last-child {
+    justify-self: end;
+  }
+
+  .footer-legal {
+    min-height: 56px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 34px;
+
+    padding:
+      15px
+      clamp(55px, 6vw, 95px);
+
+    border-top:
+      1px solid
+      rgba(255, 255, 255, .07);
+  }
+
+  .footer-legal button,
+  .footer-legal a {
+    color: #aaa19c;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: 1.5px;
+
+    text-decoration: none;
+
+    transition:
+      color .2s ease;
+  }
+
+  .footer-legal button:hover,
+  .footer-legal a:hover {
+    color: #ffffff;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   TABLET
+   ------------------------------------------------------------ */
+
+@media (min-width: 769px) and (max-width: 1050px) {
+
+  .footer-top {
+    grid-template-columns:
+      1.25fr
+      1fr
+      1fr
+      .8fr;
+
+    gap: 32px;
+
+    padding:
+      58px
+      35px
+      52px;
+  }
+
+  .footer-bottom {
+    padding:
+      0
+      35px;
+  }
+
+  .footer-legal {
+    padding:
+      15px
+      35px;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE FOOTER
+   ------------------------------------------------------------ */
+
+@media (max-width: 768px) {
+
+  .footer {
+    width: 100%;
+
+    overflow: hidden;
+
+    background: #1d1b1a;
+
+    color: #f7f2ee;
+  }
+
+  .footer-top {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap:
+      42px
+      30px;
+
+    padding:
+      48px
+      22px
+      42px;
+  }
+
+
+  /* Brand takes full first row */
+
+  .footer-brand {
+    grid-column:
+      1 / -1;
+
+    width: 100%;
+
+    max-width: none;
+
+    padding-bottom:
+      30px;
+
+    border-bottom:
+      1px solid
+      rgba(
+        255,
+        255,
+        255,
+        .09
+      );
+  }
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size:
+      clamp(
+        31px,
+        9vw,
+        39px
+      );
+
+    line-height: 1;
+  }
+
+  .footer-brand p {
+    margin:
+      16px
+      0
+      0;
+
+    color: #b8aea8;
+
+    font-family:
+      "Playfair Display",
+      serif;
+
+    font-size: 15px;
+
+    line-height: 1.55;
+  }
+
+
+  /* Link columns */
+
+  .footer-column {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .footer-column h4 {
+    margin:
+      0
+      0
+      21px;
+
+    color: #c99170;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 2.5px;
+
+    text-transform: uppercase;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    display: block;
+
+    width: fit-content;
+
+    min-height: 31px;
+
+    margin: 0;
+
+    color: #bcb3ae;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+
+    text-align: left;
+
+    text-decoration: none;
+  }
+
+
+  /*
+     If there are three link groups:
+     Shop + Help occupy the two columns.
+     Follow begins below.
+  */
+
+  .footer-column:last-child {
+    grid-column:
+      1 / -1;
+
+    padding-top:
+      4px;
+
+    border-top:
+      1px solid
+      rgba(
+        255,
+        255,
+        255,
+        .07
+      );
+  }
+
+  .footer-column:last-child h4 {
+    margin-top:
+      25px;
+  }
+
+  .footer-column:last-child button,
+  .footer-column:last-child a {
+    display: inline-flex;
+
+    align-items: center;
+
+    margin-right:
+      28px;
+  }
+
+
+  /* Main lower strip */
+
+  .footer-bottom {
+    width: 100%;
+
+    min-height: auto;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      auto;
+
+    gap:
+      15px
+      20px;
+
+    align-items: center;
+
+    padding:
+      23px
+      22px;
+
+    border-top:
+      1px solid
+      rgba(
+        255,
+        255,
+        255,
+        .09
+      );
+
+    color: #c1b7b1;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+
+    letter-spacing: 1.5px;
+
+    text-transform: uppercase;
+  }
+
+  .footer-bottom > :first-child {
+    justify-self: start;
+  }
+
+  .footer-bottom > :last-child {
+    justify-self: end;
+  }
+
+
+  /*
+     Tagline / centre item becomes its own row
+     when the existing JSX contains three children.
+  */
+
+  .footer-bottom > :nth-child(2):not(:last-child) {
+    grid-column:
+      1 / -1;
+
+    grid-row: 1;
+
+    justify-self: start;
+
+    margin-bottom:
+      5px;
+
+    color: #9e938d;
+
+    letter-spacing: 2px;
+  }
+
+  .footer-bottom > :first-child:nth-last-child(3) {
+    grid-row: 2;
+  }
+
+  .footer-bottom > :last-child:nth-child(3) {
+    grid-row: 2;
+  }
+
+
+  /* Legal */
+
+  .footer-legal {
+    width: 100%;
+
+    min-height: auto;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-start;
+
+    flex-wrap: wrap;
+
+    gap:
+      14px
+      24px;
+
+    padding:
+      20px
+      22px
+      27px;
+
+    border-top:
+      1px solid
+      rgba(
+        255,
+        255,
+        255,
+        .07
+      );
+  }
+
+  .footer-legal button,
+  .footer-legal a {
+    padding: 0;
+
+    color: #aaa19c;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+
+    letter-spacing: 1.2px;
+
+    text-decoration: none;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   SMALL PHONES
+   ------------------------------------------------------------ */
+
+@media (max-width: 430px) {
+
+  .footer-top {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap:
+      36px
+      18px;
+
+    padding:
+      42px
+      18px
+      36px;
+  }
+
+  .footer-brand {
+    padding-bottom:
+      26px;
+  }
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size: 32px;
+  }
+
+  .footer-column h4 {
+    margin-bottom:
+      17px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    min-height: 30px;
+
+    font-size: 11px;
+  }
+
+  .footer-column:last-child button,
+  .footer-column:last-child a {
+    margin-right:
+      22px;
+  }
+
+  .footer-bottom {
+    padding:
+      21px
+      18px;
+
+    column-gap:
+      12px;
+  }
+
+  .footer-legal {
+    gap:
+      13px
+      19px;
+
+    padding:
+      18px
+      18px
+      24px;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   VERY SMALL PHONES
+   ------------------------------------------------------------ */
+
+@media (max-width: 340px) {
+
+  .footer-top {
+    grid-template-columns:
+      1fr;
+
+    gap: 30px;
+  }
+
+  .footer-brand,
+  .footer-column:last-child {
+    grid-column:
+      auto;
+  }
+
+  .footer-column {
+    padding-bottom:
+      8px;
+  }
+
+  .footer-column:not(:last-child) {
+    border-bottom:
+      1px solid
+      rgba(
+        255,
+        255,
+        255,
+        .07
+      );
+  }
+
+  .footer-column:last-child {
+    border-top: 0;
+  }
+
+  .footer-column:last-child h4 {
+    margin-top: 0;
+  }
+
+  .footer-bottom {
+    grid-template-columns:
+      1fr;
+
+    gap: 10px;
+  }
+
+  .footer-bottom > *,
+  .footer-bottom > :first-child,
+  .footer-bottom > :nth-child(2),
+  .footer-bottom > :last-child {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    justify-self: start !important;
+  }
+
+  .footer-legal {
+    flex-direction:
+      column;
+
+    align-items:
+      flex-start;
+
+    gap: 12px;
+  }
+}
+
+
+
+/* ============================================================
+   DESIGLOV — FOOTER TYPOGRAPHY ENHANCEMENT
+   ============================================================ */
+
+
+/* DESKTOP */
+
+@media (min-width: 769px) {
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size: clamp(40px, 3.2vw, 50px);
+  }
+
+  .footer-brand p {
+    margin-top: 22px;
+
+    font-size: 18px;
+
+    line-height: 1.5;
+  }
+
+  .footer-column h4 {
+    margin-bottom: 25px;
+
+    font-size: 10px;
+
+    letter-spacing: 3.2px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    margin-bottom: 17px;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+  }
+
+  .footer-bottom {
+    font-size: 9px;
+
+    letter-spacing: 2.1px;
+  }
+
+  .footer-legal button,
+  .footer-legal a {
+    font-size: 9px;
+
+    letter-spacing: 1.5px;
+  }
+}
+
+
+/* TABLET */
+
+@media (min-width: 769px) and (max-width: 1050px) {
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size: 38px;
+  }
+
+  .footer-brand p {
+    font-size: 16px;
+  }
+
+  .footer-column h4 {
+    font-size: 9px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 12px;
+  }
+
+  .footer-bottom,
+  .footer-legal button,
+  .footer-legal a {
+    font-size: 8px;
+  }
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size: clamp(34px, 10vw, 42px);
+  }
+
+  .footer-brand p {
+    font-size: 17px;
+  }
+
+  .footer-column h4 {
+    font-size: 10px;
+
+    letter-spacing: 2.5px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    min-height: 34px;
+
+    font-size: 13px;
+  }
+
+  .footer-bottom {
+    font-size: 8px;
+
+    letter-spacing: 1.5px;
+  }
+
+  .footer-legal button,
+  .footer-legal a {
+    font-size: 8px;
+
+    letter-spacing: 1.2px;
+  }
+}
+
+
+/* NORMAL / SMALL PHONES */
+
+@media (max-width: 430px) {
+
+  .footer-brand .brand-word,
+  .footer-brand-word {
+    font-size: 34px;
+  }
+
+  .footer-brand p {
+    font-size: 16px;
+  }
+
+  .footer-column h4 {
+    font-size: 9px;
+  }
+
+  .footer-column button,
+  .footer-column a {
+    font-size: 12px;
+  }
+
+  .footer-bottom,
+  .footer-legal button,
+  .footer-legal a {
+    font-size: 8px;
+  }
+}
+
+
+
+/* ============================================================
+   DESIGLOV — PRODUCT BREADCRUMB IMPROVEMENT
+   ============================================================ */
+
+/* Desktop */
+
+@media (min-width: 769px) {
+
+  .breadcrumb,
+  .breadcrumbs {
+    min-height: 62px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    font-size: 10px;
+
+    line-height: 1.4;
+
+    letter-spacing: 1px;
+  }
+
+  .breadcrumb button,
+  .breadcrumb a,
+  .breadcrumb span,
+  .breadcrumbs button,
+  .breadcrumbs a,
+  .breadcrumbs span {
+    font-size: 10px;
+
+    line-height: 1.4;
+  }
+}
+
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+  .breadcrumb,
+  .breadcrumbs {
+    min-height: 52px;
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    overflow-x: auto;
+
+    white-space: nowrap;
+
+    font-size: 9px;
+
+    line-height: 1.4;
+
+    letter-spacing: .7px;
+
+    scrollbar-width: none;
+  }
+
+  .breadcrumb::-webkit-scrollbar,
+  .breadcrumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .breadcrumb button,
+  .breadcrumb a,
+  .breadcrumb span,
+  .breadcrumbs button,
+  .breadcrumbs a,
+  .breadcrumbs span {
+    flex-shrink: 0;
+
+    font-size: 9px;
+  }
+}
+
+
+/* Very small phones */
+
+@media (max-width: 380px) {
+
+  .breadcrumb,
+  .breadcrumbs {
+    gap: 7px;
+
+    font-size: 8px;
+  }
+
+  .breadcrumb button,
+  .breadcrumb a,
+  .breadcrumb span,
+  .breadcrumbs button,
+  .breadcrumbs a,
+  .breadcrumbs span {
+    font-size: 8px;
+  }
+}
+
+
+/* =====================================================
+   DESIGLOV RESPONSIVE - HERO
+   Tablet + Mobile
+===================================================== */
+
+/* ---------- TABLET / SMALL LAPTOP ---------- */
+
+@media (max-width: 1020px) {
+
+  .hero-new {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-copy {
+    min-height: 620px;
+    padding: clamp(50px, 6vw, 72px) clamp(30px, 5vw, 55px);
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(58px, 7vw, 82px);
+    line-height: 0.92;
+    letter-spacing: -2px;
+  }
+
+  .hero-copy > p {
+    max-width: 390px;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .hero-note {
+    margin-top: 50px;
+  }
+
+  .hero-visual {
+    min-height: 620px;
+  }
+
+  .hero-product-card {
+    right: 24px;
+    bottom: 24px;
+    width: min(245px, calc(100% - 48px));
+  }
+}
+
+
+/* ---------- LARGE PHONE / PORTRAIT TABLET ---------- */
+
+@media (max-width: 760px) {
+
+  .hero-new {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    min-height: auto;
+    padding:
+      clamp(48px, 10vw, 70px)
+      clamp(20px, 6vw, 42px)
+      clamp(52px, 10vw, 72px);
+  }
+
+  .hero-copy .eyebrow {
+    margin-bottom: 24px;
+  }
+
+  .hero-copy h1 {
+    max-width: 100%;
+    margin-bottom: 25px;
+    font-size: clamp(52px, 12vw, 76px);
+    line-height: 0.93;
+    letter-spacing: -2px;
+  }
+
+  .hero-copy > p {
+    max-width: 460px;
+    font-size: clamp(13px, 3.3vw, 15px);
+    line-height: 1.75;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-top: 30px;
+  }
+
+  .hero-actions .button-dark,
+  .hero-actions .button-outline {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .hero-note {
+    grid-template-columns: auto minmax(30px, 70px) 1fr;
+    width: 100%;
+    max-width: 370px;
+    margin-top: 42px;
+  }
+
+  .hero-visual {
+    min-height: clamp(500px, 125vw, 700px);
+  }
+
+  .hero-visual > img {
+    object-position: center top;
+  }
+
+  .hero-product-card {
+    left: clamp(16px, 5vw, 28px);
+    right: clamp(16px, 5vw, 28px);
+    bottom: clamp(16px, 5vw, 28px);
+    width: auto;
+    padding: clamp(18px, 5vw, 24px);
+  }
+
+  .hero-product-card strong {
+    font-size: clamp(23px, 6vw, 28px);
+  }
+}
+
+
+/* ---------- NORMAL PHONES ---------- */
+
+@media (max-width: 480px) {
+
+  .hero-copy {
+    padding:
+      48px
+      clamp(18px, 6vw, 28px)
+      52px;
+  }
+
+  .hero-copy .eyebrow {
+    font-size: 8px;
+    letter-spacing: 2.4px;
+  }
+
+  .hero-copy h1 {
+    margin-top: 0;
+    margin-bottom: 22px;
+    font-size: clamp(48px, 15vw, 68px);
+    line-height: 0.91;
+    letter-spacing: -1.8px;
+  }
+
+  .hero-copy > p {
+    max-width: 330px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .hero-actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .hero-actions .button-dark,
+  .hero-actions .button-outline {
+    width: 100%;
+    min-height: 50px;
+  }
+
+  .hero-note {
+    grid-template-columns: auto minmax(25px, 50px) 1fr;
+    gap: 12px;
+    margin-top: 38px;
+  }
+
+  .hero-note span {
+    font-size: 8px;
+  }
+
+  .hero-note p {
+    font-size: 9px;
+    line-height: 1.45;
+  }
+
+  .hero-visual {
+    min-height: clamp(480px, 135vw, 620px);
+  }
+
+  .hero-product-card {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    padding: 18px;
+  }
+
+  .hero-product-card small {
+    font-size: 7px;
+    letter-spacing: 2.3px;
+  }
+
+  .hero-product-card strong {
+    margin-top: 4px;
+    font-size: clamp(22px, 7vw, 27px);
+  }
+
+  .hero-product-card span {
+    font-size: 12px;
+  }
+
+  .hero-product-card button {
+    margin-top: 10px;
+    padding-top: 12px;
+  }
+}
+
+
+/* ---------- SMALL PHONES ---------- */
+
+@media (max-width: 360px) {
+
+  .hero-copy {
+    padding:
+      42px
+      18px
+      46px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(44px, 15vw, 55px);
+    letter-spacing: -1.4px;
+  }
+
+  .hero-copy > p {
+    font-size: 12.5px;
+  }
+
+  .hero-actions {
+    margin-top: 24px;
+  }
+
+  .hero-note {
+    margin-top: 32px;
+    grid-template-columns: auto 28px 1fr;
+    gap: 10px;
+  }
+
+  .hero-visual {
+    min-height: 470px;
+  }
+
+  .hero-product-card {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    padding: 16px;
+  }
+
+  .hero-product-card strong {
+    font-size: 22px;
+  }
+}
+
+
+/* ---------- VERY NARROW PHONES ---------- */
+
+@media (max-width: 340px) {
+
+  .hero-copy {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .hero-copy h1 {
+    font-size: 43px;
+  }
+
+  .hero-note {
+    grid-template-columns: auto 22px 1fr;
+  }
+
+  .hero-visual {
+    min-height: 440px;
+  }
+
+  .hero-product-card {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 15px;
+  }
+}
+
+
+
+/* ============================================================
+   DESIGLOV — REVIEW PHOTO + VIDEO MEDIA
+   ============================================================ */
+
+.review-media-field {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #e5dad2;
+  background: #fcfaf8;
+}
+
+.review-media-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.review-media-heading > div {
+  display: grid;
+  gap: 6px;
+}
+
+.review-media-heading strong {
+  color: #4f4945;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.review-media-heading > div > span {
+  color: #8b817b;
+  font-size: 11px;
+}
+
+.review-media-upload {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid #cdbdb2;
+  background: #fff;
+  color: #332e2b;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.review-media-upload:hover {
+  border-color: #211f1e;
+  background: #faf7f4;
+}
+
+.review-media-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.review-media-upload:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.review-media-help {
+  margin: 12px 0 0;
+  color: #918781;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.review-media-preview-grid,
+.customer-review-media {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.review-media-preview-grid {
+  margin-top: 18px;
+}
+
+.review-media-preview {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #e1d6ce;
+  background: #f3efec;
+}
+
+.review-media-preview img,
+.review-media-preview video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.review-media-remove {
+  position: absolute;
+  z-index: 3;
+  top: 7px;
+  right: 7px;
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(24, 22, 21, 0.88);
+  color: #fff;
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.review-media-type {
+  position: absolute;
+  z-index: 2;
+  bottom: 7px;
+  left: 7px;
+  padding: 5px 7px;
+  background: rgba(24, 22, 21, 0.82);
+  color: #fff;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.customer-review-media {
+  max-width: 760px;
+  margin-top: 20px;
+}
+
+.customer-review-media-item {
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #eadfd7;
+  background: #f5f1ee;
+}
+
+.customer-review-media-item a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.customer-review-media-item img,
+.customer-review-media-item video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.customer-review-media-item video {
+  background: #171717;
+}
+
+
+/* TABLET */
+
+@media (max-width: 900px) {
+  .review-media-preview-grid,
+  .customer-review-media {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .review-media-field {
+    margin-top: 20px;
+    padding: 16px;
+  }
+
+  .review-media-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .review-media-upload {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .review-media-preview-grid,
+  .customer-review-media {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .review-media-preview-grid {
+    margin-top: 15px;
+  }
+
+  .customer-review-media {
+    margin-top: 17px;
+  }
+}
+
+
+/* VERY SMALL PHONES */
+
+@media (max-width: 350px) {
+  .review-media-field {
+    padding: 14px;
+  }
+
+  .review-media-heading strong {
+    font-size: 9px;
+  }
+
+  .review-media-help {
+    font-size: 10px;
+  }
+}
+

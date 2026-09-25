@@ -567,15 +567,41 @@ export const reviewApi = {
     );
   },
 
-  save(productId, { rating, comment }) {
+  save(
+    productId,
+    {
+      rating,
+      comment,
+      media = [],
+    }
+  ) {
+    const formData =
+      new FormData();
+
+    formData.append(
+      "rating",
+      String(rating)
+    );
+
+    formData.append(
+      "comment",
+      comment
+    );
+
+    media.forEach(
+      (file) => {
+        formData.append(
+          "media",
+          file
+        );
+      }
+    );
+
     return request(
       `/reviews/product/${productId}`,
       {
         method: "POST",
-        body: JSON.stringify({
-          rating,
-          comment,
-        }),
+        body: formData,
       }
     );
   },

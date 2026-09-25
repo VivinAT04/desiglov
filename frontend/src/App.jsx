@@ -2671,6 +2671,201 @@ function ProductPage({
   const [reviewError, setReviewError] =
     useState("");
 
+  const [reviewMedia, setReviewMedia] =
+    useState([]);
+
+  function clearReviewMedia() {
+    setReviewMedia(
+      (current) => {
+        current.forEach(
+          (item) => {
+            if (
+              item.previewUrl
+            ) {
+              URL.revokeObjectURL(
+                item.previewUrl
+              );
+            }
+          }
+        );
+
+        return [];
+      }
+    );
+  }
+
+  function removeReviewMedia(
+    mediaId
+  ) {
+    setReviewMedia(
+      (current) => {
+        const removed =
+          current.find(
+            (item) =>
+              item.id ===
+              mediaId
+          );
+
+        if (
+          removed?.previewUrl
+        ) {
+          URL.revokeObjectURL(
+            removed.previewUrl
+          );
+        }
+
+        return current.filter(
+          (item) =>
+            item.id !==
+            mediaId
+        );
+      }
+    );
+  }
+
+  function handleReviewMediaChange(
+    event
+  ) {
+    const files =
+      Array.from(
+        event.target.files ||
+        []
+      );
+
+    event.target.value = "";
+
+    if (
+      files.length === 0
+    ) {
+      return;
+    }
+
+    setReviewError("");
+
+    const remainingSlots =
+      5 -
+      reviewMedia.length;
+
+    if (
+      remainingSlots <= 0
+    ) {
+      setReviewError(
+        "You can upload up to 5 photos or videos."
+      );
+
+      return;
+    }
+
+    const selected =
+      files.slice(
+        0,
+        remainingSlots
+      );
+
+    const allowedImageTypes =
+      [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+      ];
+
+    const allowedVideoTypes =
+      [
+        "video/mp4",
+        "video/quicktime",
+        "video/webm",
+      ];
+
+    for (
+      const file of
+      selected
+    ) {
+
+      const isImage =
+        allowedImageTypes.includes(
+          file.type
+        );
+
+      const isVideo =
+        allowedVideoTypes.includes(
+          file.type
+        );
+
+      if (
+        !isImage &&
+        !isVideo
+      ) {
+        setReviewError(
+          "Only JPG, PNG, WEBP, MP4, MOV and WEBM files are allowed."
+        );
+
+        return;
+      }
+
+      if (
+        isImage &&
+        file.size >
+          5 * 1024 * 1024
+      ) {
+        setReviewError(
+          `${file.name} is too large. Images must be 5 MB or smaller.`
+        );
+
+        return;
+      }
+
+      if (
+        isVideo &&
+        file.size >
+          40 * 1024 * 1024
+      ) {
+        setReviewError(
+          `${file.name} is too large. Videos must be 40 MB or smaller.`
+        );
+
+        return;
+      }
+    }
+
+    const nextMedia =
+      selected.map(
+        (file) => ({
+          id:
+            `${Date.now()}-${Math.random()}`,
+
+          file,
+
+          type:
+            file.type.startsWith(
+              "video/"
+            )
+              ? "video"
+              : "image",
+
+          previewUrl:
+            URL.createObjectURL(
+              file
+            ),
+        })
+      );
+
+    setReviewMedia(
+      (current) => [
+        ...current,
+        ...nextMedia,
+      ]
+    );
+
+    if (
+      files.length >
+      remainingSlots
+    ) {
+      setReviewError(
+        "Only the first 5 photos or videos were selected."
+      );
+    }
+  }
+
   async function loadProductReviews() {
     try {
       setReviewsLoading(true);
@@ -2712,6 +2907,7 @@ function ProductPage({
     setReviewComment("");
     setReviewMessage("");
     setReviewError("");
+    clearReviewMedia();
 
     loadProductReviews();
   }, [product.id]);
@@ -2750,6 +2946,12 @@ function ProductPage({
           rating: reviewRating,
           comment:
             reviewComment.trim(),
+
+          media:
+            reviewMedia.map(
+              (item) =>
+                item.file
+            ),
         }
       );
 
@@ -2759,6 +2961,7 @@ function ProductPage({
 
       setReviewRating(0);
       setReviewComment("");
+      clearReviewMedia();
 
       await loadProductReviews();
     } catch (error) {
@@ -3540,6 +3743,98 @@ function ProductPage({
                     }
                   />
 
+                  <div className="review-media-field">
+
+                    <div className="review-media-heading">
+                      <div>
+                        <strong>
+                          ADD PHOTOS OR VIDEOS
+                        </strong>
+
+                      </div>
+
+                      <label className="review-media-upload">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                          multiple
+                          onChange={
+                            handleReviewMediaChange
+                          }
+                          disabled={
+                            reviewSubmitting ||
+                            reviewMedia.length >= 5
+                          }
+                        />
+
+                        <span>
+                          + ADD MEDIA
+                        </span>
+                      </label>
+                    </div>
+
+
+                    {reviewMedia.length > 0 && (
+                      <div className="review-media-preview-grid">
+
+                        {reviewMedia.map(
+                          (item) => (
+                            <div
+                              className="review-media-preview"
+                              key={
+                                item.id
+                              }
+                            >
+
+                              {item.type ===
+                              "video" ? (
+                                <video
+                                  src={
+                                    item.previewUrl
+                                  }
+                                  controls
+                                  preload="metadata"
+                                />
+                              ) : (
+                                <img
+                                  src={
+                                    item.previewUrl
+                                  }
+                                  alt="Review upload preview"
+                                />
+                              )}
+
+                              <button
+                                type="button"
+                                className="review-media-remove"
+                                onClick={() =>
+                                  removeReviewMedia(
+                                    item.id
+                                  )
+                                }
+                                aria-label={
+                                  `Remove ${item.file.name}`
+                                }
+                              >
+                                ×
+                              </button>
+
+                              <span className="review-media-type">
+                                {item.type ===
+                                "video"
+                                  ? "VIDEO"
+                                  : "PHOTO"}
+                              </span>
+
+                            </div>
+                          )
+                        )}
+
+                      </div>
+                    )}
+
+                  </div>
+
                   <div className="review-form-footer">
 
                     <small>
@@ -3668,6 +3963,62 @@ function ProductPage({
                         <p>
                           {review.comment}
                         </p>
+
+                        {Array.isArray(
+                          review.media
+                        ) &&
+                          review.media.length >
+                            0 && (
+                            <div className="customer-review-media">
+
+                              {review.media.map(
+                                (
+                                  media,
+                                  mediaIndex
+                                ) => (
+                                  <div
+                                    className="customer-review-media-item"
+                                    key={
+                                      `${review.id}-${mediaIndex}`
+                                    }
+                                  >
+
+                                    {media.type ===
+                                    "video" ? (
+                                      <video
+                                        src={
+                                          media.url
+                                        }
+                                        controls
+                                        preload="metadata"
+                                      />
+                                    ) : (
+                                      <a
+                                        href={
+                                          media.url
+                                        }
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label="Open customer review photo"
+                                      >
+                                        <img
+                                          src={
+                                            media.url
+                                          }
+                                          alt={
+                                            `Customer review ${mediaIndex + 1}`
+                                          }
+                                          loading="lazy"
+                                        />
+                                      </a>
+                                    )}
+
+                                  </div>
+                                )
+                              )}
+
+                            </div>
+                          )}
 
                       </article>
 

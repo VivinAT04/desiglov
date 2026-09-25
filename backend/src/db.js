@@ -436,6 +436,13 @@ export async function initialiseDatabase() {
   `);
 
   await pool.query(`
+    ALTER TABLE product_reviews
+    ADD COLUMN IF NOT EXISTS media JSONB
+      NOT NULL
+      DEFAULT '[]'::jsonb;
+  `);
+
+  await pool.query(`
     CREATE INDEX IF NOT EXISTS product_reviews_product_index
     ON product_reviews (
       product_id,
