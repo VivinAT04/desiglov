@@ -7973,9 +7973,12 @@ function AdminPage({
     material: "",
     description: "",
     sizes: [
+      "XS",
       "S",
       "M",
       "L",
+      "XL",
+      "XXL",
     ],
     active: true,
   };
