@@ -28,6 +28,7 @@ import productRoutes from "./productRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import feedbackRoutes from "./feedbackRoutes.js";
 import reviewRoutes from "./reviewRoutes.js";
+import newsletterRoutes from "./newsletterRoutes.js";
 
 
 const app =
@@ -210,6 +211,12 @@ app.use(
 app.use(
   "/api/reviews",
   reviewRoutes
+);
+
+
+app.use(
+  "/api/newsletter",
+  newsletterRoutes
 );
 
 

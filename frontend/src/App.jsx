@@ -11,7 +11,8 @@ import {
   adminApi,
   productApi,
   feedbackApi,
-  reviewApi
+  reviewApi,
+  newsletterApi
 } from "./api.js";
 
 import { supabase } from "./lib/supabase.js";
@@ -7266,6 +7267,441 @@ function AccountPage({
   );
 }
 
+
+function AdminNewsletterPanel() {
+  const [loading, setLoading] =
+    useState(true);
+
+  const [sending, setSending] =
+    useState(false);
+
+  const [subscriberCount, setSubscriberCount] =
+    useState(0);
+
+  const [products, setProducts] =
+    useState([]);
+
+  const [productId, setProductId] =
+    useState("");
+
+  const [subject, setSubject] =
+    useState("");
+
+  const [newsletterMessage, setNewsletterMessage] =
+    useState("");
+
+  const [panelMessage, setPanelMessage] =
+    useState("");
+
+  const [panelError, setPanelError] =
+    useState("");
+
+
+  async function loadNewsletter() {
+    try {
+      setLoading(true);
+      setPanelError("");
+
+      const result =
+        await adminApi.newsletterAdmin();
+
+      const nextProducts =
+        result.products || [];
+
+      setSubscriberCount(
+        Number(
+          result.subscriberCount || 0
+        )
+      );
+
+      setProducts(
+        nextProducts
+      );
+
+      if (
+        !productId &&
+        nextProducts.length > 0
+      ) {
+        selectProduct(
+          nextProducts[0],
+          false
+        );
+      }
+    } catch (error) {
+      setPanelError(
+        error.message ||
+        "Could not load newsletter."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  useEffect(() => {
+    loadNewsletter();
+  }, []);
+
+
+  function selectProduct(
+    product,
+    preserveText = false
+  ) {
+    if (!product) {
+      setProductId("");
+      return;
+    }
+
+    setProductId(
+      String(product.id)
+    );
+
+    if (!preserveText) {
+      setSubject(
+        `New arrival: ${product.name}`
+      );
+
+      setNewsletterMessage(
+        `${product.name} has arrived at Desiglov. Discover the latest addition to our collection.`
+      );
+    }
+  }
+
+
+  function changeProduct(event) {
+    const value =
+      event.target.value;
+
+    const product =
+      products.find(
+        (item) =>
+          String(item.id) ===
+          String(value)
+      );
+
+    selectProduct(
+      product,
+      false
+    );
+
+    setPanelMessage("");
+    setPanelError("");
+  }
+
+
+  const selectedProduct =
+    products.find(
+      (item) =>
+        String(item.id) ===
+        String(productId)
+    ) || null;
+
+
+  async function sendNewsletter(
+    event
+  ) {
+    event.preventDefault();
+
+    if (!selectedProduct) {
+      setPanelError(
+        "Please select a published product."
+      );
+      return;
+    }
+
+    if (!subject.trim()) {
+      setPanelError(
+        "Please enter an email subject."
+      );
+      return;
+    }
+
+    if (!newsletterMessage.trim()) {
+      setPanelError(
+        "Please enter a newsletter message."
+      );
+      return;
+    }
+
+    if (subscriberCount < 1) {
+      setPanelError(
+        "There are no active subscribers."
+      );
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Send "${subject.trim()}" to ${subscriberCount} active subscriber${
+          subscriberCount === 1
+            ? ""
+            : "s"
+        }?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setSending(true);
+      setPanelError("");
+      setPanelMessage("");
+
+      const result =
+        await adminApi.sendNewsletter({
+          productId:
+            selectedProduct.id,
+          subject:
+            subject.trim(),
+          message:
+            newsletterMessage.trim(),
+        });
+
+      setPanelMessage(
+        result.message ||
+        "Newsletter sent successfully."
+      );
+    } catch (error) {
+      setPanelError(
+        error.message ||
+        "Could not send newsletter."
+      );
+    } finally {
+      setSending(false);
+    }
+  }
+
+
+  if (loading) {
+    return (
+      <div className="admin-newsletter-loading">
+        Loading newsletter...
+      </div>
+    );
+  }
+
+
+  return (
+    <section className="admin-newsletter">
+      <div className="admin-newsletter-summary">
+        <div>
+          <span>
+            ACTIVE SUBSCRIBERS
+          </span>
+
+          <strong>
+            {subscriberCount}
+          </strong>
+        </div>
+
+        <p>
+          Send a product announcement to everyone currently subscribed to the Desiglov Letter.
+        </p>
+      </div>
+
+
+      {panelMessage && (
+        <div className="auth-message success">
+          {panelMessage}
+        </div>
+      )}
+
+
+      {panelError && (
+        <div className="auth-message error">
+          {panelError}
+        </div>
+      )}
+
+
+      <form
+        className="admin-newsletter-form"
+        onSubmit={sendNewsletter}
+      >
+        <div className="admin-newsletter-fields">
+          <label>
+            <span>
+              PUBLISHED PRODUCT
+            </span>
+
+            <select
+              value={productId}
+              onChange={changeProduct}
+              disabled={
+                sending ||
+                products.length === 0
+              }
+            >
+              {products.length === 0 ? (
+                <option value="">
+                  No published products
+                </option>
+              ) : (
+                products.map(
+                  (product) => (
+                    <option
+                      key={product.id}
+                      value={product.id}
+                    >
+                      {product.name} — ₹
+                      {Number(
+                        product.salePriceINR ||
+                        product.priceINR ||
+                        0
+                      ).toLocaleString(
+                        "en-IN"
+                      )}
+                    </option>
+                  )
+                )
+              )}
+            </select>
+          </label>
+
+
+          <label>
+            <span>
+              EMAIL SUBJECT
+            </span>
+
+            <input
+              type="text"
+              maxLength="160"
+              value={subject}
+              onChange={(event) =>
+                setSubject(
+                  event.target.value
+                )
+              }
+              placeholder="New arrival: Mayil"
+              disabled={sending}
+            />
+          </label>
+
+
+          <label>
+            <span>
+              MESSAGE
+            </span>
+
+            <textarea
+              rows="7"
+              maxLength="2000"
+              value={
+                newsletterMessage
+              }
+              onChange={(event) =>
+                setNewsletterMessage(
+                  event.target.value
+                )
+              }
+              placeholder="Tell subscribers about this product..."
+              disabled={sending}
+            />
+          </label>
+        </div>
+
+
+        <div className="admin-newsletter-preview">
+          <div className="admin-newsletter-preview-label">
+            EMAIL PREVIEW
+          </div>
+
+          {selectedProduct ? (
+            <>
+              {selectedProduct.image ? (
+                <img
+                  src={
+                    selectedProduct.image
+                  }
+                  alt={
+                    selectedProduct.name
+                  }
+                />
+              ) : (
+                <div className="admin-newsletter-no-image">
+                  NO IMAGE
+                </div>
+              )}
+
+              <div className="admin-newsletter-preview-copy">
+                <small>
+                  {
+                    selectedProduct.category
+                  }
+                </small>
+
+                <h2>
+                  {
+                    selectedProduct.name
+                  }
+                </h2>
+
+                <strong>
+                  ₹
+                  {Number(
+                    selectedProduct.salePriceINR ||
+                    selectedProduct.priceINR ||
+                    0
+                  ).toLocaleString(
+                    "en-IN"
+                  )}
+                </strong>
+
+                <p>
+                  {
+                    newsletterMessage ||
+                    "Your message will appear here."
+                  }
+                </p>
+
+                <span className="admin-newsletter-shop-button">
+                  SHOP NOW →
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="admin-newsletter-empty">
+              Select a published product to preview the email.
+            </div>
+          )}
+        </div>
+
+
+        <div className="admin-newsletter-send-row">
+          <div>
+            <strong>
+              {subscriberCount}
+            </strong>
+
+            {" "}
+            recipient
+            {subscriberCount === 1
+              ? ""
+              : "s"}
+          </div>
+
+          <button
+            type="submit"
+            className="button-dark"
+            disabled={
+              sending ||
+              !selectedProduct ||
+              subscriberCount < 1
+            }
+          >
+            {sending
+              ? "SENDING..."
+              : "SEND EMAIL"}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+
 function AdminDiscountCodesPanel() {
   const emptyForm = {
     code: "",
@@ -9267,6 +9703,22 @@ function AdminPage({
             Discount Codes
           </button>
 
+            <button
+              className={
+                tab ===
+                "newsletter"
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                changeTab(
+                  "newsletter"
+                )
+              }
+            >
+              Newsletter
+            </button>
+
 </nav>
 
 
@@ -9299,10 +9751,13 @@ function AdminPage({
                 : tab ===
                     "discounts"
                   ? "Discount Codes"
-                  : tab
-                      .charAt(0)
-                      .toUpperCase() +
-                    tab.slice(1)}
+                  : tab ===
+                      "newsletter"
+                    ? "Newsletter"
+                    : tab
+                        .charAt(0)
+                        .toUpperCase() +
+                      tab.slice(1)}
             </h1>
 
           </div>
@@ -9351,6 +9806,12 @@ function AdminPage({
         {tab ===
           "discounts" && (
           <AdminDiscountCodesPanel />
+        )}
+
+
+        {tab ===
+          "newsletter" && (
+          <AdminNewsletterPanel />
         )}
 
 
@@ -12663,9 +13124,79 @@ function Benefit({
 }
 
 function Newsletter() {
+  const [email, setEmail] =
+    useState("");
+
+  const [status, setStatus] =
+    useState("");
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+
+  async function submitNewsletter(
+    event
+  ) {
+    event.preventDefault();
+
+    if (submitting) {
+      return;
+    }
+
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
+
+    if (!cleanEmail) {
+      setStatus(
+        "Please enter your email address."
+      );
+
+      return;
+    }
+
+
+    setSubmitting(true);
+
+    setStatus("");
+
+
+    try {
+
+      const result =
+        await newsletterApi.subscribe(
+          cleanEmail
+        );
+
+
+      setStatus(
+        result?.message ||
+        "You're on the list."
+      );
+
+      setEmail("");
+
+    } catch (error) {
+
+      setStatus(
+        error?.message ||
+        "Could not join right now. Please try again."
+      );
+
+    } finally {
+
+      setSubmitting(false);
+
+    }
+  }
+
+
   return (
     <section className="newsletter">
+
       <div>
+
         <div className="eyebrow">
           THE DESIGLOV
           LETTER
@@ -12682,23 +13213,60 @@ function Newsletter() {
           stories, delivered
           occasionally.
         </p>
+
       </div>
 
-      <form
-        onSubmit={(e) =>
-          e.preventDefault()
-        }
-      >
-        <input
-          type="email"
-          required
-          placeholder="Your email address"
-        />
 
-        <button>
-          JOIN →
-        </button>
-      </form>
+      <div className="newsletter-signup">
+
+        <form
+          onSubmit={
+            submitNewsletter
+          }
+        >
+
+          <input
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="Your email address"
+            value={email}
+            disabled={submitting}
+            onChange={(event) => {
+              setEmail(
+                event.target.value
+              );
+
+              if (status) {
+                setStatus("");
+              }
+            }}
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting
+              ? "JOINING..."
+              : "JOIN →"}
+          </button>
+
+        </form>
+
+
+        {status && (
+          <div
+            className="newsletter-status"
+            role="status"
+            aria-live="polite"
+          >
+            {status}
+          </div>
+        )}
+
+      </div>
+
     </section>
   );
 }

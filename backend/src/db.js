@@ -1174,6 +1174,38 @@ export async function initialiseDatabase() {
   `);
 
 
+  // =========================================================
+  // NEWSLETTER SUBSCRIBERS
+  // =========================================================
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      email VARCHAR(320)
+        PRIMARY KEY,
+
+      active BOOLEAN
+        NOT NULL
+        DEFAULT TRUE,
+
+      created_at TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
+
+      updated_at TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW()
+    );
+  `);
+
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS newsletter_subscribers_active_index
+    ON newsletter_subscribers (
+      active
+    );
+  `);
+
+
   console.log(
     "✓ PostgreSQL ready"
   );

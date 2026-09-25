@@ -277,6 +277,22 @@ export const adminApi = {
     );
   },
 
+  newsletterAdmin() {
+    return request(
+      "/admin/newsletter"
+    );
+  },
+
+  sendNewsletter(data) {
+    return request(
+      "/admin/newsletter/send",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
+  },
+
   createDiscountCode(
     data
   ) {
@@ -579,5 +595,24 @@ export const feedbackApi = {
         comments,
       }),
     });
+  },
+};
+
+
+// ============================================================
+// NEWSLETTER
+// ============================================================
+
+export const newsletterApi = {
+  subscribe(email) {
+    return request(
+      "/newsletter/subscribe",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+        }),
+      }
+    );
   },
 };

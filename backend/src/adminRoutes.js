@@ -3,6 +3,7 @@ import multer from "multer";
 import crypto from "crypto";
 import path from "path";
 import fs from "fs";
+import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
 
 import {
@@ -39,6 +40,433 @@ router.use(
 );
 
 
+
+
+
+
+// ===========================================================
+// NEWSLETTER ADMIN
+// ===========================================================
+
+function newsletterEscapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+router.get(
+  "/newsletter",
+  async (req, res, next) => {
+    try {
+      const subscribersResult =
+        await pool.query(`
+          SELECT
+            COUNT(*)::int AS count
+          FROM newsletter_subscribers
+          WHERE active = TRUE
+        `);
+
+      const productsResult =
+        await pool.query(`
+          SELECT
+            id,
+            slug,
+            name,
+            category,
+            price_inr,
+            sale_price_inr,
+            sale_ends_at,
+            description,
+            images,
+            image_path,
+            active
+          FROM products
+          WHERE active = TRUE
+          ORDER BY updated_at DESC, id DESC
+        `);
+
+      const products =
+        productsResult.rows.map(
+          (row) => {
+            const images =
+              Array.isArray(row.images)
+                ? row.images
+                : [];
+
+            return {
+              id: row.id,
+              slug: row.slug,
+              name: row.name,
+              category: row.category,
+              priceINR:
+                Number(row.price_inr || 0),
+              salePriceINR:
+                row.sale_price_inr == null
+                  ? null
+                  : Number(row.sale_price_inr),
+              saleEndsAt:
+                row.sale_ends_at,
+              description:
+                row.description || "",
+              image:
+                images[0] ||
+                row.image_path ||
+                "",
+              active:
+                Boolean(row.active),
+            };
+          }
+        );
+
+      return res.json({
+        subscriberCount:
+          Number(
+            subscribersResult.rows[0]?.count ||
+            0
+          ),
+        products,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
+router.post(
+  "/newsletter/send",
+  async (req, res, next) => {
+    try {
+      const productId =
+        Number(req.body?.productId);
+
+      const subject =
+        String(
+          req.body?.subject || ""
+        ).trim();
+
+      const message =
+        String(
+          req.body?.message || ""
+        ).trim();
+
+      if (
+        !Number.isInteger(productId) ||
+        productId <= 0
+      ) {
+        return res.status(400).json({
+          error:
+            "Please select a product.",
+        });
+      }
+
+      if (
+        !subject ||
+        subject.length > 160
+      ) {
+        return res.status(400).json({
+          error:
+            "Please enter a subject up to 160 characters.",
+        });
+      }
+
+      if (
+        !message ||
+        message.length > 2000
+      ) {
+        return res.status(400).json({
+          error:
+            "Please enter a message up to 2000 characters.",
+        });
+      }
+
+      const productResult =
+        await pool.query(
+          `
+          SELECT
+            id,
+            slug,
+            name,
+            category,
+            price_inr,
+            sale_price_inr,
+            sale_ends_at,
+            description,
+            images,
+            image_path,
+            active
+          FROM products
+          WHERE id = $1
+            AND active = TRUE
+          LIMIT 1
+          `,
+          [productId]
+        );
+
+      if (
+        productResult.rowCount === 0
+      ) {
+        return res.status(404).json({
+          error:
+            "Published product not found.",
+        });
+      }
+
+      const subscribersResult =
+        await pool.query(`
+          SELECT email
+          FROM newsletter_subscribers
+          WHERE active = TRUE
+          ORDER BY created_at ASC
+        `);
+
+      const recipients =
+        subscribersResult.rows
+          .map(
+            (row) =>
+              String(row.email || "")
+                .trim()
+                .toLowerCase()
+          )
+          .filter(Boolean);
+
+      if (recipients.length === 0) {
+        return res.status(400).json({
+          error:
+            "There are no active newsletter subscribers.",
+        });
+      }
+
+      const apiKey =
+        process.env.RESEND_API_KEY;
+
+      if (!apiKey) {
+        return res.status(500).json({
+          error:
+            "Newsletter email service is not configured.",
+        });
+      }
+
+      const product =
+        productResult.rows[0];
+
+      const images =
+        Array.isArray(product.images)
+          ? product.images
+          : [];
+
+      const imageUrl =
+        images[0] ||
+        product.image_path ||
+        "";
+
+      const now =
+        Date.now();
+
+      const saleActive =
+        product.sale_price_inr != null &&
+        product.sale_ends_at &&
+        new Date(
+          product.sale_ends_at
+        ).getTime() > now;
+
+      const price =
+        saleActive
+          ? Number(
+              product.sale_price_inr
+            )
+          : Number(
+              product.price_inr
+            );
+
+      const storeUrl =
+        (
+          process.env.FRONTEND_URL ||
+          "https://desiglov.com"
+        ).replace(/\/+$/, "");
+
+      const productUrl =
+        `${storeUrl}/product/${encodeURIComponent(
+          product.slug
+        )}`;
+
+      const safeSubject =
+        newsletterEscapeHtml(
+          subject
+        );
+
+      const safeMessage =
+        newsletterEscapeHtml(
+          message
+        ).replace(
+          /\n/g,
+          "<br />"
+        );
+
+      const safeName =
+        newsletterEscapeHtml(
+          product.name
+        );
+
+      const safeCategory =
+        newsletterEscapeHtml(
+          product.category
+        );
+
+      const safeImage =
+        newsletterEscapeHtml(
+          imageUrl
+        );
+
+      const safeProductUrl =
+        newsletterEscapeHtml(
+          productUrl
+        );
+
+      const resend =
+        new Resend(apiKey);
+
+      let sent = 0;
+      const failures = [];
+
+      // Send individually so subscriber addresses
+      // are never exposed to other customers.
+      for (const email of recipients) {
+        const result =
+          await resend.emails.send({
+            from:
+              process.env.NEWSLETTER_FROM_EMAIL ||
+              "DEsiglov <hello@desiglov.com>",
+
+            to: [email],
+
+            subject,
+
+            text: [
+              message,
+              "",
+              `${product.name} — ₹${price.toLocaleString(
+                "en-IN"
+              )}`,
+              productUrl,
+              "",
+              "DEsiglov",
+              "Rare finds. Real style.",
+            ].join("\n"),
+
+            html: `
+              <div style="margin:0;background:#f3e8df;padding:40px 16px;font-family:Arial,sans-serif;color:#211f1d;">
+                <div style="max-width:620px;margin:0 auto;background:#ffffff;">
+                  <div style="padding:32px 32px 22px;text-align:center;border-bottom:1px solid #ead9cf;">
+                    <div style="font-family:Georgia,serif;font-size:30px;letter-spacing:2px;">
+                      DESI<span style="color:#b87554;font-style:italic;">GLOV</span>
+                    </div>
+                    <div style="margin-top:8px;font-size:9px;letter-spacing:4px;color:#9c8c82;">
+                      RARE FINDS · REAL STYLE
+                    </div>
+                  </div>
+
+                  ${
+                    safeImage
+                      ? `
+                        <a href="${safeProductUrl}" style="display:block;">
+                          <img
+                            src="${safeImage}"
+                            alt="${safeName}"
+                            style="display:block;width:100%;max-height:620px;object-fit:cover;"
+                          />
+                        </a>
+                      `
+                      : ""
+                  }
+
+                  <div style="padding:38px 34px 42px;">
+                    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#b87554;margin-bottom:14px;">
+                      ${safeCategory}
+                    </div>
+
+                    <h1 style="font-family:Georgia,serif;font-weight:400;font-size:38px;line-height:1.1;margin:0 0 14px;">
+                      ${safeName}
+                    </h1>
+
+                    <div style="font-family:Georgia,serif;font-size:23px;margin-bottom:24px;">
+                      ₹${price.toLocaleString(
+                        "en-IN"
+                      )}
+                    </div>
+
+                    <div style="font-size:15px;line-height:1.8;color:#615a56;margin-bottom:30px;">
+                      ${safeMessage}
+                    </div>
+
+                    <a
+                      href="${safeProductUrl}"
+                      style="display:inline-block;background:#211f1d;color:#ffffff;text-decoration:none;padding:15px 25px;font-size:11px;letter-spacing:2px;"
+                    >
+                      SHOP NOW →
+                    </a>
+                  </div>
+
+                  <div style="padding:24px 32px;background:#211f1d;color:#d9c8bd;text-align:center;font-size:11px;line-height:1.7;">
+                    DEsiglov · Rare finds. Real style.
+                    <br />
+                    You received this because you joined the DEsiglov Letter.
+                  </div>
+                </div>
+              </div>
+            `,
+          });
+
+        if (result.error) {
+          failures.push({
+            email,
+            error:
+              result.error.message ||
+              "Send failed",
+          });
+        } else {
+          sent += 1;
+        }
+      }
+
+      if (sent === 0) {
+        console.error(
+          "Newsletter send failures:",
+          failures
+        );
+
+        return res.status(502).json({
+          error:
+            "The newsletter could not be sent.",
+        });
+      }
+
+      if (failures.length > 0) {
+        console.error(
+          "Some newsletter emails failed:",
+          failures
+        );
+      }
+
+      return res.json({
+        ok: true,
+        sent,
+        failed:
+          failures.length,
+        message:
+          `Newsletter sent to ${sent} subscriber${
+            sent === 1 ? "" : "s"
+          }.`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 
 // ===========================================================
