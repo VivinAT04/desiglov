@@ -14,7 +14,7 @@ export default function SizeGuide() {
         <p>
           Temporary sizing structure.
           Replace these measurements with
-          your confirmed Desiglov sizing
+          your confirmed DesiGlov sizing
           before launch.
         </p>
       </div>

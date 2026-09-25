@@ -20,7 +20,7 @@ export default function Contact() {
 
         <p>
           Questions about an order,
-          product or the Desiglov
+          product or the DesiGlov
           collection? Reach out to us.
         </p>
 
@@ -65,7 +65,7 @@ export default function Contact() {
           </p>
 
           <span>
-            DESIGLOV SUPPORT
+            DesiGlov SUPPORT
           </span>
 
         </div>

@@ -44,7 +44,7 @@ export default function Register() {
 
       <div className="auth-intro">
         <p className="eyebrow">
-          JOIN DESIGLOV
+          JOIN DesiGlov
         </p>
 
         <h1>
@@ -53,7 +53,7 @@ export default function Register() {
 
         <p>
           Create your account for a
-          smoother Desiglov experience.
+          smoother DesiGlov experience.
         </p>
       </div>
 

@@ -26,7 +26,7 @@ export default function FAQ() {
     },
     {
       question:
-        "Is Desiglov jewellery anti-tarnish?",
+        "Is DesiGlov jewellery anti-tarnish?",
       answer:
         "Selected jewellery products are listed as anti-tarnish where applicable. Product details should always be checked before ordering."
     }

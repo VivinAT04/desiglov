@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
           Payment card information should be
           processed by the selected payment
           provider rather than stored directly
-          by Desiglov.
+          by DesiGlov.
         </p>
 
         <h2>
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
         <p>
           A compliant policy should be
           prepared before production launch
-          based on where Desiglov sells and
+          based on where DesiGlov sells and
           what services are used.
         </p>
       </div>

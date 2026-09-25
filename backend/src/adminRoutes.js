@@ -340,7 +340,7 @@ router.post(
           await resend.emails.send({
             from:
               process.env.NEWSLETTER_FROM_EMAIL ||
-              "DEsiglov <hello@desiglov.com>",
+              "DesiGlov <hello@desiglov.com>",
 
             to: [email],
 
@@ -354,7 +354,7 @@ router.post(
               )}`,
               productUrl,
               "",
-              "DEsiglov",
+              "DesiGlov",
               "Rare finds. Real style.",
             ].join("\n"),
 
@@ -412,9 +412,9 @@ router.post(
                   </div>
 
                   <div style="padding:24px 32px;background:#211f1d;color:#d9c8bd;text-align:center;font-size:11px;line-height:1.7;">
-                    DEsiglov · Rare finds. Real style.
+                    DesiGlov · Rare finds. Real style.
                     <br />
-                    You received this because you joined the DEsiglov Letter.
+                    You received this because you joined the DesiGlov Letter.
                   </div>
                 </div>
               </div>

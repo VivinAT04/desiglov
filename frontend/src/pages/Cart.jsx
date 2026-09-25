@@ -50,7 +50,7 @@ export default function Cart() {
 
         <p>
           Your next favourite
-          Desiglov piece might be
+          DesiGlov piece might be
           waiting for you.
         </p>
 

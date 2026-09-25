@@ -63,7 +63,7 @@ export default function Shop() {
       <section className="shop-hero">
 
         <p className="eyebrow">
-          DESIGLOV COLLECTION
+          DesiGlov COLLECTION
         </p>
 
         <h1>
@@ -158,7 +158,7 @@ export default function Shop() {
             <h2>No products found.</h2>
 
             <p>
-              Try another Desiglov collection.
+              Try another DesiGlov collection.
             </p>
 
             <Link

@@ -15,7 +15,7 @@ export default function ReturnPolicy() {
         <p>
           The final return and exchange
           policy must be decided before
-          launch based on Desiglov's
+          launch based on DesiGlov's
           fulfilment process and product
           categories.
         </p>

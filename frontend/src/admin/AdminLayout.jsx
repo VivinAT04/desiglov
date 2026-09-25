@@ -4,7 +4,7 @@ export default function AdminLayout() {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <h2>DESIGLOV</h2>
+        <h2>DesiGlov</h2>
         <span>ADMIN PANEL</span>
 
         <nav>

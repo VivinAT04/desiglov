@@ -160,7 +160,7 @@ app.get(
       res.json({
         ok: true,
         service:
-          "DEsiglov API",
+          "DesiGlov API",
       });
     } catch {
       res.status(500).json({
@@ -276,7 +276,7 @@ async function start() {
         );
 
         console.log(
-          " DESIGLOV BACKEND RUNNING"
+          " DesiGlov BACKEND RUNNING"
         );
 
         console.log(

@@ -40,7 +40,7 @@ export default function OrderConfirmation() {
       </h1>
 
       <p className="confirmation-intro">
-        Your Desiglov order has been
+        Your DesiGlov order has been
         received successfully.
       </p>
 

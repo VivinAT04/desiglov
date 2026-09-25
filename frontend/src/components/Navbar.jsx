@@ -10,12 +10,12 @@ export default function Navbar() {
   return (
     <>
       <div className="announcement">
-        DESIGLOV • CURATED FASHION & JEWELLERY
+        DesiGlov • CURATED FASHION & JEWELLERY
       </div>
 
       <header className="navbar">
         <Link to="/" className="logo">
-          DESIGLOV
+          DesiGlov
         </Link>
 
         <nav className="nav-links">

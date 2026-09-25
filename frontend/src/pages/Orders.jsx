@@ -35,7 +35,7 @@ export default function Orders() {
           </h2>
 
           <p>
-            Your Desiglov orders
+            Your DesiGlov orders
             will appear here.
           </p>
 

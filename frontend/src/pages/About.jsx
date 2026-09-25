@@ -6,7 +6,7 @@ export default function About() {
       <section className="about-hero">
 
         <p className="eyebrow">
-          THE DESIGLOV STORY
+          THE DesiGlov STORY
         </p>
 
         <h1>
@@ -15,7 +15,7 @@ export default function About() {
         </h1>
 
         <p>
-          Desiglov is built around
+          DesiGlov is built around
           discovering expressive,
           wearable pieces that make
           everyday styling feel easy.
@@ -28,7 +28,7 @@ export default function About() {
         <div className="about-image">
           <img
             src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1300&q=90"
-            alt="Desiglov collection"
+            alt="DesiGlov collection"
           />
         </div>
 
@@ -48,7 +48,7 @@ export default function About() {
 
           <p>
             From clothing to jewellery,
-            every Desiglov collection is
+            every DesiGlov collection is
             intended to help customers
             discover pieces that feel
             personal.
@@ -67,7 +67,7 @@ export default function About() {
             to="/shop"
             className="button-dark"
           >
-            SHOP DESIGLOV
+            SHOP DesiGlov
           </Link>
 
         </div>

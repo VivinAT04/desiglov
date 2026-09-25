@@ -35,7 +35,7 @@ export default function Login() {
         </p>
 
         <h1>
-          Your Desiglov.
+          Your DesiGlov.
         </h1>
 
         <p>
@@ -97,7 +97,7 @@ export default function Login() {
         </button>
 
         <p className="auth-switch">
-          New to Desiglov?{" "}
+          New to DesiGlov?{" "}
           <Link to="/register">
             Create account
           </Link>

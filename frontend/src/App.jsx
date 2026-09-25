@@ -1653,16 +1653,8 @@ function HomePage({
           </div>
 
           <div className="hero-note">
-            <span>
-              01
-            </span>
-
-            <div />
-
             <p>
-              Limited pieces,
-              curated with
-              intention.
+              Limited pieces, curated with intention.
             </p>
           </div>
         </div>
@@ -1675,7 +1667,7 @@ function HomePage({
             }
             alt={
               products[0]?.name ||
-              "DEsiglov collection"
+              "DesiGlov collection"
             }
             onError={(e) => {
               e.currentTarget.style.display =
@@ -1693,7 +1685,7 @@ function HomePage({
             <strong>
               {
                 products[0]?.name ||
-                "DEsiglov"
+                "DesiGlov"
               }
             </strong>
 
@@ -1800,7 +1792,7 @@ function HomePage({
         <div className="story-photo">
           <img
             src={homeEditorialImages.story}
-            alt="DEsiglov fashion"
+            alt="DesiGlov fashion"
             onError={(e) => {
               e.currentTarget.style.display =
                 "none";
@@ -1810,7 +1802,7 @@ function HomePage({
 
         <div className="story-copy">
           <div className="eyebrow">
-            THE DESIGLOV
+            THE DesiGlov
             STORY
           </div>
 
@@ -1824,7 +1816,7 @@ function HomePage({
           </h2>
 
           <p>
-            DEsiglov is about
+            DesiGlov is about
             more than getting
             dressed. It is about
             discovering pieces
@@ -1865,7 +1857,7 @@ function HomePage({
         <SectionHeading
           eyebrow="CURRENT FAVOURITES"
           title="The pieces we're loving."
-          text="A selection from the latest DEsiglov edit."
+          text="A selection from the latest DesiGlov edit."
         />
 
         <div className="products-grid home-products">
@@ -2188,7 +2180,7 @@ function ShopPage({
   return (
     <>
       <PageHero
-        eyebrow="THE DESIGLOV COLLECTION"
+        eyebrow="THE DesiGlov COLLECTION"
         title={
           category ||
           (
@@ -3092,7 +3084,7 @@ function ProductPage({
             navigate("/")
           }
         >
-          HOME
+          Home
         </button>
 
         <span>
@@ -3188,7 +3180,7 @@ function ProductPage({
             ★★★★★
             <span>
               Curated by
-              DEsiglov
+              DesiGlov
             </span>
           </div>
 
@@ -4995,7 +4987,7 @@ function CheckoutPage({
 
         name:
           result.payment.name ||
-          "DESIGLOV",
+          "DesiGlov",
 
         description:
           result.payment.description ||
@@ -5059,7 +5051,7 @@ function CheckoutPage({
           } catch (err) {
             setError(
               err.message ||
-              "Payment was received but verification could not be completed. Please contact DESIGLOV before trying again."
+              "Payment was received but verification could not be completed. Please contact DesiGlov before trying again."
             );
           } finally {
             setPlacing(false);
@@ -5124,7 +5116,7 @@ function CheckoutPage({
 
         <section className="checkout-login-required">
           <h2>
-            Already have a DEsiglov account?
+            Already have a DesiGlov account?
           </h2>
 
           <p>
@@ -5153,7 +5145,7 @@ function CheckoutPage({
         <PageHero
           eyebrow="ORDER CONFIRMED"
           title="Thank you."
-          text="Your DEsiglov order has been placed."
+          text="Your DesiGlov order has been placed."
         />
 
         <section className="order-confirmation">
@@ -6617,7 +6609,7 @@ function AccountPage({
           );
 
           setMessage(
-            "Your DEsiglov account has been created."
+            "Your DesiGlov account has been created."
           );
 
           return;
@@ -6666,7 +6658,7 @@ function AccountPage({
         );
 
         setMessage(
-          "Welcome back to DEsiglov."
+          "Welcome back to DesiGlov."
         );
 
         setForm({
@@ -6755,7 +6747,7 @@ function AccountPage({
       });
 
       setMessage(
-        "Email verified. Your DEsiglov account is ready."
+        "Email verified. Your DesiGlov account is ready."
       );
     } catch (err) {
       console.error(
@@ -6854,7 +6846,7 @@ function AccountPage({
     return (
       <>
         <PageHero
-          eyebrow="YOUR DESIGLOV"
+          eyebrow="YOUR DesiGlov"
           title="Your account."
           text="Checking your account..."
         />
@@ -6875,7 +6867,7 @@ function AccountPage({
     return (
       <>
         <PageHero
-          eyebrow="YOUR DESIGLOV"
+          eyebrow="YOUR DesiGlov"
           title={`Hello, ${
             user.fullName
               .split(" ")[0]
@@ -7404,7 +7396,7 @@ function AccountPage({
   return (
     <>
       <PageHero
-        eyebrow="YOUR DESIGLOV"
+        eyebrow="YOUR DesiGlov"
         title={
           mode === "register"
             ? "Create account."
@@ -7413,7 +7405,7 @@ function AccountPage({
         text={
           mode === "register"
             ? "Create your account and verify your email with a secure code."
-            : "Sign in to your DEsiglov account."
+            : "Sign in to your DesiGlov account."
         }
       />
 
@@ -7585,7 +7577,7 @@ function AccountPage({
         <div className="account-switch">
           {mode === "register"
             ? "Already have an account?"
-            : "New to DEsiglov?"}
+            : "New to DesiGlov?"}
 
           <button
             type="button"
@@ -7610,7 +7602,7 @@ function AccountPage({
           </span>
 
           <p>
-            Your password is securely managed by Supabase Authentication and is never stored as plain text by DEsiglov.
+            Your password is securely managed by Supabase Authentication and is never stored as plain text by DesiGlov.
           </p>
         </div>
       </section>
@@ -7713,7 +7705,7 @@ function AdminNewsletterPanel() {
       );
 
       setNewsletterMessage(
-        `${product.name} has arrived at Desiglov. Discover the latest addition to our collection.`
+        `${product.name} has arrived at DesiGlov. Discover the latest addition to our collection.`
       );
     }
   }
@@ -7847,7 +7839,7 @@ function AdminNewsletterPanel() {
         </div>
 
         <p>
-          Send a product announcement to everyone currently subscribed to the Desiglov Letter.
+          Send a product announcement to everyone currently subscribed to the DesiGlov Letter.
         </p>
       </div>
 
@@ -9916,7 +9908,7 @@ function AdminPage({
       <section className="admin-denied">
 
         <div className="eyebrow">
-          DESIGLOV ADMIN
+          DesiGlov ADMIN
         </div>
 
         <h1>
@@ -9924,7 +9916,7 @@ function AdminPage({
         </h1>
 
         <p>
-          Sign in using the authorised DEsiglov admin account.
+          Sign in using the authorised DesiGlov admin account.
         </p>
 
         {error && (
@@ -9957,7 +9949,7 @@ function AdminPage({
         <div className="admin-brand">
 
           <small>
-            DESIGLOV
+            DesiGlov
           </small>
 
           <strong>
@@ -10092,7 +10084,7 @@ function AdminPage({
           <div>
 
             <div className="eyebrow">
-              DESIGLOV CONTROL
+              DesiGlov CONTROL
             </div>
 
             <h1>
@@ -11900,13 +11892,13 @@ function ForgotPasswordPage({
         }
         text={
           step === "email"
-            ? "Enter the email address linked to your DEsiglov account."
+            ? "Enter the email address linked to your DesiGlov account."
             : step === "otp"
             ? `Enter the 8-digit code sent to ${email}.`
             : step ===
               "password"
             ? "Choose a secure new password for your account."
-            : "Your DEsiglov account is ready."
+            : "Your DesiGlov account is ready."
         }
       />
 
@@ -12581,7 +12573,7 @@ function FeedbackPage() {
 
       setMessage({
         type: "success",
-        text: "Thank you for your feedback. Your message has been sent to the DEsiglov team.",
+        text: "Thank you for your feedback. Your message has been sent to the DesiGlov team.",
       });
     } catch (error) {
       setMessage({
@@ -12599,7 +12591,7 @@ function FeedbackPage() {
     <InformationPage
       eyebrow="FEEDBACK"
       title="We'd love to hear from you."
-      intro="Your feedback helps us improve the DEsiglov experience."
+      intro="Your feedback helps us improve the DesiGlov experience."
     >
       <section className="feedback-section">
         <div className="feedback-heading">
@@ -12709,7 +12701,7 @@ function DeliveryPage() {
     <InformationPage
       eyebrow="DELIVERY"
       title="From us to you."
-      intro="Everything you need to know about processing, dispatch and delivery of your DEsiglov order."
+      intro="Everything you need to know about processing, dispatch and delivery of your DesiGlov order."
     >
       <InfoSection
         number="01"
@@ -12761,7 +12753,7 @@ function ReturnsPage() {
     <InformationPage
       eyebrow="RETURNS & EXCHANGES"
       title="We want you to love what you receive."
-      intro="Every DEsiglov order goes through a careful quality-checking process before it is packed and dispatched."
+      intro="Every DesiGlov order goes through a careful quality-checking process before it is packed and dispatched."
     >
       <InfoSection
         number="01"
@@ -12811,7 +12803,7 @@ function ReturnsPage() {
       >
         <p>
           As each order undergoes a complete quality check before
-          packing and dispatch, DEsiglov is unable to accept returns
+          packing and dispatch, DesiGlov is unable to accept returns
           or exchanges for reasons other than size-related issues.
         </p>
 
@@ -12829,7 +12821,7 @@ function ReturnsPage() {
       >
         <p>
           Size exchanges are subject to availability. If the requested
-          replacement size is unavailable, the DEsiglov team will
+          replacement size is unavailable, the DesiGlov team will
           contact the customer regarding the available resolution.
         </p>
       </InfoSection>
@@ -12856,7 +12848,7 @@ function PrivacyPage() {
     <InformationPage
       eyebrow="PRIVACY"
       title="Your information matters."
-      intro="A clear overview of the information DEsiglov may process when you use the store."
+      intro="A clear overview of the information DesiGlov may process when you use the store."
     >
 
       <InfoSection
@@ -12884,7 +12876,7 @@ function PrivacyPage() {
         title="Payments"
       >
         <p>
-          When online payments are introduced, sensitive payment information should be handled by the selected payment provider rather than stored directly by DEsiglov.
+          When online payments are introduced, sensitive payment information should be handled by the selected payment provider rather than stored directly by DesiGlov.
         </p>
       </InfoSection>
 
@@ -12894,7 +12886,7 @@ function PrivacyPage() {
         title="Security"
       >
         <p>
-          DEsiglov uses password hashing, authenticated sessions, server-side authorisation and other technical controls designed to protect account and administrative access.
+          DesiGlov uses password hashing, authenticated sessions, server-side authorisation and other technical controls designed to protect account and administrative access.
         </p>
       </InfoSection>
 
@@ -12904,7 +12896,7 @@ function PrivacyPage() {
         title="Data requests"
       >
         <p>
-          Customers should be able to contact DEsiglov regarding personal information, corrections or other applicable privacy requests.
+          Customers should be able to contact DesiGlov regarding personal information, corrections or other applicable privacy requests.
         </p>
       </InfoSection>
 
@@ -12915,7 +12907,7 @@ function PrivacyPage() {
         </strong>
 
         <p>
-          This page is a technical draft and should be reviewed against the laws and business arrangements that apply to DEsiglov before launch.
+          This page is a technical draft and should be reviewed against the laws and business arrangements that apply to DesiGlov before launch.
         </p>
       </div>
 
@@ -12929,8 +12921,8 @@ function TermsPage() {
   return (
     <InformationPage
       eyebrow="TERMS"
-      title="Shopping with DEsiglov."
-      intro="The basic terms governing use of the DEsiglov online store."
+      title="Shopping with DesiGlov."
+      intro="The basic terms governing use of the DesiGlov online store."
     >
 
       <InfoSection
@@ -12958,7 +12950,7 @@ function TermsPage() {
         title="Prices"
       >
         <p>
-          Prices displayed on the store are the prices used by the DEsiglov checkout system, subject to any applicable delivery charges or adjustments shown before an order is confirmed.
+          Prices displayed on the store are the prices used by the DesiGlov checkout system, subject to any applicable delivery charges or adjustments shown before an order is confirmed.
         </p>
       </InfoSection>
 
@@ -12968,7 +12960,7 @@ function TermsPage() {
         title="Orders"
       >
         <p>
-          Receiving an order confirmation means the order has been recorded. DEsiglov may need to contact a customer if an order cannot be fulfilled.
+          Receiving an order confirmation means the order has been recorded. DesiGlov may need to contact a customer if an order cannot be fulfilled.
         </p>
       </InfoSection>
 
@@ -13003,7 +12995,7 @@ function FaqPage() {
   const questions = [
     {
       question:
-        "Where does DEsiglov deliver?",
+        "Where does DesiGlov deliver?",
       answer:
         "The store currently focuses on delivery within India. Availability for a specific destination is confirmed during checkout.",
     },
@@ -13019,7 +13011,7 @@ function FaqPage() {
       question:
         "How do I know which size to choose?",
       answer:
-        "Use the DEsiglov size guide and the sizes listed on each individual product page.",
+        "Use the DesiGlov size guide and the sizes listed on each individual product page.",
     },
 
     {
@@ -13033,7 +13025,7 @@ function FaqPage() {
       question:
         "How do I see my orders?",
       answer:
-        "Sign in to your DEsiglov account and open the account area to view your order history.",
+        "Sign in to your DesiGlov account and open the account area to view your order history.",
     },
 
     {
@@ -13056,7 +13048,7 @@ function FaqPage() {
     <InformationPage
       eyebrow="FAQ"
       title="Good to know."
-      intro="Answers to common questions about shopping with DEsiglov."
+      intro="Answers to common questions about shopping with DesiGlov."
     >
 
       <div className="faq-list">
@@ -13115,7 +13107,7 @@ function SizeGuidePage() {
     <div className="size-guide-page">
       <section className="size-guide-hero">
         <span className="size-guide-eyebrow">
-          DESIGLOV SIZE GUIDE
+          DesiGlov SIZE GUIDE
         </span>
 
         <h1>Find your fit.</h1>
@@ -13549,7 +13541,7 @@ function Newsletter() {
       <div>
 
         <div className="eyebrow">
-          THE DESIGLOV
+          THE DesiGlov
           LETTER
         </div>
 
@@ -13560,7 +13552,7 @@ function Newsletter() {
 
         <p>
           New arrivals, rare
-          finds and DEsiglov
+          finds and DesiGlov
           stories, delivered
           occasionally.
         </p>
@@ -13805,7 +13797,7 @@ function Footer({
 
       <div className="footer-bottom">
         <span>
-          © 2026 DESIGLOV
+          © 2026 DesiGlov
         </span>
 
         <span>

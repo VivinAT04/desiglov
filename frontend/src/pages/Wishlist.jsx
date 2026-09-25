@@ -47,7 +47,7 @@ export default function Wishlist() {
           to="/shop"
           className="button-dark"
         >
-          DISCOVER DESIGLOV
+          DISCOVER DesiGlov
         </Link>
 
       </section>

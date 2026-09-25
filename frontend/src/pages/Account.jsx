@@ -43,7 +43,7 @@ export default function Account() {
         <UserRound size={45} />
 
         <p className="eyebrow">
-          DESIGLOV ACCOUNT
+          DesiGlov ACCOUNT
         </p>
 
         <h1>
@@ -86,7 +86,7 @@ export default function Account() {
 
         <div>
           <p className="eyebrow">
-            MY DESIGLOV
+            MY DesiGlov
           </p>
 
           <h1>
@@ -146,7 +146,7 @@ export default function Account() {
 
           <p>
             View your recent
-            Desiglov orders.
+            DesiGlov orders.
           </p>
 
           <span>

@@ -91,13 +91,13 @@ router.post("/", feedbackLimiter, async (req, res) => {
       .replace(/\n/g, "<br />");
 
     const { data, error } = await resend.emails.send({
-      from: "DEsiglov Feedback <feedback@desiglov.com>",
+      from: "DesiGlov Feedback <feedback@desiglov.com>",
       to: [recipient],
       replyTo: email,
-      subject: `New DEsiglov feedback from ${name}`,
+      subject: `New DesiGlov feedback from ${name}`,
 
       text: [
-        "New feedback received from the DEsiglov website.",
+        "New feedback received from the DesiGlov website.",
         "",
         `Name: ${name}`,
         `Email: ${email}`,
@@ -108,7 +108,7 @@ router.post("/", feedbackLimiter, async (req, res) => {
 
       html: `
         <div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#222;">
-          <h2>DEsiglov Feedback</h2>
+          <h2>DesiGlov Feedback</h2>
 
           <p><strong>Name:</strong> ${safeName}</p>
           <p><strong>Email:</strong> ${safeEmail}</p>
@@ -120,7 +120,7 @@ router.post("/", feedbackLimiter, async (req, res) => {
           </div>
 
           <p style="margin-top:25px;color:#777;font-size:12px;">
-            Sent from the DEsiglov website feedback form.
+            Sent from the DesiGlov website feedback form.
           </p>
         </div>
       `,

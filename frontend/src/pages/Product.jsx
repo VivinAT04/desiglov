@@ -33,7 +33,7 @@ export default function Product() {
       <section className="product-not-found">
 
         <p className="eyebrow">
-          DESIGLOV
+          DesiGlov
         </p>
 
         <h1>
@@ -318,7 +318,7 @@ export default function Product() {
 
               <p>
                 Follow the care instructions
-                provided with your Desiglov
+                provided with your DesiGlov
                 product for best results.
               </p>
 

@@ -21,7 +21,7 @@ export default function ShippingPolicy() {
           development copy. Final delivery
           areas, rates, couriers and
           dispatch times must be confirmed
-          before Desiglov launches.
+          before DesiGlov launches.
         </p>
 
         <h2>

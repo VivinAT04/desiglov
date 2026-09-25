@@ -3,7 +3,7 @@ export default function Terms() {
     <section className="policy-page">
       <div className="policy-heading">
         <p className="eyebrow">
-          DESIGLOV
+          DesiGlov
         </p>
 
         <h1>
@@ -32,7 +32,7 @@ export default function Terms() {
         </h2>
 
         <p>
-          Desiglov should describe products
+          DesiGlov should describe products
           accurately while acknowledging
           reasonable differences caused by
           screens, photography and production.

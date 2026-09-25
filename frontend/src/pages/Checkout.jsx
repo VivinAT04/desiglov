@@ -109,7 +109,7 @@ export default function Checkout() {
         <Package size={42} />
 
         <p className="eyebrow">
-          DESIGLOV CHECKOUT
+          DesiGlov CHECKOUT
         </p>
 
         <h1>
@@ -517,7 +517,7 @@ export default function Checkout() {
 
           <p className="checkout-agreement">
             By placing your order you
-            agree to Desiglov's Terms
+            agree to DesiGlov's Terms
             and Privacy Policy.
           </p>
 

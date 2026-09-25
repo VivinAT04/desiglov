@@ -43,7 +43,7 @@ export default function Search() {
         </p>
 
         <h1>
-          Search Desiglov
+          Search DesiGlov
         </h1>
 
         <p>

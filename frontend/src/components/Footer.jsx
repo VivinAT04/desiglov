@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div>
-        <h2>DESIGLOV</h2>
+        <h2>DesiGlov</h2>
         <p>
           Curated fashion and jewellery for effortless everyday style.
         </p>

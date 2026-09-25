@@ -26,7 +26,7 @@ export default function Home() {
 
       <section className="section">
         <div className="section-title">
-          <p>EXPLORE DESIGLOV</p>
+          <p>EXPLORE DesiGlov</p>
           <h2>Shop by Category</h2>
         </div>
 
