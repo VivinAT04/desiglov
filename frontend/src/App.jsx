@@ -1525,6 +1525,79 @@ function HomePage({
   const featured =
     products.slice(0, 4);
 
+  // Select homepage editorial imagery from the CURRENT catalogue.
+  // useMemo recalculates when the database catalogue replaces fallback data.
+  const homeEditorialImages = useMemo(() => {
+    const getImagesForCategory = (category) => {
+      return products
+        .filter((product) => {
+          if (category === "Jewellery") {
+            return (
+              product.category === "Jewellery" ||
+              product.parentCategory === "Jewellery"
+            );
+          }
+
+          return product.category === category;
+        })
+        .flatMap((product) =>
+          Array.isArray(product.images)
+            ? product.images.filter(Boolean)
+            : []
+        );
+    };
+
+    const pickRandom = (images) => {
+      // Keep this specific Neelam image available on the
+      // product/shop pages, but never use it as homepage
+      // editorial imagery.
+      const homepageImages = images.filter(
+        (image) =>
+          image !== "/products/neelam/1.jpg"
+      );
+
+      if (!homepageImages.length) {
+        return "";
+      }
+
+      return homepageImages[
+        Math.floor(Math.random() * homepageImages.length)
+      ];
+    };
+
+    const clothingImages = products
+      .filter(
+        (product) =>
+          product.parentCategory !== "Jewellery" &&
+          product.category !== "Jewellery"
+      )
+      .flatMap((product) =>
+        Array.isArray(product.images)
+          ? product.images.filter(Boolean)
+          : []
+      );
+
+    return {
+      kurtis: pickRandom(
+        getImagesForCategory("Kurtis")
+      ),
+
+      coordSets: pickRandom(
+        getImagesForCategory("Coord Sets")
+      ),
+
+      threePieceSets: pickRandom(
+        getImagesForCategory("3 Piece Sets")
+      ),
+
+      jewellery: pickRandom(
+        getImagesForCategory("Jewellery")
+      ),
+
+      story: pickRandom(clothingImages),
+    };
+  }, [products]);
+
   return (
     <>
       <section className="hero-new">
@@ -1681,7 +1754,7 @@ function HomePage({
         <div className="category-editorial-grid">
           <CategoryCard
             title="Kurtis"
-            image="/products/neelam/1.jpg"
+            image={homeEditorialImages.kurtis}
             className="category-large"
             onClick={() =>
               navigate(
@@ -1692,7 +1765,7 @@ function HomePage({
 
           <CategoryCard
             title="Coord Sets"
-            image="/products/grape/1.jpg"
+            image={homeEditorialImages.coordSets}
             onClick={() =>
               navigate(
                 "/shop?category=Coord%20Sets"
@@ -1702,7 +1775,7 @@ function HomePage({
 
           <CategoryCard
             title="3 Piece Sets"
-            image="/products/ivorybloom/1.jpg"
+            image={homeEditorialImages.threePieceSets}
             onClick={() =>
               navigate(
                 "/shop?category=3%20Piece%20Sets"
@@ -1712,7 +1785,7 @@ function HomePage({
 
           <CategoryCard
             title="Jewellery"
-            image="/products/tri-heart/1.png"
+            image={homeEditorialImages.jewellery}
             onClick={() =>
               navigate(
                 "/shop?category=Jewellery"
@@ -1725,7 +1798,7 @@ function HomePage({
       <section className="story-section">
         <div className="story-photo">
           <img
-            src="/products/moonlight/1.jpg"
+            src={homeEditorialImages.story}
             alt="DEsiglov fashion"
             onError={(e) => {
               e.currentTarget.style.display =
