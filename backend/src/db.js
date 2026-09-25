@@ -768,7 +768,8 @@ export async function initialiseDatabase() {
           product.images
         ),
       ]
-    );  }
+    );
+  }
 
 
   // =========================================================
