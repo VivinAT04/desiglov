@@ -11381,11 +11381,12 @@ function ContactPage() {
   ];
 
   return (
-    <InformationPage
-      eyebrow="GET IN TOUCH"
-      title="Contact us."
-      intro="Questions about an order, sizing or a piece from the collection? Our founders are here to help."
-    >
+    <div className="contact-information-page">
+      <InformationPage
+        eyebrow="GET IN TOUCH"
+        title="Contact us."
+        intro="Questions about an order, sizing or a piece from the collection? Our founders are here to help."
+      >
       <section className="founders-section">
 
         <div className="contact-team-switch">
@@ -11419,7 +11420,7 @@ function ContactPage() {
           <p>
             {contactView === "founders"
               ? "Connect directly with the people behind DesiGlov."
-              : "Meet the team working behind DEsiglov."}
+              : "Meet the team working behind DesiGlov."}
           </p>
 
         </div>
@@ -11518,7 +11519,8 @@ function ContactPage() {
         )}
 
       </section>
-    </InformationPage>
+      </InformationPage>
+    </div>
   );
 }
 

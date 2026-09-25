@@ -14156,21 +14156,28 @@ input:disabled {
   }
 }
 
-
 /* ============================================================
-   DESIGLOV — CONTACT PAGE BOTTOM SPACING
+   DESIGLOV — CONTACT PAGE COMPACT BOTTOM SPACING
    ============================================================ */
 
-.founders-section {
-  padding-bottom: 80px;
+.contact-information-page .information-page {
+  margin-bottom: 35px;
 }
 
-.founder-contact-note {
+.contact-information-page .founders-section {
+  padding-bottom: 0;
+}
+
+.contact-information-page .founder-contact-note {
   margin-bottom: 0;
 }
 
-@media (max-width: 650px) {
-  .founders-section {
-    padding-bottom: 55px;
+@media (max-width: 760px) {
+  .contact-information-page .information-page {
+    margin-bottom: 28px;
+  }
+
+  .contact-information-page .founders-section {
+    padding-bottom: 0;
   }
 }
