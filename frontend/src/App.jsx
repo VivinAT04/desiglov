@@ -8034,6 +8034,9 @@ function AdminPage({
   const [savingProduct, setSavingProduct] =
     useState(false);
 
+  const [uploadingImages, setUploadingImages] =
+    useState(false);
+
 
   useEffect(() => {
 
@@ -8651,18 +8654,6 @@ function AdminPage({
         );
 
 
-        if (
-          newImages.length >
-          0
-        ) {
-
-          await adminApi.uploadProductImages(
-            editingProduct.id,
-            newImages
-          );
-        }
-
-
         setMessage(
           `${productForm.name} updated successfully.`
         );
@@ -8687,6 +8678,110 @@ function AdminPage({
     } finally {
 
       setSavingProduct(false);
+    }
+  }
+
+
+  async function uploadSelectedProductImages() {
+
+    if (
+      editorMode !== "edit" ||
+      !editingProduct
+    ) {
+
+      setError(
+        "Save the product before uploading additional images."
+      );
+
+      return;
+    }
+
+
+    if (
+      newImages.length ===
+      0
+    ) {
+
+      setError(
+        "Choose at least one image to upload."
+      );
+
+      return;
+    }
+
+
+    try {
+
+      setUploadingImages(true);
+      setError("");
+      setMessage("");
+
+
+      await adminApi.uploadProductImages(
+        editingProduct.id,
+        newImages
+      );
+
+
+      const refreshed =
+        await adminApi.products();
+
+
+      setProducts(
+        refreshed.products
+      );
+
+
+      const current =
+        refreshed.products.find(
+          (item) =>
+            item.id ===
+            editingProduct.id
+        );
+
+
+      if (current) {
+
+        setEditingProduct(
+          current
+        );
+      }
+
+
+      setNewImages([]);
+
+
+      const input =
+        document.getElementById(
+          "admin-product-image-input"
+        );
+
+
+      if (input) {
+
+        input.value =
+          "";
+      }
+
+
+      setMessage(
+        `${newImages.length} image${
+          newImages.length === 1
+            ? ""
+            : "s"
+        } uploaded successfully.`
+      );
+
+    } catch (error) {
+
+      setError(
+        error.message ||
+          "Unable to upload product images."
+      );
+
+    } finally {
+
+      setUploadingImages(false);
     }
   }
 
@@ -10201,6 +10296,7 @@ function AdminPage({
                     PRODUCT IMAGES
 
                     <input
+                      id="admin-product-image-input"
                       type="file"
                       multiple
                       accept="image/jpeg,image/png,image/webp"
@@ -10217,6 +10313,48 @@ function AdminPage({
                     <small>
                       Up to 8 JPG, PNG or WEBP images. Maximum 8 MB each.
                     </small>
+
+                    {editorMode === "edit" &&
+                      editingProduct && (
+
+                      <div className="admin-image-upload-actions">
+
+                        <button
+                          type="button"
+                          className="admin-upload-images-button"
+                          disabled={
+                            uploadingImages ||
+                            newImages.length === 0
+                          }
+                          onClick={
+                            uploadSelectedProductImages
+                          }
+                        >
+                          {uploadingImages
+                            ? "UPLOADING..."
+                            : newImages.length > 0
+                              ? `UPLOAD ${
+                                  newImages.length
+                                } IMAGE${
+                                  newImages.length === 1
+                                    ? ""
+                                    : "S"
+                                }`
+                              : "UPLOAD IMAGES"}
+                        </button>
+
+                        {newImages.length > 0 && (
+                          <span>
+                            {newImages.length} image{
+                              newImages.length === 1
+                                ? ""
+                                : "s"
+                            } selected
+                          </span>
+                        )}
+
+                      </div>
+                    )}
 
                   </label>
 

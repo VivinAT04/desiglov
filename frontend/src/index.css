@@ -14100,3 +14100,58 @@ input:disabled {
     );
   }
 }
+
+
+/* ============================================================
+   ADMIN PRODUCT IMAGE UPLOAD BUTTON
+============================================================ */
+
+.admin-image-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.admin-upload-images-button {
+  width: auto !important;
+  min-width: 170px;
+  min-height: 42px;
+  padding: 0 22px;
+  border: 0;
+  background: #2a2523;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    background 0.2s ease;
+}
+
+.admin-upload-images-button:hover:not(:disabled) {
+  background: #1f1b19;
+}
+
+.admin-upload-images-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-image-upload-actions span {
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: #7e6e65;
+}
+
+@media (max-width: 640px) {
+  .admin-image-upload-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-upload-images-button {
+    width: 100% !important;
+  }
+}

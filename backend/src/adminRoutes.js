@@ -3,6 +3,7 @@ import multer from "multer";
 import crypto from "crypto";
 import path from "path";
 import fs from "fs";
+import { createClient } from "@supabase/supabase-js";
 
 import {
   z,
@@ -487,66 +488,10 @@ router.get(
 // IMAGE UPLOAD CONFIG
 // ===========================================================
 
-const uploadDirectory =
-  path.resolve(
-    "uploads/products"
-  );
-
-
-fs.mkdirSync(
-  uploadDirectory,
-  {
-    recursive: true,
-  }
-);
-
-
+// Keep uploads in memory while sending them to Supabase.
+// Nothing is permanently stored on Render's filesystem.
 const storage =
-  multer.diskStorage({
-
-    destination: (
-      req,
-      file,
-      callback
-    ) => {
-
-      callback(
-        null,
-        uploadDirectory
-      );
-    },
-
-
-    filename: (
-      req,
-      file,
-      callback
-    ) => {
-
-      const extension =
-        path
-          .extname(
-            file.originalname
-          )
-          .toLowerCase();
-
-
-      const filename =
-        `${
-          Date.now()
-        }-${
-          crypto
-            .randomBytes(6)
-            .toString("hex")
-        }${extension}`;
-
-
-      callback(
-        null,
-        filename
-      );
-    },
-  });
+  multer.memoryStorage();
 
 
 const upload =
@@ -564,7 +509,6 @@ const upload =
         8,
     },
 
-
     fileFilter: (
       req,
       file,
@@ -577,7 +521,6 @@ const upload =
           "image/png",
           "image/webp",
         ];
-
 
       if (
         !allowed.includes(
@@ -592,13 +535,352 @@ const upload =
         );
       }
 
-
       callback(
         null,
         true
       );
     },
   });
+
+
+// ===========================================================
+// SUPABASE PRODUCT IMAGE STORAGE
+// ===========================================================
+
+const PRODUCT_IMAGE_BUCKET =
+  "product-images";
+
+
+function getImageStorageClient() {
+
+  const supabaseUrl =
+    process.env.SUPABASE_URL;
+
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (
+    !supabaseUrl ||
+    !serviceRoleKey
+  ) {
+
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured."
+    );
+  }
+
+  return createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
+}
+
+
+function getImageExtension(
+  file
+) {
+
+  const extension =
+    path
+      .extname(
+        file.originalname || ""
+      )
+      .toLowerCase();
+
+  if (
+    [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+    ].includes(
+      extension
+    )
+  ) {
+
+    return extension;
+  }
+
+  if (
+    file.mimetype ===
+    "image/png"
+  ) {
+
+    return ".png";
+  }
+
+  if (
+    file.mimetype ===
+    "image/webp"
+  ) {
+
+    return ".webp";
+  }
+
+  return ".jpg";
+}
+
+
+async function uploadProductImages(
+  files,
+  productFolder
+) {
+
+  const selectedFiles =
+    files || [];
+
+  if (
+    selectedFiles.length ===
+    0
+  ) {
+
+    return [];
+  }
+
+  const supabase =
+    getImageStorageClient();
+
+  const uploaded =
+    [];
+
+  try {
+
+    for (
+      const file of
+      selectedFiles
+    ) {
+
+      if (
+        !file.buffer
+      ) {
+
+        throw new Error(
+          "Image buffer is missing."
+        );
+      }
+
+      const extension =
+        getImageExtension(
+          file
+        );
+
+      const objectPath =
+        `products/${productFolder}/${Date.now()}-${crypto
+          .randomBytes(10)
+          .toString("hex")}${extension}`;
+
+      const {
+        error: uploadError,
+      } =
+        await supabase
+          .storage
+          .from(
+            PRODUCT_IMAGE_BUCKET
+          )
+          .upload(
+            objectPath,
+            file.buffer,
+            {
+              contentType:
+                file.mimetype,
+
+              cacheControl:
+                "31536000",
+
+              upsert:
+                false,
+            }
+          );
+
+      if (
+        uploadError
+      ) {
+
+        throw new Error(
+          `Supabase image upload failed: ${uploadError.message}`
+        );
+      }
+
+      const {
+        data,
+      } =
+        supabase
+          .storage
+          .from(
+            PRODUCT_IMAGE_BUCKET
+          )
+          .getPublicUrl(
+            objectPath
+          );
+
+      if (
+        !data?.publicUrl
+      ) {
+
+        throw new Error(
+          "Supabase public image URL was not generated."
+        );
+      }
+
+      uploaded.push({
+        objectPath,
+        url:
+          data.publicUrl,
+      });
+    }
+
+    return uploaded;
+
+  } catch (error) {
+
+    if (
+      uploaded.length >
+      0
+    ) {
+
+      try {
+
+        await supabase
+          .storage
+          .from(
+            PRODUCT_IMAGE_BUCKET
+          )
+          .remove(
+            uploaded.map(
+              (item) =>
+                item.objectPath
+            )
+          );
+
+      } catch {
+        // Keep original upload error.
+      }
+    }
+
+    throw error;
+  }
+}
+
+
+async function uploadedPaths(
+  files,
+  productFolder
+) {
+
+  const uploaded =
+    await uploadProductImages(
+      files,
+      productFolder
+    );
+
+  return uploaded.map(
+    (item) =>
+      item.url
+  );
+}
+
+
+function getSupabaseImageObjectPath(
+  imageUrl
+) {
+
+  if (
+    typeof imageUrl !==
+    "string"
+  ) {
+
+    return null;
+  }
+
+  const marker =
+    `/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`;
+
+  const markerIndex =
+    imageUrl.indexOf(
+      marker
+    );
+
+  if (
+    markerIndex ===
+    -1
+  ) {
+
+    return null;
+  }
+
+  const encodedPath =
+    imageUrl.slice(
+      markerIndex +
+      marker.length
+    );
+
+  if (
+    !encodedPath
+  ) {
+
+    return null;
+  }
+
+  try {
+
+    return decodeURIComponent(
+      encodedPath
+    );
+
+  } catch {
+
+    return encodedPath;
+  }
+}
+
+
+async function deleteSupabaseProductImage(
+  imageUrl
+) {
+
+  const objectPath =
+    getSupabaseImageObjectPath(
+      imageUrl
+    );
+
+  if (
+    !objectPath
+  ) {
+
+    return;
+  }
+
+  const supabase =
+    getImageStorageClient();
+
+  const {
+    error,
+  } =
+    await supabase
+      .storage
+      .from(
+        PRODUCT_IMAGE_BUCKET
+      )
+      .remove([
+        objectPath,
+      ]);
+
+  if (
+    error
+  ) {
+
+    console.error(
+      "Supabase image deletion failed:",
+      error.message
+    );
+  }
+}
 
 
 // ===========================================================
@@ -687,19 +969,6 @@ function parseSizes(
 
 
   return [];
-}
-
-
-function uploadedPaths(
-  files
-) {
-
-  return (
-    files || []
-  ).map(
-    (file) =>
-      `/uploads/products/${file.filename}`
-  );
 }
 
 
@@ -1785,8 +2054,9 @@ router.post(
 
 
       const images =
-        uploadedPaths(
-          req.files
+        await uploadedPaths(
+          req.files,
+          `new-${Date.now()}`
         );
 
 
@@ -2540,12 +2810,17 @@ router.post(
           : [];
 
 
+      const uploadedImages =
+        await uploadedPaths(
+          req.files,
+          req.params.id
+        );
+
+
       const newImages =
         [
           ...oldImages,
-          ...uploadedPaths(
-            req.files
-          ),
+          ...uploadedImages,
         ];
 
 
@@ -2935,12 +3210,12 @@ router.delete(
         )
       ) {
 
+        // Legacy Render image.
         const localPath =
           path.resolve(
             "." +
             removed
           );
-
 
         if (
           fs.existsSync(
@@ -2952,6 +3227,16 @@ router.delete(
             localPath
           );
         }
+
+      } else if (
+        removed
+      ) {
+
+        // Supabase image is deleted only when
+        // the admin explicitly removes it.
+        await deleteSupabaseProductImage(
+          removed
+        );
       }
 
 
