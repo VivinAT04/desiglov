@@ -20383,3 +20383,16 @@ button:hover {
 
 }
 
+
+/* ===== MOBILE NAV: PREVENT SAFARI BLUE LINKS ===== */
+@media (max-width: 768px) {
+  nav a,
+  nav a:link,
+  nav a:visited,
+  nav a:hover,
+  nav a:active {
+    color: #1f1f1f !important;
+    -webkit-text-fill-color: #1f1f1f !important;
+    text-decoration: none !important;
+  }
+}
