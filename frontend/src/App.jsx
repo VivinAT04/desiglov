@@ -11342,43 +11342,49 @@ function ContactPage() {
   ];
 
   const team = [
-    {
-      number: "01",
-      name: "Vivin AT",
-      role: "IT Team",
-      initials: "VA",
-    },
-    {
-      number: "02",
-      name: "Chithran V",
-      role: "IT Team",
-      initials: "CV",
-    },
-    {
-      number: "03",
-      name: "Gnanesh G",
-      role: "Editor",
-      initials: "GG",
-    },
-    {
-      number: "04",
-      name: "Elangkumaran A",
-      role: "Operations & Maintenance",
-      initials: "EA",
-    },
-    {
-      number: "05",
-      name: "Dharshana S",
-      role: "Operations & Maintenance",
-      initials: "DS",
-    },
-    {
-      number: "06",
-      name: "Akash M",
-      role: "Marketing",
-      initials: "AM",
-    },
-  ];
+  {
+    name: "Vivin AT",
+    role: "IT Team",
+    image: "/Vivin.png",
+    phone: "+91 96262 67696",
+    phoneLink: "tel:+919626267696",
+  },
+  {
+    name: "Chithran V",
+    role: "IT Team",
+    image: "/Cithran.jpg",
+    phone: "+91 93604 14757",
+    phoneLink: "tel:+919360414757",
+  },
+  {
+    name: "Gnanesh G",
+    role: "Editor",
+    image: "/Gnaesh.png",
+    phone: "+91 99446 45980",
+    phoneLink: "tel:+919944645980",
+  },
+  {
+    name: "Elangkumaran A",
+    role: "Operations & Maintenance",
+    image: "/Elan.jpeg",
+    phone: "+91 75989 41453",
+    phoneLink: "tel:+917598941453",
+  },
+  {
+    name: "Dharsana S",
+    role: "Operations & Maintenance",
+    image: "/Dharsana.jpeg",
+    phone: "+91 88257 57382",
+    phoneLink: "tel:+918825757382",
+  },
+  {
+    name: "Akash M",
+    role: "Marketing",
+    image: "/Akash.png",
+    phone: "+91 93609 54821",
+    phoneLink: "tel:+919360954821",
+  },
+];
 
   return (
     <div className="contact-information-page">
@@ -11497,18 +11503,37 @@ function ContactPage() {
                 key={member.name}
               >
 
-                <div className="desiglov-team-avatar">
-                  {member.initials}
+                <div className="desiglov-team-photo">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                  />
                 </div>
 
-                <div className="desiglov-team-copy">
+                <div className="desiglov-team-details">
+
                   <h2>
                     {member.name}
                   </h2>
 
-                  <p>
+                  <p className="desiglov-team-role">
                     {member.role}
                   </p>
+
+                  <a
+                    className="desiglov-team-phone"
+                    href={member.phoneLink}
+                  >
+                    <span className="desiglov-team-phone-icon">
+                      ☎
+                    </span>
+
+                    <span>
+                      <small>PHONE</small>
+                      <strong>{member.phone}</strong>
+                    </span>
+                  </a>
+
                 </div>
 
               </article>

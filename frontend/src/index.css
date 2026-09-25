@@ -14309,3 +14309,178 @@ input:disabled {
     font-size: 6.5px;
   }
 }
+
+
+/* DESIGLOV TEAM PHOTO CARDS V2 */
+
+.desiglov-team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.desiglov-team-card {
+  min-height: 285px;
+  display: grid;
+  grid-template-columns: 42% 58%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--champagne);
+  border-radius: 18px;
+  background: #fff;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.desiglov-team-card:hover {
+  transform: translateY(-3px);
+  border-color: #d7b7a4;
+  box-shadow: 0 16px 38px rgba(49, 39, 33, 0.08);
+}
+
+.desiglov-team-photo {
+  width: 100%;
+  height: 100%;
+  min-height: 285px;
+  overflow: hidden;
+  background: #f6f2ee;
+}
+
+.desiglov-team-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.desiglov-team-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px 28px;
+}
+
+.desiglov-team-details h2 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-family: "Playfair Display", serif;
+  font-size: clamp(22px, 2vw, 28px);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.desiglov-team-role {
+  margin: 0 0 34px;
+  color: #786e68;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.desiglov-team-phone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: fit-content;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.desiglov-team-phone-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 15px;
+}
+
+.desiglov-team-phone > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desiglov-team-phone small {
+  color: #a09187;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.desiglov-team-phone strong {
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .desiglov-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .desiglov-team-card {
+    min-height: 270px;
+  }
+
+  .desiglov-team-photo {
+    min-height: 270px;
+  }
+}
+
+@media (max-width: 600px) {
+  .desiglov-team-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .desiglov-team-card {
+    min-height: 210px;
+    grid-template-columns: 43% 57%;
+    border-radius: 14px;
+  }
+
+  .desiglov-team-photo {
+    min-height: 210px;
+  }
+
+  .desiglov-team-details {
+    padding: 22px 16px;
+  }
+
+  .desiglov-team-details h2 {
+    font-size: 20px;
+  }
+
+  .desiglov-team-role {
+    margin-bottom: 24px;
+    font-size: 9px;
+  }
+
+  .desiglov-team-phone {
+    gap: 10px;
+  }
+
+  .desiglov-team-phone-icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    font-size: 13px;
+  }
+
+  .desiglov-team-phone small {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+  }
+
+  .desiglov-team-phone strong {
+    font-size: 9px;
+  }
+}
