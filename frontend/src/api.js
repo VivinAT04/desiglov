@@ -399,7 +399,8 @@ export const adminApi = {
     ).forEach(
       ([key, value]) => {
         if (
-          key === "sizes"
+          key === "sizes" ||
+          key === "sizeStock"
         ) {
           formData.append(
             key,

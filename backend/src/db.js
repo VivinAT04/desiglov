@@ -273,6 +273,93 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
+  // STOCK BY PRODUCT SIZE
+  // =========================================================
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS product_size_stock (
+      product_id INTEGER
+        NOT NULL
+        REFERENCES products(id)
+        ON DELETE CASCADE,
+
+      size VARCHAR(50)
+        NOT NULL,
+
+      stock INTEGER
+        NOT NULL
+        DEFAULT 0
+        CHECK (stock >= 0),
+
+      reserved_stock INTEGER
+        NOT NULL
+        DEFAULT 0
+        CHECK (reserved_stock >= 0),
+
+      created_at TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
+
+      updated_at TIMESTAMPTZ
+        NOT NULL
+        DEFAULT NOW(),
+
+      PRIMARY KEY (
+        product_id,
+        size
+      ),
+
+      CHECK (
+        reserved_stock <= stock
+      )
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS product_size_stock_product_index
+    ON product_size_stock (product_id);
+  `);
+
+  /*
+   * Existing products are deliberately initialised with
+   * ZERO stock for each size.
+   *
+   * We cannot safely guess how an old total such as 8 should
+   * be divided between XS/S/M/L. The admin will allocate it.
+   */
+  await pool.query(`
+    INSERT INTO product_size_stock (
+      product_id,
+      size,
+      stock,
+      reserved_stock
+    )
+
+    SELECT
+      p.id,
+      UPPER(TRIM(size_value)),
+      0,
+      0
+
+    FROM products p
+
+    CROSS JOIN LATERAL
+      jsonb_array_elements_text(
+        p.sizes
+      ) AS size_value
+
+    WHERE
+      TRIM(size_value) <> ''
+
+    ON CONFLICT (
+      product_id,
+      size
+    )
+
+    DO NOTHING;
+  `);
+
+  // =========================================================
   // TIMED PRODUCT SALES
   // =========================================================
 

@@ -382,34 +382,38 @@ async function validateOrder(
 
   const validatedItems = [];
 
-  // Stock is tracked per product, not per size.
-  // Calculate the total requested quantity for each product
-  // so duplicate cart lines cannot bypass stock validation.
-  const requestedQuantityByProduct =
-    new Map();
-
-  for (const item of items) {
-    const currentQuantity =
-      requestedQuantityByProduct.get(
-        item.productId
-      ) || 0;
-
-    requestedQuantityByProduct.set(
-      item.productId,
-      currentQuantity +
-        item.quantity
+  // Stock is tracked by product + selected size.
+  // Duplicate cart lines for the same product/size are combined
+  // so they cannot bypass inventory validation.
+  const requestedSizeQuantities =
+    aggregateSizeQuantities(
+      items
     );
-  }
 
-  // Load each unique product once and, when requested,
-  // lock products in ascending ID order. Every checkout therefore
-  // acquires product locks in the same deterministic order.
+  const requestedQuantityBySize =
+    new Map(
+      requestedSizeQuantities.map(
+        (item) => [
+          `${item.productId}::${item.size}`,
+          item.quantity,
+        ]
+      )
+    );
+
+  // Product catalogue rows are loaded once for pricing,
+  // availability and size validation.
   const productIds =
     Array.from(
-      requestedQuantityByProduct.keys()
+      new Set(
+        requestedSizeQuantities.map(
+          (item) =>
+            item.productId
+        )
+      )
     ).sort(
       (a, b) =>
-        Number(a) - Number(b)
+        Number(a) -
+        Number(b)
     );
 
   const productById =
@@ -500,15 +504,61 @@ async function validateOrder(
       throw error;
     }
 
+    const normalisedSize =
+      normaliseOrderSize(
+        item.size
+      );
+
     const requestedQuantity =
-      requestedQuantityByProduct.get(
-        product.id
+      requestedQuantityBySize.get(
+        `${product.id}::${normalisedSize}`
       ) || 0;
 
+    const sizeStockResult =
+      await client.query(
+        `
+        SELECT
+          stock,
+          reserved_stock
+
+        FROM product_size_stock
+
+        WHERE
+          product_id = $1
+          AND size = $2
+
+        ${lockProducts
+          ? "FOR UPDATE"
+          : ""}
+        `,
+        [
+          product.id,
+          normalisedSize,
+        ]
+      );
+
+    if (
+      sizeStockResult.rowCount ===
+      0
+    ) {
+      const error =
+        new Error(
+          `Size ${normalisedSize} is currently unavailable for ${product.name}.`
+        );
+
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const sizeInventory =
+      sizeStockResult.rows[0];
+
     const availableStock =
-      Number(product.stock) -
       Number(
-        product.reserved_stock ||
+        sizeInventory.stock || 0
+      ) -
+      Number(
+        sizeInventory.reserved_stock ||
           0
       );
 
@@ -521,7 +571,7 @@ async function validateOrder(
           `Only ${Math.max(
             0,
             availableStock
-          )} ${product.name} item(s) are currently available.`
+          )} ${product.name} item(s) are available in size ${normalisedSize}.`
         );
 
       error.statusCode = 400;
@@ -644,149 +694,384 @@ async function insertOrderItems(
 }
 
 
-async function aggregateProductQuantities(
+function normaliseOrderSize(
+  value
+) {
+  return String(
+    value || ""
+  )
+    .trim()
+    .toUpperCase();
+}
+
+
+function aggregateSizeQuantities(
   items
 ) {
-  const quantityByProduct =
+  const quantityBySize =
     new Map();
 
-  for (const item of items) {
-    const current =
-      quantityByProduct.get(
-        item.productId
-      ) || 0;
 
-    quantityByProduct.set(
-      item.productId,
-      current + item.quantity
-    );
+  for (const item of items) {
+
+    const productId =
+      Number(
+        item.productId
+      );
+
+    const size =
+      normaliseOrderSize(
+        item.size
+      );
+
+
+    if (
+      !Number.isInteger(
+        productId
+      ) ||
+      productId <= 0 ||
+      !size
+    ) {
+
+      const error =
+        new Error(
+          "Every cart item must have a valid product and size."
+        );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+
+    const key =
+      `${productId}::${size}`;
+
+
+    const current =
+      quantityBySize.get(
+        key
+      );
+
+
+    if (current) {
+
+      current.quantity +=
+        Number(
+          item.quantity
+        );
+
+    } else {
+
+      quantityBySize.set(
+        key,
+        {
+          productId,
+          size,
+          quantity:
+            Number(
+              item.quantity
+            ),
+        }
+      );
+    }
   }
 
+
   return Array.from(
-    quantityByProduct.entries()
+    quantityBySize.values()
   ).sort(
-    ([productIdA], [productIdB]) =>
-      Number(productIdA) -
-      Number(productIdB)
+    (a, b) =>
+      a.productId -
+        b.productId ||
+      a.size.localeCompare(
+        b.size
+      )
   );
 }
+
+
+
+async function syncAggregateProductStock(
+  client,
+  productId
+) {
+
+  await client.query(
+    `
+    UPDATE products p
+
+    SET
+      stock =
+        COALESCE(
+          (
+            SELECT
+              SUM(pss.stock)::int
+
+            FROM product_size_stock pss
+
+            WHERE
+              pss.product_id =
+                p.id
+          ),
+          0
+        ),
+
+      reserved_stock =
+        COALESCE(
+          (
+            SELECT
+              SUM(
+                pss.reserved_stock
+              )::int
+
+            FROM product_size_stock pss
+
+            WHERE
+              pss.product_id =
+                p.id
+          ),
+          0
+        ),
+
+      updated_at =
+        NOW()
+
+    WHERE p.id = $1
+    `,
+    [
+      productId,
+    ]
+  );
+}
+
 
 
 async function reserveStock(
   client,
   items
 ) {
-  // Always update products in ascending ID order.
-  // This reduces deadlock risk when concurrent orders
-  // contain the same products in different cart orders.
+
+  /*
+   * Inventory is reserved by product + size.
+   *
+   * The deterministic product/size ordering reduces deadlock
+   * risk when two customers checkout overlapping products.
+   */
   const quantities =
-    await aggregateProductQuantities(
+    aggregateSizeQuantities(
       items
     );
 
+
+  const touchedProducts =
+    new Set();
+
+
   for (
-    const [
-      productId,
-      quantity,
-    ] of quantities
+    const item of
+    quantities
   ) {
+
     const result =
       await client.query(
         `
-        UPDATE products
+        UPDATE product_size_stock pss
+
         SET
           reserved_stock =
-            reserved_stock + $1,
+            pss.reserved_stock +
+            $1,
+
           updated_at =
             NOW()
+
+        FROM products p
+
         WHERE
-          id = $2
-          AND active = TRUE
+          pss.product_id =
+            $2
+
+          AND pss.size =
+            $3
+
+          AND p.id =
+            pss.product_id
+
+          AND p.active =
+            TRUE
+
           AND (
-            stock - reserved_stock
+            pss.stock -
+            pss.reserved_stock
           ) >= $1
+
         RETURNING
-          id,
-          stock,
-          reserved_stock
+          pss.product_id,
+          pss.size,
+          pss.stock,
+          pss.reserved_stock
         `,
         [
-          quantity,
-          productId,
+          item.quantity,
+          item.productId,
+          item.size,
         ]
       );
 
+
     if (
-      result.rowCount !== 1
+      result.rowCount !==
+      1
     ) {
+
       const error =
         new Error(
-          "One or more products no longer have enough stock to reserve."
+          `${item.size} no longer has enough stock. Please choose another size or reduce the quantity.`
         );
 
       error.statusCode = 409;
+
       throw error;
     }
+
+
+    touchedProducts.add(
+      item.productId
+    );
+  }
+
+
+  for (
+    const productId of
+    Array.from(
+      touchedProducts
+    ).sort(
+      (a, b) =>
+        a - b
+    )
+  ) {
+
+    await syncAggregateProductStock(
+      client,
+      productId
+    );
   }
 }
+
 
 
 async function reduceStock(
   client,
   items
 ) {
-  // COD stock reduction uses the same deterministic
-  // product ordering and combines duplicate cart lines.
+
+  /*
+   * COD orders consume physical stock immediately.
+   * Existing Razorpay reservations belonging to other orders
+   * remain protected.
+   */
   const quantities =
-    await aggregateProductQuantities(
+    aggregateSizeQuantities(
       items
     );
 
+
+  const touchedProducts =
+    new Set();
+
+
   for (
-    const [
-      productId,
-      quantity,
-    ] of quantities
+    const item of
+    quantities
   ) {
+
     const result =
       await client.query(
         `
-        UPDATE products
+        UPDATE product_size_stock pss
+
         SET
           stock =
-            stock - $1,
+            pss.stock -
+            $1,
+
           updated_at =
             NOW()
+
+        FROM products p
+
         WHERE
-          id = $2
-          AND active = TRUE
+          pss.product_id =
+            $2
+
+          AND pss.size =
+            $3
+
+          AND p.id =
+            pss.product_id
+
+          AND p.active =
+            TRUE
+
           AND (
-            stock - reserved_stock
+            pss.stock -
+            pss.reserved_stock
           ) >= $1
+
         RETURNING
-          id,
-          stock,
-          reserved_stock
+          pss.product_id,
+          pss.size,
+          pss.stock,
+          pss.reserved_stock
         `,
         [
-          quantity,
-          productId,
+          item.quantity,
+          item.productId,
+          item.size,
         ]
       );
 
+
     if (
-      result.rowCount !== 1
+      result.rowCount !==
+      1
     ) {
+
       const error =
         new Error(
-          "One or more products no longer have enough stock."
+          `${item.size} no longer has enough stock. Please choose another size or reduce the quantity.`
         );
 
       error.statusCode = 409;
+
       throw error;
     }
+
+
+    touchedProducts.add(
+      item.productId
+    );
+  }
+
+
+  for (
+    const productId of
+    Array.from(
+      touchedProducts
+    ).sort(
+      (a, b) =>
+        a - b
+    )
+  ) {
+
+    await syncAggregateProductStock(
+      client,
+      productId
+    );
   }
 }
+
 
 
 // ===========================================================

@@ -22,6 +22,11 @@ import {
   publicProduct,
 } from "./productRoutes.js";
 
+import {
+  parseSizeStock,
+  syncProductSizeStock,
+} from "./sizeStock.js";
+
 
 const router =
   express.Router();
@@ -767,7 +772,15 @@ const productSchema =
         .min(
           0,
           "Stock cannot be negative."
-        ),
+        )
+        .optional()
+        .default(0),
+
+    sizeStock:
+      z
+        .any()
+        .optional()
+        .default({}),
 
     badge:
       z
@@ -1517,13 +1530,44 @@ router.get(
       const result =
         await pool.query(
           `
-          SELECT *
+          SELECT
+            p.*,
 
-          FROM products
+            COALESCE(
+              (
+                SELECT
+                  jsonb_object_agg(
+                    pss.size,
+                    pss.stock
+                  )
+                FROM product_size_stock pss
+                WHERE pss.product_id = p.id
+              ),
+              '{}'::jsonb
+            ) AS size_stock,
+
+            COALESCE(
+              (
+                SELECT
+                  jsonb_object_agg(
+                    pss.size,
+                    GREATEST(
+                      pss.stock -
+                      pss.reserved_stock,
+                      0
+                    )
+                  )
+                FROM product_size_stock pss
+                WHERE pss.product_id = p.id
+              ),
+              '{}'::jsonb
+            ) AS size_available
+
+          FROM products p
 
           ORDER BY
-            created_at DESC,
-            id DESC
+            p.created_at DESC,
+            p.id DESC
           `
         );
 
@@ -1649,6 +1693,18 @@ router.post(
       const sizes =
         parseSizes(
           req.body.sizes
+        )
+          .map(
+            (size) =>
+              String(size)
+                .trim()
+                .toUpperCase()
+          )
+          .filter(Boolean);
+
+      const sizeStock =
+        parseSizeStock(
+          req.body.sizeStock
         );
 
 
@@ -1828,7 +1884,7 @@ router.post(
             saleEndsAt
               ? saleEndsAt.toISOString()
               : null,
-            data.stock,
+            0,
             data.badge || null,
             data.colour || null,
             data.material || null,
@@ -1841,6 +1897,62 @@ router.post(
               images
             ),
             data.active,
+          ]
+        );
+
+
+      await syncProductSizeStock(
+        client,
+        id,
+        sizes,
+        sizeStock
+      );
+
+
+      const syncedResult =
+        await client.query(
+          `
+          SELECT
+            p.*,
+
+            COALESCE(
+              (
+                SELECT
+                  jsonb_object_agg(
+                    pss.size,
+                    pss.stock
+                  )
+                FROM product_size_stock pss
+                WHERE pss.product_id = p.id
+              ),
+              '{}'::jsonb
+            ) AS size_stock,
+
+            COALESCE(
+              (
+                SELECT
+                  jsonb_object_agg(
+                    pss.size,
+                    GREATEST(
+                      pss.stock -
+                      pss.reserved_stock,
+                      0
+                    )
+                  )
+                FROM product_size_stock pss
+                WHERE pss.product_id = p.id
+              ),
+              '{}'::jsonb
+            ) AS size_available
+
+          FROM products p
+
+          WHERE p.id = $1
+
+          LIMIT 1
+          `,
+          [
+            id,
           ]
         );
 
@@ -1860,14 +1972,14 @@ router.post(
             "product",
 
           entityId:
-            result.rows[0].id,
+            syncedResult.rows[0].id,
 
           metadata: {
             name:
-              result.rows[0].name,
+              syncedResult.rows[0].name,
 
             slug:
-              result.rows[0].slug,
+              syncedResult.rows[0].slug,
           },
         }
       );
@@ -1882,7 +1994,7 @@ router.post(
 
           product:
             publicProduct(
-              result.rows[0]
+              syncedResult.rows[0]
             ),
         });
 
@@ -1948,6 +2060,18 @@ router.patch(
       const sizes =
         parseSizes(
           req.body.sizes
+        )
+          .map(
+            (size) =>
+              String(size)
+                .trim()
+                .toUpperCase()
+          )
+          .filter(Boolean);
+
+      const sizeStock =
+        parseSizeStock(
+          req.body.sizeStock
         );
 
 
@@ -2112,16 +2236,15 @@ router.patch(
             price_inr = $5,
             sale_price_inr = $6,
             sale_ends_at = $7,
-            stock = $8,
-            badge = $9,
-            colour = $10,
-            material = $11,
-            description = $12,
-            sizes = $13::jsonb,
-            active = $14,
+            badge = $8,
+            colour = $9,
+            material = $10,
+            description = $11,
+            sizes = $12::jsonb,
+            active = $13,
             updated_at = NOW()
 
-          WHERE id = $15
+          WHERE id = $14
 
           RETURNING *
           `,
@@ -2137,7 +2260,6 @@ router.patch(
             saleEndsAt
               ? saleEndsAt.toISOString()
               : null,
-            data.stock,
             data.badge || null,
             data.colour || null,
             data.material || null,
@@ -2151,6 +2273,62 @@ router.patch(
         );
 
 
+      await syncProductSizeStock(
+        pool,
+        req.params.id,
+        sizes,
+        sizeStock
+      );
+
+
+      const syncedResult =
+        await pool.query(
+          `
+          SELECT
+            p.*,
+
+            COALESCE(
+              (
+                SELECT
+                  jsonb_object_agg(
+                    pss.size,
+                    pss.stock
+                  )
+                FROM product_size_stock pss
+                WHERE pss.product_id = p.id
+              ),
+              '{}'::jsonb
+            ) AS size_stock,
+
+            COALESCE(
+              (
+                SELECT
+                  jsonb_object_agg(
+                    pss.size,
+                    GREATEST(
+                      pss.stock -
+                      pss.reserved_stock,
+                      0
+                    )
+                  )
+                FROM product_size_stock pss
+                WHERE pss.product_id = p.id
+              ),
+              '{}'::jsonb
+            ) AS size_available
+
+          FROM products p
+
+          WHERE p.id = $1
+
+          LIMIT 1
+          `,
+          [
+            req.params.id,
+          ]
+        );
+
+
       return res.json({
 
         message:
@@ -2158,7 +2336,7 @@ router.patch(
 
         product:
           publicProduct(
-            result.rows[0]
+            syncedResult.rows[0]
           ),
       });
 
@@ -2231,11 +2409,10 @@ router.patch(
 
           SET
             price_inr = $1,
-            stock = $2,
-            active = $3,
+            active = $2,
             updated_at = NOW()
 
-          WHERE id = $4
+          WHERE id = $3
 
           RETURNING *
           `,
@@ -2243,10 +2420,6 @@ router.patch(
             parsed
               .data
               .priceINR,
-
-            parsed
-              .data
-              .stock,
 
             parsed
               .data

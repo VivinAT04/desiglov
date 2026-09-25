@@ -595,45 +595,123 @@ function App() {
     );
   }
 
+  function getSizeAvailability(
+    product,
+    size
+  ) {
+
+    const sizeKey =
+      String(size || "")
+        .trim()
+        .toUpperCase();
+
+    if (!sizeKey) {
+      return 0;
+    }
+
+    const available =
+      Number(
+        product?.sizeAvailable?.[
+          sizeKey
+        ] ?? 0
+      );
+
+    if (
+      !Number.isFinite(
+        available
+      )
+    ) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.floor(
+        available
+      )
+    );
+  }
+
+
   function addToCart(
     product,
     size
   ) {
 
-    if (
-      Number(product.stock) <=
-      0
-    ) {
+    const chosenSize =
+      String(size || "")
+        .trim()
+        .toUpperCase();
+
+    if (!chosenSize) {
 
       setToast(
-        `${product.name} is currently out of stock`
+        "Please select a size"
       );
 
       return;
     }
-    const chosenSize =
-      size ||
-      product.sizes[0];
+
+    const available =
+      getSizeAvailability(
+        product,
+        chosenSize
+      );
+
+    if (available <= 0) {
+
+      setToast(
+        `${product.name} is sold out in ${chosenSize}`
+      );
+
+      return;
+    }
 
     const key =
       `${product.id}-${chosenSize}`;
 
+    const existing =
+      cart.find(
+        (item) =>
+          item.key === key
+      );
+
+    if (
+      existing &&
+      Number(
+        existing.quantity
+      ) >= available
+    ) {
+
+      setToast(
+        `Only ${available} available in ${chosenSize}`
+      );
+
+      return;
+    }
+
     setCart((current) => {
-      const existing =
+
+      const currentItem =
         current.find(
           (item) =>
             item.key === key
         );
 
-      if (existing) {
+      if (currentItem) {
+
         return current.map(
           (item) =>
             item.key === key
               ? {
                   ...item,
+
                   quantity:
-                    item.quantity +
-                    1,
+                    Math.min(
+                      item.quantity +
+                        1,
+                      available
+                    ),
                 }
               : item
         );
@@ -641,38 +719,93 @@ function App() {
 
       return [
         ...current,
+
         {
           key,
-          id: product.id,
-          size: chosenSize,
-          quantity: 1,
+          id:
+            product.id,
+          size:
+            chosenSize,
+          quantity:
+            1,
         },
       ];
     });
 
     setToast(
-      `${product.name} added to bag`
+      `${product.name} · ${chosenSize} added to bag`
     );
 
     setCartOpen(true);
   }
 
+
   function changeQty(
     key,
     amount
   ) {
+
     setCart((current) =>
       current
-        .map((item) =>
-          item.key === key
-            ? {
-                ...item,
-                quantity:
-                  item.quantity +
+        .map((item) => {
+
+          if (
+            item.key !== key
+          ) {
+            return item;
+          }
+
+          if (
+            amount <= 0
+          ) {
+
+            return {
+              ...item,
+
+              quantity:
+                item.quantity +
+                amount,
+            };
+          }
+
+          const product =
+            products.find(
+              (candidate) =>
+                candidate.id ===
+                item.id
+            );
+
+          const available =
+            getSizeAvailability(
+              product,
+              item.size
+            );
+
+          if (
+            item.quantity >=
+            available
+          ) {
+
+            setToast(
+              available > 0
+                ? `Only ${available} available in ${item.size}`
+                : `${item.size} is sold out`
+            );
+
+            return item;
+          }
+
+          return {
+            ...item,
+
+            quantity:
+              Math.min(
+                item.quantity +
                   amount,
-              }
-            : item
-        )
+                available
+              ),
+          };
+        })
         .filter(
           (item) =>
             item.quantity > 0
@@ -2378,12 +2511,31 @@ function ProductPage({
   }
 
   const [size, setSize] =
-    useState(
-      product.sizes.length ===
-        1
-        ? product.sizes[0]
-        : ""
-    );
+    useState(() => {
+
+      const sizes =
+        Array.isArray(
+          product.sizes
+        )
+          ? product.sizes
+          : [];
+
+      return (
+        sizes.find(
+          (item) =>
+
+            Number(
+              product.sizeAvailable?.[
+                String(item)
+                  .trim()
+                  .toUpperCase()
+              ] ?? 0
+            ) > 0
+        ) ||
+        sizes[0] ||
+        ""
+      );
+    });
 
   const [sizeError, setSizeError] =
     useState(false);
@@ -2579,8 +2731,51 @@ function ProductPage({
           product.category
     ).slice(0, 4);
 
+  const selectedSizeKey =
+    String(size || "")
+      .trim()
+      .toUpperCase();
+
+  const selectedSizeAvailable =
+    selectedSizeKey
+      ? Math.max(
+          0,
+          Number(
+            product.sizeAvailable?.[
+              selectedSizeKey
+            ] ?? 0
+          ) || 0
+        )
+      : 0;
+
+  const productHasStock =
+    Array.isArray(
+      product.sizes
+    ) &&
+    product.sizes.some(
+      (item) =>
+
+        Number(
+          product.sizeAvailable?.[
+            String(item)
+              .trim()
+              .toUpperCase()
+          ] ?? 0
+        ) > 0
+    );
+
+
   function handleAdd() {
+
     if (!size) {
+      setSizeError(true);
+      return;
+    }
+
+    if (
+      selectedSizeAvailable <=
+      0
+    ) {
       setSizeError(true);
       return;
     }
@@ -2771,51 +2966,98 @@ function ProductPage({
 
             <div className="size-grid">
               {product.sizes.map(
-                (item) => (
-                  <button
-                    key={
-                      item
-                    }
-                    className={
-                      size ===
-                      item
-                        ? "selected"
-                        : ""
-                    }
-                    onClick={() => {
-                      setSize(
+                (item) => {
+
+                  const itemKey =
+                    String(item)
+                      .trim()
+                      .toUpperCase();
+
+                  const available =
+                    Math.max(
+                      0,
+                      Number(
+                        product.sizeAvailable?.[
+                          itemKey
+                        ] ?? 0
+                      ) || 0
+                    );
+
+                  const soldOut =
+                    available <= 0;
+
+                  return (
+                    <button
+                      key={
                         item
-                      );
-                      setSizeError(
-                        false
-                      );
-                    }}
-                  >
-                    {item}
-                  </button>
-                )
+                      }
+                      type="button"
+                      disabled={
+                        soldOut
+                      }
+                      className={[
+                        size === item
+                          ? "selected"
+                          : "",
+
+                        soldOut
+                          ? "sold-out"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => {
+                        setSize(
+                          item
+                        );
+
+                        setSizeError(
+                          false
+                        );
+                      }}
+                    >
+                      {item}
+                    </button>
+                  );
+                }
               )}
             </div>
 
             {sizeError && (
               <p className="size-error">
-                Please select a
-                size.
+                {
+                  size &&
+                  selectedSizeAvailable <= 0
+                    ? `${size} is sold out. Please choose another size.`
+                    : "Please select a size."
+                }
               </p>
             )}
           </div>
 
-          {product.stock <=
-            5 && (
+          {!productHasStock ? (
+
             <div className="stock-warning">
-              Only{" "}
-              {
-                product.stock
-              }{" "}
-              pieces currently
-              available.
+              SOLD OUT
             </div>
-          )}
+
+          ) : size ? (
+
+            <div className="stock-warning">
+
+              {
+                selectedSizeAvailable <= 0
+                  ? `${size} is sold out.`
+
+                  : selectedSizeAvailable <= 3
+                    ? `Only ${selectedSizeAvailable} left in ${size}.`
+
+                    : `${selectedSizeAvailable} available in ${size}.`
+              }
+
+            </div>
+
+          ) : null}
 
           <div className="product-buttons">
             <button
@@ -2824,13 +3066,20 @@ function ProductPage({
                 handleAdd
               }
               disabled={
-                Number(product.stock) <=
+                !size ||
+                selectedSizeAvailable <=
                 0
               }
             >
-              {Number(product.stock) <= 0
-                ? "SOLD OUT"
-                : "ADD TO BAG"}
+              {
+                !productHasStock
+                  ? "SOLD OUT"
+
+                  : selectedSizeAvailable <= 0
+                    ? "SIZE SOLD OUT"
+
+                    : "ADD TO BAG"
+              }
             </button>
 
             <button
@@ -7718,7 +7967,7 @@ function AdminPage({
     saleEnabled: false,
     salePriceINR: "",
     saleEndsAt: "",
-    stock: "",
+    sizeStock: {},
     badge: "",
     colour: "",
     material: "",
@@ -8008,6 +8257,16 @@ function AdminPage({
       sizes: [
         ...EMPTY_PRODUCT.sizes,
       ],
+
+      sizeStock:
+        Object.fromEntries(
+          EMPTY_PRODUCT.sizes.map(
+            (item) => [
+              item,
+              "0",
+            ]
+          )
+        ),
     });
 
     setNewImages([]);
@@ -8073,10 +8332,35 @@ function AdminPage({
               .slice(0, 16)
           : "",
 
-      stock:
-        String(
-          product.stock ??
-          ""
+      sizeStock:
+        Object.fromEntries(
+          (
+            Array.isArray(
+              product.sizes
+            )
+              ? product.sizes
+              : []
+          ).map(
+            (item) => {
+
+              const key =
+                String(item)
+                  .trim()
+                  .toUpperCase();
+
+              return [
+                key,
+
+                String(
+                  Number(
+                    product.sizeStock?.[
+                      key
+                    ] ?? 0
+                  )
+                ),
+              ];
+            }
+          )
         ),
 
       badge:
@@ -8164,9 +8448,91 @@ function AdminPage({
         .filter(Boolean);
 
 
-    updateForm(
-      "sizes",
-      sizes
+    setProductForm(
+      (current) => {
+
+        const nextSizeStock =
+          {};
+
+        sizes.forEach(
+          (item) => {
+
+            nextSizeStock[item] =
+              current.sizeStock?.[
+                item
+              ] ?? "0";
+          }
+        );
+
+        return {
+          ...current,
+
+          sizes,
+
+          sizeStock:
+            nextSizeStock,
+        };
+      }
+    );
+  }
+
+
+  function updateSizeStock(
+    size,
+    value
+  ) {
+
+    const key =
+      String(size)
+        .trim()
+        .toUpperCase();
+
+    const cleanValue =
+      value === ""
+        ? ""
+        : String(
+            Math.max(
+              0,
+              Math.floor(
+                Number(value) ||
+                0
+              )
+            )
+          );
+
+    setProductForm(
+      (current) => ({
+        ...current,
+
+        sizeStock: {
+          ...current.sizeStock,
+
+          [key]:
+            cleanValue,
+        },
+      })
+    );
+  }
+
+
+  function adminTotalStock() {
+
+    return productForm.sizes.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Math.max(
+          0,
+          Number(
+            productForm
+              .sizeStock?.[
+                item
+              ] ?? 0
+          ) || 0
+        ),
+      0
     );
   }
 
@@ -8215,9 +8581,25 @@ function AdminPage({
             ? new Date(productForm.saleEndsAt).toISOString()
             : null,
 
-        stock:
-          Number(
-            productForm.stock
+        sizeStock:
+          Object.fromEntries(
+            productForm.sizes.map(
+              (item) => [
+                item,
+
+                Math.max(
+                  0,
+                  Math.floor(
+                    Number(
+                      productForm
+                        .sizeStock?.[
+                          item
+                        ] ?? 0
+                    ) || 0
+                  )
+                ),
+              ]
+            )
           ),
 
         badge:
@@ -9634,26 +10016,7 @@ function AdminPage({
                   </div>
 
 
-                  <label>
 
-                    STOCK
-
-                    <input
-                      required
-                      type="number"
-                      min="0"
-                      value={
-                        productForm.stock
-                      }
-                      onChange={(e) =>
-                        updateForm(
-                          "stock",
-                          e.target.value
-                        )
-                      }
-                    />
-
-                  </label>
 
 
                   <label>
@@ -9718,6 +10081,76 @@ function AdminPage({
                     </small>
 
                   </label>
+
+
+                  <div className="editor-full admin-size-stock-panel">
+
+                    <div className="admin-size-stock-heading">
+
+                      <div>
+
+                        <strong>
+                          STOCK BY SIZE
+                        </strong>
+
+                        <small>
+                          Enter the quantity available for each size.
+                        </small>
+
+                      </div>
+
+                      <strong>
+                        Total: {
+                          adminTotalStock()
+                        }
+                      </strong>
+
+                    </div>
+
+
+                    <div className="admin-size-stock-grid">
+
+                      {
+                        productForm.sizes.map(
+                          (item) => (
+
+                            <label
+                              className="admin-size-stock-item"
+                              key={item}
+                            >
+
+                              <span>
+                                {item}
+                              </span>
+
+                              <input
+                                required
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={
+                                  productForm
+                                    .sizeStock?.[
+                                      item
+                                    ] ?? "0"
+                                }
+                                onChange={(e) =>
+                                  updateSizeStock(
+                                    item,
+                                    e.target.value
+                                  )
+                                }
+                              />
+
+                            </label>
+
+                          )
+                        )
+                      }
+
+                    </div>
+
+                  </div>
 
 
                   <label className="editor-full">

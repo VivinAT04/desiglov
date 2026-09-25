@@ -1,6 +1,74 @@
 import { pool } from "./db.js";
 
 
+async function syncProductStockTotals(
+  client,
+  productIds
+) {
+  const ids =
+    Array.from(
+      new Set(
+        (productIds || [])
+          .map(Number)
+          .filter(
+            (id) =>
+              Number.isInteger(id) &&
+              id > 0
+          )
+      )
+    ).sort(
+      (a, b) =>
+        a - b
+    );
+
+  for (const productId of ids) {
+    await client.query(
+      `
+      UPDATE products p
+      SET
+        stock =
+          COALESCE(
+            (
+              SELECT
+                SUM(pss.stock)::int
+              FROM product_size_stock pss
+              WHERE
+                pss.product_id =
+                  p.id
+            ),
+            0
+          ),
+
+        reserved_stock =
+          COALESCE(
+            (
+              SELECT
+                SUM(
+                  pss.reserved_stock
+                )::int
+              FROM product_size_stock pss
+              WHERE
+                pss.product_id =
+                  p.id
+            ),
+            0
+          ),
+
+        updated_at =
+          NOW()
+
+      WHERE
+        p.id = $1
+      `,
+      [
+        productId,
+      ]
+    );
+  }
+}
+
+
+
 export async function releaseReservedStock(
   client,
   orderId
@@ -45,11 +113,20 @@ export async function releaseReservedStock(
       `
       SELECT
         product_id,
+        size,
         SUM(quantity)::int AS quantity
+
       FROM order_items
+
       WHERE order_id = $1
-      GROUP BY product_id
-      ORDER BY product_id ASC
+
+      GROUP BY
+        product_id,
+        size
+
+      ORDER BY
+        product_id ASC,
+        size ASC
       `,
       [orderId]
     );
@@ -69,22 +146,38 @@ export async function releaseReservedStock(
     const result =
       await client.query(
         `
-        UPDATE products
+        UPDATE product_size_stock
+
         SET
           reserved_stock =
             reserved_stock - $1,
+
           updated_at =
             NOW()
+
         WHERE
-          id = $2
+          product_id = $2
+
+          AND size = $3
+
           AND reserved_stock >= $1
+
         RETURNING
-          id,
+          product_id,
+          size,
+          stock,
           reserved_stock
         `,
         [
           Number(item.quantity),
+
           item.product_id,
+
+          String(
+            item.size || ""
+          )
+            .trim()
+            .toUpperCase(),
         ]
       );
 
@@ -100,6 +193,15 @@ export async function releaseReservedStock(
       throw error;
     }
   }
+
+  await syncProductStockTotals(
+    client,
+    itemResult.rows.map(
+      (item) =>
+        item.product_id
+    )
+  );
+
 
   const releaseResult =
     await client.query(
@@ -401,14 +503,25 @@ export async function finaliseRazorpayPayment({
         `
         SELECT
           product_id,
+          size,
+
           MIN(product_name)
             AS product_name,
+
           SUM(quantity)::int
             AS quantity
+
         FROM order_items
+
         WHERE order_id = $1
-        GROUP BY product_id
-        ORDER BY product_id ASC
+
+        GROUP BY
+          product_id,
+          size
+
+        ORDER BY
+          product_id ASC,
+          size ASC
         `,
         [
           order.id,
@@ -451,26 +564,43 @@ export async function finaliseRazorpayPayment({
         const result =
           await client.query(
             `
-            UPDATE products
+            UPDATE product_size_stock
+
             SET
               stock =
                 stock - $1,
+
               reserved_stock =
                 reserved_stock - $1,
+
               updated_at =
                 NOW()
+
             WHERE
-              id = $2
+              product_id = $2
+
+              AND size = $3
+
               AND stock >= $1
+
               AND reserved_stock >= $1
+
             RETURNING
-              id,
+              product_id,
+              size,
               stock,
               reserved_stock
             `,
             [
               quantity,
+
               item.product_id,
+
+              String(
+                item.size || ""
+              )
+                .trim()
+                .toUpperCase(),
             ]
           );
 
@@ -534,26 +664,41 @@ export async function finaliseRazorpayPayment({
         const result =
           await client.query(
             `
-            UPDATE products
+            UPDATE product_size_stock
+
             SET
               stock =
                 stock - $1,
+
               updated_at =
                 NOW()
+
             WHERE
-              id = $2
+              product_id = $2
+
+              AND size = $3
+
               AND (
                 stock -
                 reserved_stock
               ) >= $1
+
             RETURNING
-              id,
+              product_id,
+              size,
               stock,
               reserved_stock
             `,
             [
               quantity,
+
               item.product_id,
+
+              String(
+                item.size || ""
+              )
+                .trim()
+                .toUpperCase(),
             ]
           );
 
@@ -568,6 +713,13 @@ export async function finaliseRazorpayPayment({
             productName:
               item.product_name ||
               "A product",
+
+            size:
+              String(
+                item.size || ""
+              )
+                .trim()
+                .toUpperCase(),
           };
 
           break;
@@ -696,6 +848,15 @@ export async function finaliseRazorpayPayment({
     // here because the safe late-payment path above may have
     // fulfilled the order from currently available stock.
     // -------------------------------------------------------
+
+    await syncProductStockTotals(
+      client,
+      itemResult.rows.map(
+        (item) =>
+          item.product_id
+      )
+    );
+
 
     const paidOrderResult =
       await client.query(

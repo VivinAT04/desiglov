@@ -4,6 +4,10 @@ import {
   pool,
 } from "./db.js";
 
+import {
+  getSizeStockMap,
+} from "./sizeStock.js";
+
 
 const router =
   express.Router();
@@ -131,6 +135,18 @@ export function publicProduct(
     stock:
       row.stock,
 
+    sizeStock:
+      row.size_stock &&
+      typeof row.size_stock === "object"
+        ? row.size_stock
+        : {},
+
+    sizeAvailable:
+      row.size_available &&
+      typeof row.size_available === "object"
+        ? row.size_available
+        : {},
+
     badge:
       row.badge || "",
 
@@ -186,7 +202,36 @@ router.get(
       const result =
         await pool.query(
           `
-          SELECT *
+          SELECT
+            products.*,
+
+            COALESCE(
+              (
+                SELECT jsonb_object_agg(
+                  pss.size,
+                  pss.stock
+                )
+                FROM product_size_stock pss
+                WHERE pss.product_id = products.id
+              ),
+              '{}'::jsonb
+            ) AS size_stock,
+
+            COALESCE(
+              (
+                SELECT jsonb_object_agg(
+                  pss.size,
+                  GREATEST(
+                    pss.stock -
+                    pss.reserved_stock,
+                    0
+                  )
+                )
+                FROM product_size_stock pss
+                WHERE pss.product_id = products.id
+              ),
+              '{}'::jsonb
+            ) AS size_available
 
           FROM products
 
@@ -231,7 +276,36 @@ router.get(
       const result =
         await pool.query(
           `
-          SELECT *
+          SELECT
+            products.*,
+
+            COALESCE(
+              (
+                SELECT jsonb_object_agg(
+                  pss.size,
+                  pss.stock
+                )
+                FROM product_size_stock pss
+                WHERE pss.product_id = products.id
+              ),
+              '{}'::jsonb
+            ) AS size_stock,
+
+            COALESCE(
+              (
+                SELECT jsonb_object_agg(
+                  pss.size,
+                  GREATEST(
+                    pss.stock -
+                    pss.reserved_stock,
+                    0
+                  )
+                )
+                FROM product_size_stock pss
+                WHERE pss.product_id = products.id
+              ),
+              '{}'::jsonb
+            ) AS size_available
 
           FROM products
 
