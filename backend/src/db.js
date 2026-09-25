@@ -768,49 +768,7 @@ export async function initialiseDatabase() {
           product.images
         ),
       ]
-    );
-
-
-    // Existing rows created before sizes/images existed:
-    // update catalogue metadata but keep admin price/stock/active changes.
-
-    await pool.query(
-      `
-      UPDATE products
-
-      SET
-        slug = $2,
-        name = $3,
-        category = $4,
-        badge = $5,
-        colour = $6,
-        material = $7,
-        description = $8,
-        image_path = $9,
-        sizes = $10::jsonb,
-        images = $11::jsonb
-
-      WHERE id = $1
-      `,
-      [
-        product.id,
-        product.slug,
-        product.name,
-        product.category,
-        product.badge,
-        product.colour,
-        product.material,
-        product.description,
-        product.images[0],
-        JSON.stringify(
-          product.sizes
-        ),
-        JSON.stringify(
-          product.images
-        ),
-      ]
-    );
-  }
+    );  }
 
 
   // =========================================================
