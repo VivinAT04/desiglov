@@ -14932,3 +14932,709 @@ input:disabled {
   }
 }
 
+
+
+/* ============================================================
+   DESIGLOV — FINAL RESPONSIVE MOBILE OVERRIDES
+   Added: 25 September 2026
+
+   IMPORTANT:
+   Desktop layout is intentionally untouched.
+   These rules only apply at <= 768px.
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  /* ----------------------------------------------------------
+     GLOBAL
+  ---------------------------------------------------------- */
+
+  html,
+  body,
+  #root,
+  .site {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  img,
+  video,
+  svg {
+    max-width: 100%;
+  }
+
+  main {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+
+  /* ----------------------------------------------------------
+     ANNOUNCEMENT
+  ---------------------------------------------------------- */
+
+  .announcement {
+    min-height: 32px;
+    height: auto;
+    padding: 8px 14px;
+    gap: 0;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .announcement span {
+    white-space: normal;
+  }
+
+  .announcement span:not(:first-of-type),
+  .announcement i {
+    display: none;
+  }
+
+
+  /* ----------------------------------------------------------
+     HEADER
+  ---------------------------------------------------------- */
+
+  .header {
+    width: 100%;
+    min-height: 72px;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 0 12px;
+  }
+
+  .mobile-menu-button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .brand {
+    min-width: 0;
+    justify-self: center;
+    overflow: visible;
+  }
+
+  .brand-word {
+    font-size: clamp(21px, 6.3vw, 27px);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .brand-line {
+    margin-top: 6px;
+    font-size: 4px;
+    letter-spacing: 1.7px;
+    white-space: nowrap;
+  }
+
+  .header-centre {
+    min-width: 0;
+  }
+
+  .header-tools {
+    min-width: 40px;
+    gap: 0;
+    justify-content: flex-end;
+  }
+
+  .header-tools .icon-button {
+    width: 40px;
+    height: 40px;
+    padding: 9px;
+  }
+
+  .header-tools .icon-button:first-of-type {
+    display: grid;
+    place-items: center;
+  }
+
+  .header-tools .icon-button:nth-of-type(2),
+  .header-tools .icon-button:nth-of-type(3),
+  .country-wrapper {
+    display: none;
+  }
+
+  .cart-icon-button {
+    display: grid !important;
+    place-items: center;
+  }
+
+  .cart-count {
+    transform: scale(.9);
+    transform-origin: top right;
+  }
+
+
+  /* ----------------------------------------------------------
+     MOBILE NAV
+  ---------------------------------------------------------- */
+
+  .mobile-nav {
+    top: 104px;
+    max-height: calc(100dvh - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px 20px 25px;
+  }
+
+  .mobile-nav button {
+    width: 100%;
+    min-height: 49px;
+    font-size: 18px;
+  }
+
+
+  /* ----------------------------------------------------------
+     SEARCH
+  ---------------------------------------------------------- */
+
+  .search-panel {
+    top: 104px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100dvh - 104px);
+    overflow-y: auto;
+    padding: 18px 16px 25px;
+  }
+
+  .search-panel input,
+  .navbar-search input {
+    min-width: 0;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .search-results {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+
+  /* ----------------------------------------------------------
+     HOME HERO
+  ---------------------------------------------------------- */
+
+  .hero-new {
+    width: 100%;
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    min-height: auto;
+    padding: 58px 22px 60px;
+  }
+
+  .hero-copy h1 {
+    max-width: 100%;
+    font-size: clamp(48px, 15vw, 68px);
+    line-height: .94;
+    letter-spacing: -2px;
+    overflow-wrap: normal;
+  }
+
+  .hero-copy > p {
+    max-width: 100%;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .hero-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .hero-actions button,
+  .button-dark,
+  .button-outline {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .hero-note {
+    margin-top: 36px;
+  }
+
+  .hero-visual {
+    min-height: min(135vw, 610px);
+  }
+
+  .hero-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-product-card {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    max-width: none;
+    padding: 18px;
+  }
+
+  .hero-product-card strong {
+    font-size: 23px;
+  }
+
+
+  /* ----------------------------------------------------------
+     BENEFITS
+  ---------------------------------------------------------- */
+
+  .benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .benefit {
+    width: 100%;
+    min-height: 100px;
+    padding: 22px 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--champagne);
+  }
+
+  .benefit:last-child {
+    border-bottom: 0;
+  }
+
+
+  /* ----------------------------------------------------------
+     GENERAL HOME SECTIONS
+  ---------------------------------------------------------- */
+
+  .home-section {
+    width: 100%;
+    padding: 65px 18px;
+  }
+
+  .section-heading {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-bottom: 32px;
+  }
+
+  .section-heading h2 {
+    font-size: clamp(36px, 11vw, 48px);
+    line-height: 1.05;
+  }
+
+  .section-heading p {
+    max-width: 100%;
+  }
+
+
+  /* ----------------------------------------------------------
+     EDITORIAL CATEGORIES
+  ---------------------------------------------------------- */
+
+  .category-editorial-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    gap: 1px;
+  }
+
+  .category-editorial-grid > * {
+    min-width: 0;
+    min-height: 390px;
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .category-large {
+    grid-column: auto;
+  }
+
+
+  /* ----------------------------------------------------------
+     PRODUCT GRIDS
+     Keep 2 products per row on normal phones.
+  ---------------------------------------------------------- */
+
+  .products-grid,
+  .shop-products,
+  .wishlist-products {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 10px;
+  }
+
+  .product-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .product-card img,
+  .product-image img {
+    width: 100%;
+    display: block;
+  }
+
+  .product-info {
+    min-width: 0;
+  }
+
+  .product-info h3 {
+    font-size: 16px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .product-info p,
+  .product-info span {
+    line-height: 1.45;
+  }
+
+  .wishlist-circle {
+    width: 36px;
+    height: 36px;
+  }
+
+
+  /* ----------------------------------------------------------
+     SHOP
+  ---------------------------------------------------------- */
+
+  .shop-layout {
+    width: 100%;
+    display: block;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .filters {
+    position: static;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .shop-layout > *,
+  .shop-products > * {
+    min-width: 0;
+  }
+
+
+  /* ----------------------------------------------------------
+     PRODUCT DETAILS
+  ---------------------------------------------------------- */
+
+  .product-page {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .product-page > * {
+    min-width: 0;
+  }
+
+  .product-details {
+    position: static;
+    width: 100%;
+  }
+
+  .product-gallery,
+  .product-images {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .product-gallery img,
+  .product-images img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .size-options,
+  .size-selector {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+
+  /* ----------------------------------------------------------
+     CART
+  ---------------------------------------------------------- */
+
+  .cart-page {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .cart-page > * {
+    min-width: 0;
+  }
+
+  .order-summary {
+    position: static;
+    width: 100%;
+  }
+
+  .cart-item {
+    max-width: 100%;
+  }
+
+  .cart-drawer {
+    width: min(100%, 430px);
+    max-width: 100vw;
+  }
+
+
+  /* ----------------------------------------------------------
+     CHECKOUT
+  ---------------------------------------------------------- */
+
+  .checkout-page {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .checkout-page > * {
+    min-width: 0;
+  }
+
+  .checkout-summary {
+    position: static;
+    width: 100%;
+  }
+
+  .checkout-page input,
+  .checkout-page select,
+  .checkout-page textarea,
+  .account-page input,
+  .account-page select,
+  .account-page textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+
+  /* ----------------------------------------------------------
+     FORMS / ACCOUNT / LOGIN
+  ---------------------------------------------------------- */
+
+  form {
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+
+  /* ----------------------------------------------------------
+     STORY
+  ---------------------------------------------------------- */
+
+  .story-section {
+    grid-template-columns: 1fr;
+  }
+
+  .story-photo {
+    min-height: min(125vw, 560px);
+  }
+
+  .story-copy {
+    padding: 58px 22px;
+  }
+
+  .story-copy h2 {
+    font-size: clamp(43px, 13vw, 60px);
+    line-height: 1;
+  }
+
+
+  /* ----------------------------------------------------------
+     NEWSLETTER
+  ---------------------------------------------------------- */
+
+  .newsletter {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .newsletter form {
+    width: 100%;
+  }
+
+  .newsletter input {
+    min-width: 0;
+    font-size: 16px;
+  }
+
+
+  /* ----------------------------------------------------------
+     FOOTER
+  ---------------------------------------------------------- */
+
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 38px 22px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .footer-column {
+    min-width: 0;
+  }
+
+  .footer-bottom {
+    min-height: auto;
+    padding: 22px 20px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.6;
+  }
+
+
+  /* ----------------------------------------------------------
+     TABLES
+     Prevent admin/account/order tables from breaking viewport.
+  ---------------------------------------------------------- */
+
+  table {
+    max-width: 100%;
+  }
+
+  .table-wrapper,
+  .admin-table-wrapper,
+  .orders-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+
+  /* ----------------------------------------------------------
+     TOAST
+  ---------------------------------------------------------- */
+
+  .toast {
+    left: 14px;
+    right: 14px;
+    bottom: 18px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    text-align: center;
+  }
+}
+
+
+/* ============================================================
+   DESIGLOV — EXTRA SMALL PHONES
+   ============================================================ */
+
+@media (max-width: 430px) {
+
+  .header {
+    grid-template-columns: 38px minmax(0, 1fr) 40px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .mobile-menu-button,
+  .header-tools .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand-word {
+    font-size: 21px;
+  }
+
+  .brand-line {
+    font-size: 3.5px;
+    letter-spacing: 1.35px;
+  }
+
+  .hero-copy {
+    padding: 50px 18px 52px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(46px, 15vw, 61px);
+  }
+
+  .home-section {
+    padding: 58px 14px;
+  }
+
+  .products-grid,
+  .shop-products,
+  .wishlist-products {
+    gap: 25px 8px;
+  }
+
+  .product-info h3 {
+    font-size: 15px;
+  }
+
+  .category-editorial-grid > * {
+    min-height: 360px;
+  }
+
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+
+/* ============================================================
+   VERY SMALL DEVICES
+   ============================================================ */
+
+@media (max-width: 350px) {
+
+  .brand-line {
+    display: none;
+  }
+
+  .brand-word {
+    font-size: 19px;
+  }
+
+  .products-grid,
+  .shop-products,
+  .wishlist-products {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .footer-top {
+    grid-template-columns: 1fr;
+  }
+}
+
