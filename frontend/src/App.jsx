@@ -488,11 +488,6 @@ function App() {
   useEffect(() => {
     const listener = () => {
       setRoute(currentRoute());
-
-      window.scrollTo(
-        0,
-        0
-      );
     };
 
     window.addEventListener(
@@ -506,6 +501,14 @@ function App() {
         listener
       );
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+  }, [route]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -10629,22 +10632,63 @@ function InfoSection({
 
 
 function ContactPage() {
+  const [contactView, setContactView] = useState("founders");
+
   const founders = [
     {
       number: "01",
-      name: "B.S. Abinaya Parameswari",
+      name: "Abinaya Parameswari B.S.",
       role: "Associate Software Engineer at Accenture",
-      phone: "9344921188",
+      phone: "+91 93449 21188",
       phoneLink: "tel:+919344921188",
       image: "/Founder1.jpg",
     },
     {
       number: "02",
-      name: "Harini M",
+      name: "Harini M.",
       role: "Software System Engineer at HP",
       phone: "+91 72002 32989",
       phoneLink: "tel:+917200232989",
       image: "/Founder2.png",
+    },
+  ];
+
+  const team = [
+    {
+      number: "01",
+      name: "Vivin AT",
+      role: "IT Team",
+      initials: "VA",
+    },
+    {
+      number: "02",
+      name: "Chithran V",
+      role: "IT Team",
+      initials: "CV",
+    },
+    {
+      number: "03",
+      name: "Gnanesh G",
+      role: "Editor",
+      initials: "GG",
+    },
+    {
+      number: "04",
+      name: "Elangkumaran A",
+      role: "Operations & Maintenance",
+      initials: "EA",
+    },
+    {
+      number: "05",
+      name: "Dharshana S",
+      role: "Operations & Maintenance",
+      initials: "DS",
+    },
+    {
+      number: "06",
+      name: "Akash M",
+      role: "Marketing",
+      initials: "AM",
     },
   ];
 
@@ -10655,64 +10699,138 @@ function ContactPage() {
       intro="Questions about an order, sizing or a piece from the collection? Our founders are here to help."
     >
       <section className="founders-section">
-        <div className="founders-heading">
-          <span>OUR FOUNDERS</span>
-          <p>
-            Connect directly with the people behind DEsiglov.
-          </p>
-        </div>
 
-        <div className="founders-grid">
-          {founders.map((founder) => (
-            <article
-              className="founder-card"
-              key={founder.name}
+        <div className="contact-team-switch">
+
+          <div className="contact-team-tabs">
+            <button
+              type="button"
+              className={
+                contactView === "founders"
+                  ? "contact-team-tab active"
+                  : "contact-team-tab"
+              }
+              onClick={() => setContactView("founders")}
             >
-              <div className="founder-photo">
-                <img
-                  src={founder.image}
-                  alt={founder.name}
-                />
-              </div>
+              OUR FOUNDERS
+            </button>
 
-              <div className="founder-details">
-                <small>
-                  FOUNDER {founder.number}
-                </small>
+            <button
+              type="button"
+              className={
+                contactView === "team"
+                  ? "contact-team-tab active"
+                  : "contact-team-tab"
+              }
+              onClick={() => setContactView("team")}
+            >
+              OUR TEAM
+            </button>
+          </div>
 
-                <h2>{founder.name}</h2>
-
-                <p className="founder-role">
-                  {founder.role}
-                </p>
-
-                <a
-                  className="founder-phone"
-                  href={founder.phoneLink}
-                >
-                  <span className="founder-phone-icon">
-                    ☎
-                  </span>
-
-                  <span>
-                    <small>PHONE</small>
-                    <strong>
-                      {founder.phone}
-                    </strong>
-                  </span>
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <div className="founder-contact-note">
-          <span>DE</span>
           <p>
-            For product, sizing and order enquiries,
-            please contact our team using the details above.
+            {contactView === "founders"
+              ? "Connect directly with the people behind DEsiglov."
+              : "Meet the team working behind DEsiglov."}
           </p>
+
         </div>
+
+        {contactView === "founders" ? (
+          <>
+            <div className="founders-grid">
+
+              {founders.map((founder) => (
+                <article
+                  className="founder-card"
+                  key={founder.name}
+                >
+
+                  <div className="founder-photo">
+                    <img
+                      src={founder.image}
+                      alt={founder.name}
+                    />
+                  </div>
+
+                  <div className="founder-details">
+
+                    <small>
+                      FOUNDER {founder.number}
+                    </small>
+
+                    <h2>
+                      {founder.name}
+                    </h2>
+
+                    <p className="founder-role">
+                      {founder.role}
+                    </p>
+
+                    <a
+                      className="founder-phone"
+                      href={founder.phoneLink}
+                    >
+                      <span className="founder-phone-icon">
+                        ☎
+                      </span>
+
+                      <span>
+                        <small>PHONE</small>
+
+                        <strong>
+                          {founder.phone}
+                        </strong>
+                      </span>
+                    </a>
+
+                  </div>
+
+                </article>
+              ))}
+
+            </div>
+
+            <div className="founder-contact-note">
+              <span>DE</span>
+
+              <p>
+                For product, sizing and order enquiries,
+                please contact our team using the details above.
+              </p>
+            </div>
+          </>
+        ) : (
+
+          <div className="desiglov-team-grid">
+
+            {team.map((member) => (
+              <article
+                className="desiglov-team-card"
+                key={member.name}
+              >
+
+                <div className="desiglov-team-avatar">
+                  {member.initials}
+                </div>
+
+                <div className="desiglov-team-copy">
+                  <h2>
+                    {member.name}
+                  </h2>
+
+                  <p>
+                    {member.role}
+                  </p>
+                </div>
+
+              </article>
+            ))}
+
+          </div>
+
+        )}
+
       </section>
     </InformationPage>
   );
