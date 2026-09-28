@@ -53,12 +53,70 @@ app.use(
 );
 
 
+const allowedOrigins =
+  new Set(
+    [
+      process.env.FRONTEND_URL,
+      process.env.NODE_ENV !== "production"
+        ? "http://localhost:5173"
+        : null,
+    ].filter(Boolean)
+  );
+
+
 app.use(
   cors({
-    origin:
-      process.env
-        .FRONTEND_URL,
+    origin(
+      origin,
+      callback
+    ) {
+      // Requests without an Origin header are allowed because
+      // CORS is a browser protection. This keeps server-to-server
+      // requests, health checks and command-line tools working.
+      if (!origin) {
+        callback(
+          null,
+          true
+        );
+        return;
+      }
+
+      if (
+        allowedOrigins.has(
+          origin
+        )
+      ) {
+        callback(
+          null,
+          true
+        );
+        return;
+      }
+
+      // Do not emit Access-Control-Allow-Origin for unknown
+      // browser origins.
+      callback(
+        null,
+        false
+      );
+    },
+
     credentials: true,
+
+    methods: [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+    allowedHeaders: [
+      "Authorization",
+      "Content-Type",
+    ],
   })
 );
 
