@@ -450,6 +450,22 @@ export async function requireAdmin(
   next
 ) {
   try {
+    const authenticatedEmail =
+      normaliseEmail(
+        req.supabaseUser?.email ||
+        req.user?.email
+      );
+
+    const adminEmails =
+      String(
+        process.env.ADMIN_EMAILS ||
+        process.env.ADMIN_EMAIL ||
+        ""
+      )
+        .split(",")
+        .map(normaliseEmail)
+        .filter(Boolean);
+
     const result =
       await pool.query(
         `
@@ -467,9 +483,21 @@ export async function requireAdmin(
         ]
       );
 
+    const admin =
+      result.rows[0] || null;
+
+    const databaseAdmin =
+      admin?.role === "ADMIN";
+
+    const configuredAdmin =
+      authenticatedEmail &&
+      adminEmails.includes(
+        authenticatedEmail
+      );
+
     if (
-      result.rowCount === 0 ||
-      result.rows[0].role !== "ADMIN"
+      !databaseAdmin &&
+      !configuredAdmin
     ) {
       return res
         .status(403)
@@ -479,21 +507,22 @@ export async function requireAdmin(
         });
     }
 
-    const admin =
-      result.rows[0];
-
     req.admin = {
       id:
-        admin.id,
+        admin?.id ||
+        req.userId,
 
       email:
-        admin.email,
+        authenticatedEmail ||
+        admin?.email,
 
       fullName:
-        admin.full_name,
+        admin?.full_name ||
+        req.user?.full_name ||
+        "DESIGLOV Administrator",
 
       role:
-        admin.role,
+        "ADMIN",
     };
 
     next();
