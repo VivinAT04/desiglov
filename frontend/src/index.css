@@ -21145,3 +21145,211 @@ a[x-apple-data-detectors]:active {
 
   text-decoration: none !important;
 }
+
+/* =========================================================
+   DESIGLOV — REMOVE IOS / SAFARI SYSTEM BLUE
+   Keep intentional brand colours; neutralise native controls
+   ========================================================= */
+
+/* Product accordion */
+.accordion > button,
+.accordion > button:link,
+.accordion > button:visited,
+.accordion > button:hover,
+.accordion > button:focus,
+.accordion > button:focus-visible,
+.accordion > button:active,
+.accordion > button > span {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  text-decoration: none !important;
+}
+
+/* Remove Safari's native button/link appearance */
+.accordion > button,
+.size-btn,
+.qty-btn,
+.cart-close,
+.featured-card button,
+.featured-card a {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Product size buttons */
+.size-btn,
+.size-btn:link,
+.size-btn:visited,
+.size-btn:hover,
+.size-btn:focus,
+.size-btn:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+}
+
+/* Keep selected size white on dark background */
+.size-btn.active,
+.size-btn.selected,
+.size-btn[aria-pressed="true"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Keep unavailable sizes muted */
+.size-btn:disabled,
+.size-btn.disabled,
+.size-btn.sold-out {
+  color: #d8d3d0 !important;
+  -webkit-text-fill-color: #d8d3d0 !important;
+}
+
+/* Homepage VIEW PIECE */
+.featured-card button,
+.featured-card button *,
+.featured-card a,
+.featured-card a *,
+.featured-piece button,
+.featured-piece button *,
+.featured-piece a,
+.featured-piece a * {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  text-decoration: none !important;
+}
+
+/* Cart quantity − / + */
+.qty-btn,
+.qty-btn *,
+.cart-qty button,
+.cart-qty button *,
+.quantity-control button,
+.quantity-control button * {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Cart close X */
+.cart-close,
+.cart-close *,
+.cart-drawer-close,
+.cart-drawer-close *,
+.cart-panel button[aria-label*="Close"],
+.cart-panel button[aria-label*="close"] {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  stroke: #1f1c1a !important;
+}
+
+/* Cart VIEW BAG */
+.view-bag,
+.view-bag *,
+.view-bag-link,
+.view-bag-link *,
+a[href="/cart"],
+a[href="/cart"] * {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+}
+
+/* Safari must inherit our colour inside buttons */
+button span,
+button svg {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Never allow iOS to substitute its default link colour
+   inside the components fixed above */
+.accordion button *,
+.size-btn *,
+.qty-btn *,
+.cart-close * {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* =========================================================
+   DESIGLOV — IOS SAFARI EXACT CONTROL COLOURS
+   ========================================================= */
+
+/* Homepage VIEW PIECE */
+.home-view-piece,
+.home-view-piece:hover,
+.home-view-piece:focus,
+.home-view-piece:focus-visible,
+.home-view-piece:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  text-decoration: none !important;
+}
+
+/* Product accordion */
+.accordion > button,
+.accordion > button:hover,
+.accordion > button:focus,
+.accordion > button:focus-visible,
+.accordion > button:active,
+.accordion > button > span {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Product size buttons */
+.size-grid button:not(:disabled) {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Selected size stays white */
+.size-grid button.active,
+.size-grid button.selected,
+.size-grid button[aria-pressed="true"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Cart quantity − / + */
+.quantity .cart-quantity-button,
+.quantity .cart-quantity-button:hover,
+.quantity .cart-quantity-button:focus,
+.quantity .cart-quantity-button:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Shopping bag close X */
+.cart-drawer-close,
+.cart-drawer-close:hover,
+.cart-drawer-close:focus,
+.cart-drawer-close:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* VIEW BAG */
+.view-bag,
+.view-bag:hover,
+.view-bag:focus,
+.view-bag:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}

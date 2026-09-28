@@ -1760,6 +1760,8 @@ function HomePage({
             </span>
 
             <button
+              type="button"
+              className="home-view-piece"
               onClick={() =>
                 openProduct(
                   products[0]
@@ -4378,6 +4380,8 @@ function CartLine({
 
         <div className="quantity">
           <button
+            type="button"
+            className="cart-quantity-button"
             onClick={() =>
               changeQty(
                 item.key,
@@ -4395,6 +4399,8 @@ function CartLine({
           </span>
 
           <button
+            type="button"
+            className="cart-quantity-button"
             onClick={() =>
               changeQty(
                 item.key,
@@ -14488,6 +14494,9 @@ function CartDrawer({
           </div>
 
           <button
+            type="button"
+            className="cart-drawer-close"
+            aria-label="Close shopping bag"
             onClick={() =>
               setOpen(false)
             }
