@@ -583,6 +583,15 @@ export const adminApi = {
       }
     );
   },
+
+  deleteProduct(id) {
+    return request(
+      `/admin/products/${id}/permanent`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
 };
 
 

@@ -11051,6 +11051,45 @@ function AdminPage({
   }
 
 
+  async function deleteProduct(
+    product
+  ) {
+
+    const confirmed =
+      window.confirm(
+        `DELETE ${product.name} permanently? This cannot be undone.`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+
+      setError("");
+      setMessage("");
+
+      await adminApi.deleteProduct(
+        product.id
+      );
+
+      await refreshProducts();
+
+      setMessage(
+        `${product.name} deleted permanently.`
+      );
+
+    } catch (err) {
+
+      setError(
+        err.message ||
+        "Unable to delete product."
+      );
+
+    }
+  }
+
+
   async function quickToggle(
     product
   ) {
@@ -12809,6 +12848,18 @@ function AdminPage({
                         }
                       >
                         ARCHIVE
+                      </button>
+
+
+                      <button
+                        className="delete-product"
+                        onClick={() =>
+                          deleteProduct(
+                            product
+                          )
+                        }
+                      >
+                        DELETE
                       </button>
 
                     </div>

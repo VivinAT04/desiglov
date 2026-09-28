@@ -3706,6 +3706,79 @@ router.delete(
 
 
 // ===========================================================
+// PERMANENTLY DELETE PRODUCT
+// ===========================================================
+
+router.delete(
+  "/products/:id/permanent",
+  async (
+    req,
+    res,
+    next
+  ) => {
+
+    try {
+
+      const result =
+        await pool.query(
+          `
+          DELETE FROM products
+          WHERE id = $1
+          RETURNING
+            id,
+            name
+          `,
+          [
+            req.params.id,
+          ]
+        );
+
+      if (
+        result.rowCount ===
+        0
+      ) {
+        return res
+          .status(404)
+          .json({
+            error:
+              "Product not found.",
+          });
+      }
+
+      await writeAdminAudit(
+        req,
+        {
+          action:
+            "PRODUCT_DELETED",
+
+          entityType:
+            "product",
+
+          entityId:
+            result.rows[0].id,
+
+          metadata: {
+            name:
+              result.rows[0].name,
+          },
+        }
+      );
+
+      return res.json({
+        message:
+          `${result.rows[0].name} deleted permanently.`,
+      });
+
+    } catch (error) {
+
+      next(error);
+
+    }
+  }
+);
+
+
+// ===========================================================
 // ARCHIVE PRODUCT
 // ===========================================================
 
