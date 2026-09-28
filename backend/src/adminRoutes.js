@@ -2251,6 +2251,8 @@ router.get(
 
           FROM products p
 
+          WHERE p.active = TRUE
+
           ORDER BY
             p.created_at DESC,
             p.id DESC
