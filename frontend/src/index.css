@@ -20633,3 +20633,331 @@ a[x-apple-data-detectors]:active {
     font-size: max(16px, 1em);
   }
 }
+
+/* ============================================================
+   DESIGLOV — MOBILE / IPHONE FINAL FIX
+   One authoritative mobile override.
+   Keep this block at the END of index.css.
+   ============================================================ */
+
+@media (max-width: 1020px) {
+
+  /* ----------------------------------------------------------
+     HEADER
+     ---------------------------------------------------------- */
+
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10000 !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     MOBILE NAV DRAWER
+     Header is 70px on phones.
+     Drawer is a sibling of <header>, so it is viewport-fixed.
+     ---------------------------------------------------------- */
+
+  .mobile-nav {
+    position: fixed !important;
+
+    top: 70px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    height: auto !important;
+    max-height: none !important;
+
+    margin: 0 !important;
+
+    padding:
+      8px
+      20px
+      calc(24px + env(safe-area-inset-bottom))
+      !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
+
+    box-sizing: border-box !important;
+
+    background: #ffffff !important;
+
+    border: 0 !important;
+    border-top: 1px solid #eee7e2 !important;
+
+    box-shadow: none !important;
+
+    z-index: 10001 !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     MAIN MOBILE NAV ROWS
+     ---------------------------------------------------------- */
+
+  .mobile-nav > button {
+    width: 100% !important;
+    min-height: 58px !important;
+    flex: 0 0 auto !important;
+
+    margin: 0 !important;
+    padding: 0 12px !important;
+
+    border: 0 !important;
+    border-bottom: 1px solid #eee7e2 !important;
+    border-radius: 0 !important;
+
+    background: transparent !important;
+
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+
+    font-family:
+      "Playfair Display",
+      Georgia,
+      serif !important;
+
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+
+    text-align: left !important;
+    text-decoration: none !important;
+
+    -webkit-appearance: none !important;
+    appearance: none !important;
+
+    box-shadow: none !important;
+  }
+
+  .mobile-nav > button:hover,
+  .mobile-nav > button:active,
+  .mobile-nav > button:focus,
+  .mobile-nav > button:focus-visible {
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     JEWELLERY ROW
+     ---------------------------------------------------------- */
+
+  .mobile-nav-jewellery {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+  .mobile-nav-jewellery > summary {
+    width: 100% !important;
+    min-height: 58px !important;
+
+    margin: 0 !important;
+    padding: 0 12px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    border: 0 !important;
+    border-bottom: 1px solid #eee7e2 !important;
+    border-radius: 0 !important;
+
+    background: transparent !important;
+
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+
+    font-family:
+      "Playfair Display",
+      Georgia,
+      serif !important;
+
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+
+    list-style: none !important;
+
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  .mobile-nav-jewellery > summary::-webkit-details-marker {
+    display: none !important;
+  }
+
+  .mobile-nav-jewellery-arrow {
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     JEWELLERY SUBMENU
+     ---------------------------------------------------------- */
+
+  .mobile-nav .mobile-nav-jewellery-submenu button {
+    width: 100% !important;
+    min-height: 52px !important;
+
+    margin: 0 !important;
+    padding: 0 12px 0 32px !important;
+
+    border: 0 !important;
+    border-bottom: 1px solid #f1ebe7 !important;
+    border-radius: 0 !important;
+
+    background: #ffffff !important;
+
+    color: #6f6965 !important;
+    -webkit-text-fill-color: #6f6965 !important;
+
+    font-family:
+      "Playfair Display",
+      Georgia,
+      serif !important;
+
+    font-size: 17px !important;
+    font-weight: 400 !important;
+
+    text-align: left !important;
+
+    -webkit-appearance: none !important;
+    appearance: none !important;
+
+    box-shadow: none !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     HEADER ICONS
+     Prevent Safari system-blue controls.
+     ---------------------------------------------------------- */
+
+  .mobile-menu-button,
+  .header .icon-button {
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+  .mobile-menu-button svg,
+  .header .icon-button svg {
+    color: #1f1c1a !important;
+    stroke: currentColor !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     PRODUCT CARD TEXT
+     ---------------------------------------------------------- */
+
+  .product-card,
+  .product-info,
+  .product-info:hover,
+  .product-info:active,
+  .product-info:focus,
+  .product-info:focus-visible,
+  .product-info h3,
+  .product-info strong,
+  .product-info span,
+  .product-info p {
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+  .product-info {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    text-decoration: none !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     PRODUCT CARD HEART
+     ---------------------------------------------------------- */
+
+  .wishlist-circle:not(.saved),
+  .wishlist-circle:not(.saved):hover,
+  .wishlist-circle:not(.saved):active,
+  .wishlist-circle:not(.saved):focus,
+  .wishlist-circle:not(.saved):focus-visible {
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+  .wishlist-circle:not(.saved) svg,
+  .wishlist-circle:not(.saved) svg path {
+    color: #1f1c1a !important;
+    stroke: #1f1c1a !important;
+  }
+
+
+  /* ----------------------------------------------------------
+     PRODUCT PAGE HEART
+     Actual product-page class is .wish-product.
+     ---------------------------------------------------------- */
+
+  .wish-product:not(.saved),
+  .wish-product:not(.saved):hover,
+  .wish-product:not(.saved):active,
+  .wish-product:not(.saved):focus,
+  .wish-product:not(.saved):focus-visible {
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+  .wish-product:not(.saved) svg,
+  .wish-product:not(.saved) svg path {
+    color: #1f1c1a !important;
+    stroke: #1f1c1a !important;
+    fill: none !important;
+  }
+}
+
+
+/* Tablet header is 80px tall. */
+@media (min-width: 601px) and (max-width: 1020px) {
+  .mobile-nav {
+    top: 80px !important;
+  }
+}
+
+
+/* Safari button text should follow the CSS colour. */
+button {
+  -webkit-text-fill-color: currentColor;
+}
+
+
+/* Prevent Apple's detected links from becoming system blue. */
+a[x-apple-data-detectors],
+a[x-apple-data-detectors]:link,
+a[x-apple-data-detectors]:visited,
+a[x-apple-data-detectors]:hover,
+a[x-apple-data-detectors]:active {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-decoration: none !important;
+  font: inherit !important;
+}
