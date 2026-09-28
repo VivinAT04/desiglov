@@ -21419,3 +21419,81 @@ button svg {
   -webkit-tap-highlight-color: transparent !important;
   text-decoration-color: #1f1c1a !important;
 }
+
+/* =========================================================
+   DESIGLOV — FINAL SAFARI BLUE CLEANUP
+   Verification actions + newsletter JOIN
+   ========================================================= */
+
+/* Verification page:
+   remove iOS Safari system blue from Resend / Change email */
+.auth-card button,
+.auth-card button:visited,
+.auth-card button:hover,
+.auth-card button:focus,
+.auth-card button:focus-visible,
+.auth-card button:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Newsletter JOIN → must be black */
+.newsletter button,
+.newsletter button:hover,
+.newsletter button:focus,
+.newsletter button:focus-visible,
+.newsletter button:active,
+.newsletter button span {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Also cover common newsletter form structures */
+.newsletter-form button,
+.newsletter-form button:hover,
+.newsletter-form button:focus,
+.newsletter-form button:focus-visible,
+.newsletter-form button:active,
+.newsletter-form button span {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* =========================================================
+   DESIGLOV — EXACT VERIFICATION ACTION COLOUR
+   ========================================================= */
+
+.verification-action,
+.verification-action:hover,
+.verification-action:focus,
+.verification-action:focus-visible,
+.verification-action:active,
+.verification-action:disabled {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Exact newsletter submit button */
+.newsletter form button[type="submit"],
+.newsletter form button[type="submit"]:hover,
+.newsletter form button[type="submit"]:focus,
+.newsletter form button[type="submit"]:focus-visible,
+.newsletter form button[type="submit"]:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}

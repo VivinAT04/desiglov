@@ -8625,6 +8625,7 @@ function AccountPage({
                     : "pointer",
                   font: "inherit",
                 }}
+                className="verification-action"
               >
                 Resend code
               </button>
@@ -8657,6 +8658,7 @@ function AccountPage({
                   font: "inherit",
                   fontSize: "13px",
                 }}
+                className="verification-action"
               >
                 Change email
               </button>
