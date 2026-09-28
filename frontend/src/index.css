@@ -20447,3 +20447,189 @@ button:hover {
     max-width: 100%;
   }
 }
+
+
+/* ============================================================
+   DESIGLOV — FINAL CROSS-DEVICE SAFETY
+   Desktop / laptop / iPhone / Safari
+   ============================================================ */
+
+/* Prevent intrinsic content from expanding the document */
+html,
+body,
+#root,
+.site {
+  width: 100%;
+  max-width: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root,
+.site {
+  min-width: 0;
+}
+
+/* Images/media must never enlarge their parent */
+img,
+picture,
+video,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+/* Allow grid/flex children to shrink correctly */
+.header > *,
+.header-centre,
+.header-tools,
+.desktop-nav,
+.hero-new > *,
+.home-section > *,
+.products-grid > *,
+.category-editorial-grid > *,
+.shop-layout > * {
+  min-width: 0;
+}
+
+
+/* ============================================================
+   DESKTOP HEADER
+   Remove the old 650px / 700px forced centre-column width
+   ============================================================ */
+
+@media (min-width: 1021px) {
+  .header {
+    width: 100%;
+    max-width: 100%;
+
+    grid-template-columns:
+      minmax(170px, 0.75fr)
+      minmax(0, 2.9fr)
+      minmax(145px, 0.7fr);
+  }
+
+  .header-centre {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .desktop-nav {
+    width: 100%;
+    min-width: 0;
+    max-width: 900px;
+  }
+
+  .header-tools {
+    min-width: 0;
+  }
+}
+
+
+/* Smaller laptop widths */
+@media (min-width: 1021px) and (max-width: 1250px) {
+  .header {
+    grid-template-columns:
+      minmax(150px, 0.72fr)
+      minmax(0, 1fr)
+      minmax(140px, 0.7fr);
+  }
+
+  .desktop-nav {
+    max-width: 100%;
+  }
+}
+
+
+/* ============================================================
+   iPHONE / SAFARI
+   Prevent Safari from automatically turning text/controls blue
+   ============================================================ */
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+input,
+select,
+textarea,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Safari sometimes auto-detects phone/address-like text */
+a[x-apple-data-detectors],
+a[x-apple-data-detectors]:link,
+a[x-apple-data-detectors]:visited,
+a[x-apple-data-detectors]:hover,
+a[x-apple-data-detectors]:active {
+  color: inherit !important;
+  text-decoration: none !important;
+  font: inherit !important;
+}
+
+
+/* ============================================================
+   MOBILE SAFETY
+   ============================================================ */
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #root,
+  .site,
+  main {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .hero-new,
+  .home-section,
+  .category-editorial-grid,
+  .products-grid,
+  .shop-layout,
+  .account-dashboard {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  input,
+  textarea,
+  select {
+    max-width: 100%;
+  }
+}
+
+
+/* Prevent iOS Safari zooming when focusing form controls */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}

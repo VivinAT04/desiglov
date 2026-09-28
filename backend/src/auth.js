@@ -69,21 +69,21 @@ async function syncLocalUser(user) {
       .map(normaliseEmail)
       .filter(Boolean);
 
+  // ADMIN_EMAILS is authoritative.
+  // Browser metadata can never grant administrator access.
   const desiredRole =
     adminEmails.includes(email)
       ? "ADMIN"
       : "CUSTOMER";
 
   /*
-   * Compatibility with customers created before Supabase Auth
-   * became the authentication source.
+   * 1. Normal path:
+   *    Resolve the customer using the permanent Supabase UUID binding.
    *
-   * Existing DESIGLOV data may already contain this email under
-   * a different local UUID. Because addresses, orders, reviews
-   * and other records reference that UUID, keep the existing
-   * local user ID instead of attempting to replace it.
+   * This means that once an account has been migrated, email matching is
+   * no longer used to decide which DESIGLOV customer owns the session.
    */
-  const existing =
+  const bound =
     await pool.query(
       `
         SELECT
@@ -91,18 +91,19 @@ async function syncLocalUser(user) {
           full_name,
           email,
           role,
+          supabase_user_id,
           created_at,
           updated_at
         FROM users
-        WHERE LOWER(email) = LOWER($1)
+        WHERE supabase_user_id = $1
         LIMIT 1
       `,
-      [email]
+      [user.id]
     );
 
-  if (existing.rowCount > 0) {
+  if (bound.rowCount > 0) {
     const existingUser =
-      existing.rows[0];
+      bound.rows[0];
 
     const updated =
       await pool.query(
@@ -117,19 +118,16 @@ async function syncLocalUser(user) {
                 ELSE full_name
               END,
             email = $1,
-            role =
-              CASE
-                WHEN role = 'ADMIN'
-                  THEN 'ADMIN'
-                ELSE $3
-              END,
+            role = $3,
             updated_at = NOW()
           WHERE id = $4
+            AND supabase_user_id = $5
           RETURNING
             id,
             full_name,
             email,
             role,
+            supabase_user_id,
             created_at,
             updated_at
         `,
@@ -138,67 +136,221 @@ async function syncLocalUser(user) {
           fullName,
           desiredRole,
           existingUser.id,
+          user.id,
         ]
       );
 
     return updated.rows[0];
   }
 
-  const result =
-    await pool.query(
-      `
-        INSERT INTO users (
-          id,
-          full_name,
-          email,
-          password_hash,
-          role
-        )
-        VALUES (
-          $1,
-          $2,
-          $3,
-          NULL,
-          $4
-        )
-
-        ON CONFLICT (id)
-        DO UPDATE SET
-          full_name =
-            CASE
-              WHEN users.full_name IS NULL
-                OR BTRIM(users.full_name) = ''
-                THEN EXCLUDED.full_name
-              ELSE users.full_name
-            END,
-          email =
-            EXCLUDED.email,
-          role =
-            CASE
-              WHEN users.role = 'ADMIN'
-                THEN 'ADMIN'
-              ELSE EXCLUDED.role
-            END,
-          updated_at =
-            NOW()
-
-        RETURNING
-          id,
-          full_name,
-          email,
-          role,
-          created_at,
-          updated_at
-      `,
-      [
-        user.id,
-        fullName,
-        email,
-        desiredRole,
-      ]
+  /*
+   * 2. Legacy migration path:
+   *
+   * Existing DESIGLOV customers may have a local UUID different from their
+   * Supabase Auth UUID. We may link by email exactly once, but only when:
+   *
+   * - Supabase says the email is confirmed; and
+   * - the local account has never been bound to another Supabase identity.
+   *
+   * The local UUID is deliberately preserved because customer records
+   * reference users(id).
+   */
+  const emailConfirmed =
+    Boolean(
+      user.email_confirmed_at ||
+      user.confirmed_at
     );
 
-  return result.rows[0];
+  if (emailConfirmed) {
+    const client =
+      await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const legacy =
+        await client.query(
+          `
+            SELECT
+              id,
+              full_name,
+              email,
+              role,
+              supabase_user_id,
+              created_at,
+              updated_at
+            FROM users
+            WHERE LOWER(email) = LOWER($1)
+            FOR UPDATE
+          `,
+          [email]
+        );
+
+      if (legacy.rowCount > 1) {
+        throw new Error(
+          "Multiple local accounts use this email address."
+        );
+      }
+
+      if (legacy.rowCount === 1) {
+        const legacyUser =
+          legacy.rows[0];
+
+        if (
+          legacyUser.supabase_user_id &&
+          legacyUser.supabase_user_id !== user.id
+        ) {
+          throw new Error(
+            "This DESIGLOV account is already linked to another authentication identity."
+          );
+        }
+
+        const migrated =
+          await client.query(
+            `
+              UPDATE users
+              SET
+                supabase_user_id = $1,
+                full_name =
+                  CASE
+                    WHEN full_name IS NULL
+                      OR BTRIM(full_name) = ''
+                      THEN $2
+                    ELSE full_name
+                  END,
+                email = $3,
+                role = $4,
+                updated_at = NOW()
+              WHERE id = $5
+                AND (
+                  supabase_user_id IS NULL
+                  OR supabase_user_id = $1
+                )
+              RETURNING
+                id,
+                full_name,
+                email,
+                role,
+                supabase_user_id,
+                created_at,
+                updated_at
+            `,
+            [
+              user.id,
+              fullName,
+              email,
+              desiredRole,
+              legacyUser.id,
+            ]
+          );
+
+        if (migrated.rowCount !== 1) {
+          throw new Error(
+            "Could not safely bind the existing DESIGLOV account."
+          );
+        }
+
+        await client.query("COMMIT");
+
+        return migrated.rows[0];
+      }
+
+      await client.query("COMMIT");
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {}
+
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /*
+   * 3. New customer:
+   *
+   * A new local row can be created only for a confirmed Supabase account.
+   * The local UUID may equal the Supabase UUID for new customers; existing
+   * legacy customer UUIDs remain untouched.
+   */
+  if (!emailConfirmed) {
+    throw new Error(
+      "Please verify your email address before using your DESIGLOV account."
+    );
+  }
+
+  try {
+    const result =
+      await pool.query(
+        `
+          INSERT INTO users (
+            id,
+            full_name,
+            email,
+            password_hash,
+            role,
+            supabase_user_id
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            NULL,
+            $4,
+            $1
+          )
+          RETURNING
+            id,
+            full_name,
+            email,
+            role,
+            supabase_user_id,
+            created_at,
+            updated_at
+        `,
+        [
+          user.id,
+          fullName,
+          email,
+          desiredRole,
+        ]
+      );
+
+    return result.rows[0];
+  } catch (error) {
+    /*
+     * A concurrent first request may have completed the migration/insert
+     * between our lookup and INSERT. Resolve by immutable Supabase UUID.
+     */
+    if (
+      error?.code === "23505"
+    ) {
+      const retry =
+        await pool.query(
+          `
+            SELECT
+              id,
+              full_name,
+              email,
+              role,
+              supabase_user_id,
+              created_at,
+              updated_at
+            FROM users
+            WHERE supabase_user_id = $1
+            LIMIT 1
+          `,
+          [user.id]
+        );
+
+      if (retry.rowCount === 1) {
+        return retry.rows[0];
+      }
+    }
+
+    throw error;
+  }
 }
 
 function bearerToken(req) {

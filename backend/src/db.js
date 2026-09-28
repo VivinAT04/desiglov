@@ -59,8 +59,7 @@ export async function initialiseDatabase() {
         UNIQUE
         NOT NULL,
 
-      password_hash TEXT
-        NOT NULL,
+      password_hash TEXT,
 
       role VARCHAR(30)
         NOT NULL
@@ -87,9 +86,38 @@ export async function initialiseDatabase() {
   `);
 
 
+  // Supabase Auth owns customer passwords now.
+  // Existing legacy databases may still have password_hash marked NOT NULL,
+  // so remove that obsolete constraint safely during startup.
+  await pool.query(`
+    ALTER TABLE users
+    ALTER COLUMN password_hash DROP NOT NULL;
+  `);
+
+
   await pool.query(`
     CREATE INDEX IF NOT EXISTS users_email_index
     ON users (email);
+  `);
+
+  // Permanently bind each local DESIGLOV customer to one
+  // Supabase Auth identity while preserving the local UUID
+  // referenced by orders, addresses, reviews and other records.
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS supabase_user_id UUID;
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_supabase_user_id_unique
+    ON users (supabase_user_id)
+    WHERE supabase_user_id IS NOT NULL;
+  `);
+
+  // Prevent case-only duplicate customer emails.
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique
+    ON users (LOWER(email));
   `);
 
 
@@ -465,6 +493,12 @@ export async function initialiseDatabase() {
       product_id,
       updated_at DESC
     );
+  `);
+
+  // Index the customer foreign key used by product reviews.
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS product_reviews_user_index
+    ON product_reviews (user_id);
   `);
 
 
@@ -934,6 +968,12 @@ export async function initialiseDatabase() {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS orders_user_index
     ON orders (user_id);
+  `);
+
+  // Index the address foreign key used by orders.
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS orders_address_index
+    ON orders (address_id);
   `);
 
 

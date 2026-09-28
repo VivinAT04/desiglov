@@ -4,6 +4,7 @@ import path from "path";
 import express from "express";
 import multer from "multer";
 import { createClient } from "@supabase/supabase-js";
+import { fileTypeFromBuffer } from "file-type";
 import { z } from "zod";
 
 import { requireAuth } from "./auth.js";
@@ -118,50 +119,35 @@ function getStorageClient() {
 }
 
 
-function profileImageExtension(
-  file
-) {
-  const original =
-    path
-      .extname(
-        file.originalname ||
-          ""
-      )
-      .toLowerCase();
+const PROFILE_IMAGE_TYPES = new Map([
+  ["image/jpeg", ".jpg"],
+  ["image/png", ".png"],
+  ["image/webp", ".webp"],
+]);
 
-  if (
-    [
-      ".jpg",
-      ".jpeg",
-      ".png",
-      ".webp",
-    ].includes(
-      original
-    )
-  ) {
-    return original ===
-      ".jpeg"
-      ? ".jpg"
-      : original;
+async function validateProfileImage(file) {
+  if (!file?.buffer?.length) {
+    throw new Error("Profile photo is empty.");
   }
 
-  if (
-    file.mimetype ===
-    "image/png"
-  ) {
-    return ".png";
-  }
+  const detected =
+    await fileTypeFromBuffer(file.buffer);
 
   if (
-    file.mimetype ===
-    "image/webp"
+    !detected ||
+    !PROFILE_IMAGE_TYPES.has(detected.mime)
   ) {
-    return ".webp";
+    throw new Error(
+      "Profile photo must be a real JPG, PNG or WEBP image."
+    );
   }
 
-  return ".jpg";
+  return {
+    mime: detected.mime,
+    extension:
+      PROFILE_IMAGE_TYPES.get(detected.mime),
+  };
 }
-
 
 function publicUser(
   row
@@ -379,10 +365,13 @@ router.post(
       const supabase =
         getStorageClient();
 
-      const extension =
-        profileImageExtension(
+      const verifiedImage =
+        await validateProfileImage(
           req.file
         );
+
+      const extension =
+        verifiedImage.extension;
 
       const objectPath =
         `profiles/${req.userId}/${crypto.randomUUID()}${extension}`;
@@ -401,8 +390,7 @@ router.post(
             req.file.buffer,
             {
               contentType:
-                req.file
-                  .mimetype,
+                verifiedImage.mime,
 
               cacheControl:
                 "3600",

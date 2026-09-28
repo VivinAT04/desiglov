@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { fileTypeFromBuffer } from "file-type";
 
 import { pool } from "./db.js";
 import { requireAuth } from "./auth.js";
@@ -113,87 +114,60 @@ function getReviewStorageClient() {
 }
 
 
-function getReviewMediaExtension(
-  file
-) {
+const REVIEW_MEDIA_TYPES = new Map([
+  ["image/jpeg", { extension: ".jpg", type: "image" }],
+  ["image/png", { extension: ".png", type: "image" }],
+  ["image/webp", { extension: ".webp", type: "image" }],
+  ["video/mp4", { extension: ".mp4", type: "video" }],
+  ["video/quicktime", { extension: ".mov", type: "video" }],
+  ["video/webm", { extension: ".webm", type: "video" }],
+]);
 
-  const extension =
-    path
-      .extname(
-        file.originalname || ""
-      )
-      .toLowerCase();
-
-  const allowedExtensions =
-    new Set([
-      ".jpg",
-      ".jpeg",
-      ".png",
-      ".webp",
-      ".mp4",
-      ".mov",
-      ".webm",
-    ]);
-
-  if (
-    allowedExtensions.has(
-      extension
-    )
-  ) {
-    return extension;
+async function detectReviewMedia(file) {
+  if (!file?.buffer?.length) {
+    throw new Error("Review media file is empty.");
   }
 
-  switch (file.mimetype) {
-    case "image/png":
-      return ".png";
+  const detected =
+    await fileTypeFromBuffer(file.buffer);
 
-    case "image/webp":
-      return ".webp";
+  const trusted =
+    detected
+      ? REVIEW_MEDIA_TYPES.get(detected.mime)
+      : null;
 
-    case "image/jpeg":
-      return ".jpg";
-
-    case "video/webm":
-      return ".webm";
-
-    case "video/quicktime":
-      return ".mov";
-
-    default:
-      return ".mp4";
+  if (!trusted) {
+    throw new Error(
+      "Review media must be a real JPG, PNG, WEBP, MP4, MOV or WEBM file."
+    );
   }
+
+  return {
+    mime: detected.mime,
+    extension: trusted.extension,
+    type: trusted.type,
+  };
 }
 
-
-function validateReviewMediaFiles(
-  files
-) {
-
+async function validateReviewMediaFiles(files) {
   const selectedFiles =
-    Array.isArray(files)
-      ? files
-      : [];
+    Array.isArray(files) ? files : [];
 
-  if (
-    selectedFiles.length >
-    MAX_REVIEW_FILES
-  ) {
+  if (selectedFiles.length > MAX_REVIEW_FILES) {
     throw new Error(
       `You can upload up to ${MAX_REVIEW_FILES} photos or videos.`
     );
   }
 
-  for (
-    const file of
-    selectedFiles
-  ) {
+  const verified = [];
+
+  for (const file of selectedFiles) {
+    const media =
+      await detectReviewMedia(file);
 
     if (
-      allowedImageTypes.has(
-        file.mimetype
-      ) &&
-      file.size >
-        IMAGE_MAX_BYTES
+      media.type === "image" &&
+      file.size > IMAGE_MAX_BYTES
     ) {
       throw new Error(
         `${file.originalname || "Image"} is too large. Images must be 5 MB or smaller.`
@@ -201,19 +175,22 @@ function validateReviewMediaFiles(
     }
 
     if (
-      allowedVideoTypes.has(
-        file.mimetype
-      ) &&
-      file.size >
-        VIDEO_MAX_BYTES
+      media.type === "video" &&
+      file.size > VIDEO_MAX_BYTES
     ) {
       throw new Error(
         `${file.originalname || "Video"} is too large. Videos must be 40 MB or smaller.`
       );
     }
-  }
-}
 
+    verified.push({
+      file,
+      ...media,
+    });
+  }
+
+  return verified;
+}
 
 async function uploadReviewMedia(
   files,
@@ -222,21 +199,17 @@ async function uploadReviewMedia(
     userId,
   }
 ) {
-
   const selectedFiles =
-    Array.isArray(files)
-      ? files
-      : [];
+    Array.isArray(files) ? files : [];
 
-  if (
-    selectedFiles.length === 0
-  ) {
+  if (selectedFiles.length === 0) {
     return [];
   }
 
-  validateReviewMediaFiles(
-    selectedFiles
-  );
+  const verifiedFiles =
+    await validateReviewMediaFiles(
+      selectedFiles
+    );
 
   const supabase =
     getReviewStorageClient();
@@ -244,55 +217,33 @@ async function uploadReviewMedia(
   const uploaded = [];
 
   try {
-
-    for (
-      const file of
-      selectedFiles
-    ) {
-
-      if (!file.buffer) {
-        throw new Error(
-          "Review media buffer is missing."
-        );
-      }
-
-      const extension =
-        getReviewMediaExtension(
-          file
-        );
+    for (const verified of verifiedFiles) {
+      const file = verified.file;
 
       const safeUserId =
-        String(userId)
-          .replace(
-            /[^a-zA-Z0-9_-]/g,
-            ""
-          );
+        String(userId).replace(
+          /[^a-zA-Z0-9_-]/g,
+          ""
+        );
 
       const objectPath =
         `reviews/product-${productId}/${safeUserId}/${Date.now()}-${crypto
           .randomBytes(10)
-          .toString("hex")}${extension}`;
+          .toString("hex")}${verified.extension}`;
 
       const {
         error: uploadError,
       } =
         await supabase
           .storage
-          .from(
-            REVIEW_MEDIA_BUCKET
-          )
+          .from(REVIEW_MEDIA_BUCKET)
           .upload(
             objectPath,
             file.buffer,
             {
-              contentType:
-                file.mimetype,
-
-              cacheControl:
-                "31536000",
-
-              upsert:
-                false,
+              contentType: verified.mime,
+              cacheControl: "31536000",
+              upsert: false,
             }
           );
 
@@ -302,76 +253,47 @@ async function uploadReviewMedia(
         );
       }
 
-      const {
-        data,
-      } =
+      const { data } =
         supabase
           .storage
-          .from(
-            REVIEW_MEDIA_BUCKET
-          )
-          .getPublicUrl(
-            objectPath
-          );
+          .from(REVIEW_MEDIA_BUCKET)
+          .getPublicUrl(objectPath);
 
-      if (
-        !data?.publicUrl
-      ) {
+      if (!data?.publicUrl) {
         throw new Error(
           "Review media public URL was not generated."
         );
       }
 
       uploaded.push({
-        type:
-          allowedVideoTypes.has(
-            file.mimetype
-          )
-            ? "video"
-            : "image",
-
-        url:
-          data.publicUrl,
-
+        type: verified.type,
+        url: data.publicUrl,
         objectPath,
-
-        mimeType:
-          file.mimetype,
-
-        name:
-          file.originalname || "",
+        mimeType: verified.mime,
+        name: file.originalname || "",
       });
     }
 
     return uploaded;
-
   } catch (error) {
-
-    if (
-      uploaded.length >
-      0
-    ) {
+    if (uploaded.length > 0) {
       try {
         await supabase
           .storage
-          .from(
-            REVIEW_MEDIA_BUCKET
-          )
+          .from(REVIEW_MEDIA_BUCKET)
           .remove(
             uploaded.map(
-              (item) =>
-                item.objectPath
+              (item) => item.objectPath
             )
           );
       } catch {
-        // Keep original upload error.
+        // Preserve original error.
       }
     }
 
     throw error;
   }
 }
-
 
 function getReviewMediaObjectPath(
   mediaUrl
@@ -843,7 +765,7 @@ router.post(
           });
       }
 
-      validateReviewMediaFiles(
+      await validateReviewMediaFiles(
         req.files || []
       );
 

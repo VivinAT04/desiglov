@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
+import { fileTypeFromBuffer } from "file-type";
 
 import {
   z,
@@ -1010,50 +1011,35 @@ function getImageStorageClient() {
 }
 
 
-function getImageExtension(
-  file
-) {
+const PRODUCT_IMAGE_TYPES = new Map([
+  ["image/jpeg", ".jpg"],
+  ["image/png", ".png"],
+  ["image/webp", ".webp"],
+]);
 
-  const extension =
-    path
-      .extname(
-        file.originalname || ""
-      )
-      .toLowerCase();
-
-  if (
-    [
-      ".jpg",
-      ".jpeg",
-      ".png",
-      ".webp",
-    ].includes(
-      extension
-    )
-  ) {
-
-    return extension;
+async function validateProductImage(file) {
+  if (!file?.buffer?.length) {
+    throw new Error("Image buffer is missing.");
   }
 
-  if (
-    file.mimetype ===
-    "image/png"
-  ) {
-
-    return ".png";
-  }
+  const detected =
+    await fileTypeFromBuffer(file.buffer);
 
   if (
-    file.mimetype ===
-    "image/webp"
+    !detected ||
+    !PRODUCT_IMAGE_TYPES.has(detected.mime)
   ) {
-
-    return ".webp";
+    throw new Error(
+      "Uploaded product files must be real JPG, PNG or WEBP images."
+    );
   }
 
-  return ".jpg";
+  return {
+    mime: detected.mime,
+    extension:
+      PRODUCT_IMAGE_TYPES.get(detected.mime),
+  };
 }
-
 
 async function uploadProductImages(
   files,
@@ -1093,10 +1079,13 @@ async function uploadProductImages(
         );
       }
 
-      const extension =
-        getImageExtension(
+      const verifiedImage =
+        await validateProductImage(
           file
         );
+
+      const extension =
+        verifiedImage.extension;
 
       const objectPath =
         `products/${productFolder}/${Date.now()}-${crypto
@@ -1116,7 +1105,7 @@ async function uploadProductImages(
             file.buffer,
             {
               contentType:
-                file.mimetype,
+                verifiedImage.mime,
 
               cacheControl:
                 "31536000",
