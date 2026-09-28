@@ -20961,3 +20961,187 @@ a[x-apple-data-detectors]:active {
   text-decoration: none !important;
   font: inherit !important;
 }
+
+/* DESIGLOV — STRUCTURAL MOBILE NAV + SAFARI CONTROL FIX */
+
+/*
+ * mobile-nav now lives INSIDE .header.
+ * Therefore top:100% means exactly the physical bottom
+ * of the header, whether the announcement is visible or not.
+ */
+@media (max-width: 1020px) {
+
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10000 !important;
+    overflow: visible !important;
+  }
+
+  .mobile-nav {
+    position: absolute !important;
+
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    height: calc(100dvh - 70px) !important;
+    max-height: calc(100dvh - 70px) !important;
+
+    margin: 0 !important;
+
+    padding:
+      8px
+      20px
+      calc(24px + env(safe-area-inset-bottom))
+      !important;
+
+    box-sizing: border-box !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
+
+    background: #ffffff !important;
+
+    border: 0 !important;
+    border-top: 1px solid #eee7e2 !important;
+
+    box-shadow: none !important;
+
+    z-index: 10001 !important;
+  }
+
+  /*
+   * Safari accordion fix.
+   * PRODUCT DETAILS / CARE / DELIVERY & RETURNS.
+   */
+  .product-details .accordion > button,
+  .product-details .accordion > button:hover,
+  .product-details .accordion > button:active,
+  .product-details .accordion > button:focus,
+  .product-details .accordion > button:focus-visible {
+
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+
+    -webkit-appearance: none !important;
+    appearance: none !important;
+
+    text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .product-details .accordion > button span,
+  .product-details .accordion > button span:first-child,
+  .product-details .accordion > button span:last-child {
+
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+  }
+
+  /*
+   * Product page wishlist.
+   */
+  .wish-product,
+  .wish-product:hover,
+  .wish-product:active,
+  .wish-product:focus,
+  .wish-product:focus-visible {
+
+    color: #1f1c1a !important;
+    -webkit-text-fill-color: #1f1c1a !important;
+
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  .wish-product svg,
+  .wish-product svg path {
+
+    color: #1f1c1a !important;
+    stroke: #1f1c1a !important;
+  }
+}
+
+
+/*
+ * Tablet header is taller.
+ */
+@media (min-width: 601px) and (max-width: 1020px) {
+
+  .mobile-nav {
+    height: calc(100dvh - 80px) !important;
+    max-height: calc(100dvh - 80px) !important;
+  }
+
+}
+
+
+/*
+ * Older Safari viewport fallback.
+ */
+@supports not (height: 100dvh) {
+
+  @media (max-width: 600px) {
+
+    .mobile-nav {
+      height: calc(100vh - 70px) !important;
+      max-height: calc(100vh - 70px) !important;
+    }
+
+  }
+
+  @media (min-width: 601px) and (max-width: 1020px) {
+
+    .mobile-nav {
+      height: calc(100vh - 80px) !important;
+      max-height: calc(100vh - 80px) !important;
+    }
+
+  }
+}
+
+
+/*
+ * Global accordion colour.
+ * The Accordion component is a native <button>, so explicitly
+ * prevent Safari from applying its system accent colour.
+ */
+.accordion > button {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.accordion > button > span {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+
+/*
+ * Homepage FEATURED PIECE / VIEW PIECE button.
+ */
+.featured-card button,
+.featured-card button:hover,
+.featured-card button:active,
+.featured-card button:focus,
+.featured-card button:focus-visible {
+
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+
+  -webkit-appearance: none !important;
+  appearance: none !important;
+
+  text-decoration: none !important;
+}

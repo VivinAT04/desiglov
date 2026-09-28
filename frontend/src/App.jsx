@@ -1451,10 +1451,9 @@ function Header({
             )}
           </button>
         </div>
-      </header>
 
-      {mobileOpen && (
-        <div className="mobile-nav">
+        {mobileOpen && (
+          <div className="mobile-nav">
           {[
             ["Home", "/"],
             ["Shop", "/shop"],
@@ -1570,8 +1569,9 @@ function Header({
               </button>
             )
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </header>
     </>
   );
 }
