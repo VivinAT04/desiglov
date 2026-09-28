@@ -8736,6 +8736,7 @@ function AccountPage({
                       "/forgot-password"
                     )
                   }
+                  className="forgot-password-button"
                   style={{
                     border: 0,
                     background:

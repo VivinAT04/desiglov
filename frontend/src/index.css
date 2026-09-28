@@ -21353,3 +21353,69 @@ button svg {
   appearance: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
+
+/* DESIGLOV — FINAL IPHONE AUTH + CART DRAWER */
+
+.forgot-password-button,
+.forgot-password-button:hover,
+.forgot-password-button:focus,
+.forgot-password-button:active {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.cart-drawer {
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  overflow: hidden !important;
+}
+
+.cart-drawer .drawer-items {
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.cart-drawer .drawer-bottom {
+  position: relative !important;
+  background: #fff !important;
+  padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+  z-index: 2 !important;
+}
+
+@media (max-width: 767px) {
+  .cart-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+  }
+}
+
+/* =========================================================
+   DESIGLOV — IOS SAFARI TEXT LINK RESET
+   Prevent native blue on homepage story CTA
+   ========================================================= */
+
+.story-copy .text-link,
+.story-copy .text-link:hover,
+.story-copy .text-link:focus,
+.story-copy .text-link:focus-visible,
+.story-copy .text-link:active,
+.story-copy .text-link span {
+  color: #1f1c1a !important;
+  -webkit-text-fill-color: #1f1c1a !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  text-decoration-color: #1f1c1a !important;
+}
