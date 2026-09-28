@@ -3745,24 +3745,35 @@ router.delete(
           });
       }
 
-      await writeAdminAudit(
-        req,
-        {
-          action:
-            "PRODUCT_DELETED",
+      await writeAdminAudit({
+        adminUserId:
+          req.admin?.id ||
+          req.userId ||
+          null,
 
-          entityType:
-            "product",
+        adminEmail:
+          req.admin?.email ||
+          req.user?.email ||
+          null,
 
-          entityId:
-            result.rows[0].id,
+        action:
+          "PRODUCT_DELETED",
 
-          metadata: {
-            name:
-              result.rows[0].name,
-          },
-        }
-      );
+        entityType:
+          "product",
+
+        entityId:
+          result.rows[0].id,
+
+        metadata: {
+          name:
+            result.rows[0].name,
+        },
+
+        ipAddress:
+          req.ip ||
+          null,
+      });
 
       return res.json({
         message:
