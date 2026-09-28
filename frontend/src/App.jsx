@@ -8504,123 +8504,261 @@ function AccountPage({
           </div>
         )}
 
-        <form
-          className="auth-form"
-          onSubmit={submit}
-        >
-          {mode ===
-            "register" && (
+        {mode === "register" &&
+        registrationStep === "otp" ? (
+          <form
+            className="auth-form"
+            onSubmit={verifyRegistrationOtp}
+          >
+            <div
+              style={{
+                textAlign: "center",
+                marginBottom: "8px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  letterSpacing: "0.18em",
+                  fontWeight: 600,
+                  marginBottom: "12px",
+                }}
+              >
+                VERIFY YOUR EMAIL
+              </div>
+
+              <p
+                style={{
+                  margin: 0,
+                  lineHeight: 1.7,
+                  color: "#6f6863",
+                  fontSize: "14px",
+                }}
+              >
+                Enter the 8-digit verification code sent to
+              </p>
+
+              <strong
+                style={{
+                  display: "block",
+                  marginTop: "4px",
+                  fontSize: "14px",
+                  wordBreak: "break-word",
+                }}
+              >
+                {pendingRegistrationEmail}
+              </strong>
+            </div>
+
             <label className="auth-field">
-              <span>
-                FULL NAME
-              </span>
+              <span>VERIFICATION CODE</span>
 
               <input
                 required
-                name="fullName"
-                value={
-                  form.fullName
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={registrationOtp}
+                onChange={(event) =>
+                  setRegistrationOtp(
+                    event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 8)
+                  )
                 }
-                onChange={
-                  updateField
-                }
-                placeholder="Your full name"
-                autoComplete="name"
+                placeholder="Enter 8-digit code"
+                maxLength={8}
+                autoFocus
+                style={{
+                  textAlign: "center",
+                  letterSpacing: "0.35em",
+                  fontSize: "18px",
+                  fontWeight: 600,
+                }}
               />
             </label>
-          )}
 
-          <label className="auth-field">
-            <span>
-              EMAIL ADDRESS
-            </span>
+            <button
+              className="add-bag auth-submit"
+              disabled={
+                submitting ||
+                registrationOtp.length !== 8
+              }
+            >
+              {submitting
+                ? "VERIFYING..."
+                : "VERIFY EMAIL"}
+            </button>
 
-            <input
-              required
-              type="email"
-              name="email"
-              value={
-                form.email
-              }
-              onChange={
-                updateField
-              }
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </label>
-
-          <label className="auth-field">
-            <span>
-              PASSWORD
-            </span>
-
-            <input
-              required
-              minLength="8"
-              type="password"
-              name="password"
-              value={
-                form.password
-              }
-              onChange={
-                updateField
-              }
-              placeholder="At least 8 characters"
-              autoComplete={
-                mode === "register"
-                  ? "new-password"
-                  : "current-password"
-              }
-            />
-          </label>
-
-          {mode === "login" && (
             <div
               style={{
                 display: "flex",
-                justifyContent:
-                  "flex-end",
-                marginTop:
-                  "-8px",
+                justifyContent: "center",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "8px",
+                marginTop: "18px",
+                fontSize: "13px",
+              }}
+            >
+              <span style={{ color: "#756d68" }}>
+                Didn't receive the code?
+              </span>
+
+              <button
+                type="button"
+                onClick={resendRegistrationOtp}
+                disabled={submitting}
+                style={{
+                  border: 0,
+                  padding: 0,
+                  background: "transparent",
+                  textDecoration: "underline",
+                  cursor: submitting
+                    ? "default"
+                    : "pointer",
+                  font: "inherit",
+                }}
+              >
+                Resend code
+              </button>
+            </div>
+
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: "14px",
               }}
             >
               <button
                 type="button"
-                onClick={() =>
-                  navigate(
-                    "/forgot-password"
-                  )
-                }
+                disabled={submitting}
+                onClick={() => {
+                  setRegistrationStep("details");
+                  setRegistrationOtp("");
+                  setPendingRegistrationEmail("");
+                  setMessage("");
+                  setError("");
+                }}
                 style={{
                   border: 0,
-                  background:
-                    "transparent",
                   padding: 0,
-                  cursor:
-                    "pointer",
-                  textDecoration:
-                    "underline",
+                  background: "transparent",
+                  textDecoration: "underline",
+                  cursor: submitting
+                    ? "default"
+                    : "pointer",
                   font: "inherit",
+                  fontSize: "13px",
                 }}
               >
-                Forgot password?
+                Change email
               </button>
             </div>
-          )}
-
-          <button
-            className="add-bag auth-submit"
-            disabled={submitting}
+          </form>
+        ) : (
+          <form
+            className="auth-form"
+            onSubmit={submit}
           >
-            {submitting
-              ? "PLEASE WAIT..."
-              : mode ===
-                "register"
-              ? "CREATE ACCOUNT"
-              : "SIGN IN"}
-          </button>
-        </form>
+            {mode === "register" && (
+              <label className="auth-field">
+                <span>
+                  FULL NAME
+                </span>
+
+                <input
+                  required
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={updateField}
+                  placeholder="Your full name"
+                  autoComplete="name"
+                />
+              </label>
+            )}
+
+            <label className="auth-field">
+              <span>
+                EMAIL ADDRESS
+              </span>
+
+              <input
+                required
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={updateField}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </label>
+
+            <label className="auth-field">
+              <span>
+                PASSWORD
+              </span>
+
+              <input
+                required
+                minLength="8"
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={updateField}
+                placeholder="At least 8 characters"
+                autoComplete={
+                  mode === "register"
+                    ? "new-password"
+                    : "current-password"
+                }
+              />
+            </label>
+
+            {mode === "login" && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "-8px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      "/forgot-password"
+                    )
+                  }
+                  style={{
+                    border: 0,
+                    background:
+                      "transparent",
+                    padding: 0,
+                    cursor:
+                      "pointer",
+                    textDecoration:
+                      "underline",
+                    font: "inherit",
+                  }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            <button
+              className="add-bag auth-submit"
+              disabled={submitting}
+            >
+              {submitting
+                ? "PLEASE WAIT..."
+                : mode === "register"
+                ? "CREATE ACCOUNT"
+                : "SIGN IN"}
+            </button>
+          </form>
+        )}
 
         <div className="account-switch">
           {mode === "register"
@@ -12898,8 +13036,6 @@ function ForgotPasswordPage({
       if (updateError) {
         throw updateError;
       }
-
-      await supabase.auth.signOut();
 
       setStep("complete");
       setPassword("");

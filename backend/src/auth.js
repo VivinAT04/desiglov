@@ -74,51 +74,121 @@ async function syncLocalUser(user) {
       ? "ADMIN"
       : "CUSTOMER";
 
+  /*
+   * Compatibility with customers created before Supabase Auth
+   * became the authentication source.
+   *
+   * Existing DESIGLOV data may already contain this email under
+   * a different local UUID. Because addresses, orders, reviews
+   * and other records reference that UUID, keep the existing
+   * local user ID instead of attempting to replace it.
+   */
+  const existing =
+    await pool.query(
+      `
+        SELECT
+          id,
+          full_name,
+          email,
+          role,
+          created_at,
+          updated_at
+        FROM users
+        WHERE LOWER(email) = LOWER($1)
+        LIMIT 1
+      `,
+      [email]
+    );
+
+  if (existing.rowCount > 0) {
+    const existingUser =
+      existing.rows[0];
+
+    const updated =
+      await pool.query(
+        `
+          UPDATE users
+          SET
+            full_name =
+              CASE
+                WHEN full_name IS NULL
+                  OR BTRIM(full_name) = ''
+                  THEN $2
+                ELSE full_name
+              END,
+            email = $1,
+            role =
+              CASE
+                WHEN role = 'ADMIN'
+                  THEN 'ADMIN'
+                ELSE $3
+              END,
+            updated_at = NOW()
+          WHERE id = $4
+          RETURNING
+            id,
+            full_name,
+            email,
+            role,
+            created_at,
+            updated_at
+        `,
+        [
+          email,
+          fullName,
+          desiredRole,
+          existingUser.id,
+        ]
+      );
+
+    return updated.rows[0];
+  }
+
   const result =
     await pool.query(
       `
-      INSERT INTO users (
-        id,
-        full_name,
-        email,
-        password_hash,
-        role
-      )
-      VALUES (
-        $1,
-        $2,
-        $3,
-        NULL,
-        $4
-      )
+        INSERT INTO users (
+          id,
+          full_name,
+          email,
+          password_hash,
+          role
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          NULL,
+          $4
+        )
 
-      ON CONFLICT (id)
-      DO UPDATE SET
-        full_name =
-          CASE
-            WHEN users.full_name IS NULL
-              OR BTRIM(users.full_name) = ''
-              THEN EXCLUDED.full_name
-            ELSE users.full_name
-          END,
-        email =
-          EXCLUDED.email,
-        role =
-          CASE
-            WHEN users.role = 'ADMIN'
-              THEN 'ADMIN'
-            ELSE EXCLUDED.role
-          END,
-        updated_at =
-          NOW()
+        ON CONFLICT (id)
+        DO UPDATE SET
+          full_name =
+            CASE
+              WHEN users.full_name IS NULL
+                OR BTRIM(users.full_name) = ''
+                THEN EXCLUDED.full_name
+              ELSE users.full_name
+            END,
+          email =
+            EXCLUDED.email,
+          role =
+            CASE
+              WHEN users.role = 'ADMIN'
+                THEN 'ADMIN'
+              ELSE EXCLUDED.role
+            END,
+          updated_at =
+            NOW()
 
-      RETURNING
-        id,
-        full_name,
-        email,
-        role,
-        created_at,
-        updated_at
+        RETURNING
+          id,
+          full_name,
+          email,
+          role,
+          created_at,
+          updated_at
       `,
       [
         user.id,
@@ -191,7 +261,13 @@ export async function requireAuth(
         data.user
       );
 
+    // PostgreSQL-facing routes must use the local DESIGLOV user ID.
+    // Legacy customers may have a different UUID from their Supabase Auth UUID.
     req.userId =
+      localUser.id;
+
+    // Keep the Supabase Auth UUID separately when it is specifically needed.
+    req.supabaseUserId =
       data.user.id;
 
     req.supabaseUser =

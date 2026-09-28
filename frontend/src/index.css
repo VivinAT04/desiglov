@@ -20396,3 +20396,54 @@ button:hover {
     text-decoration: none !important;
   }
 }
+
+
+/* ============================================================
+   DESIGLOV — DESKTOP HEADER OVERFLOW FIX
+   Prevent desktop navigation from forcing page wider than viewport
+   ============================================================ */
+
+@media (min-width: 1021px) {
+
+  .header {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns:
+      minmax(170px, 0.75fr)
+      minmax(0, 2.9fr)
+      minmax(150px, 0.7fr);
+  }
+
+  .header > *,
+  .header-centre,
+  .desktop-nav,
+  .header-tools {
+    min-width: 0;
+  }
+
+  .header-centre {
+    overflow: hidden;
+  }
+
+  .desktop-nav {
+    width: 100%;
+    max-width: 900px;
+    min-width: 0;
+  }
+}
+
+
+/* Smaller desktop / laptop windows */
+@media (min-width: 1021px) and (max-width: 1250px) {
+
+  .header {
+    grid-template-columns:
+      minmax(155px, 0.72fr)
+      minmax(0, 2.9fr)
+      minmax(145px, 0.7fr);
+  }
+
+  .desktop-nav {
+    max-width: 100%;
+  }
+}
