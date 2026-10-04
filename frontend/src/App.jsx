@@ -2658,35 +2658,18 @@ function ProductPage({
     setDeliveryStatus("available");
   }
 
+  // No size is selected when the product page first opens.
+  // Stock information appears only after the customer chooses a size.
   const [size, setSize] =
-    useState(() => {
-
-      const sizes =
-        Array.isArray(
-          product.sizes
-        )
-          ? product.sizes
-          : [];
-
-      return (
-        sizes.find(
-          (item) =>
-
-            Number(
-              product.sizeAvailable?.[
-                String(item)
-                  .trim()
-                  .toUpperCase()
-              ] ?? 0
-            ) > 0
-        ) ||
-        sizes[0] ||
-        ""
-      );
-    });
+    useState("");
 
   const [sizeError, setSizeError] =
     useState(false);
+
+  useEffect(() => {
+    setSize("");
+    setSizeError(false);
+  }, [product.id]);
 
   // =========================================================
   // PRODUCT REVIEWS
