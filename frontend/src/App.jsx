@@ -3379,6 +3379,15 @@ function ProductPage({
                         "black & white":
                           "linear-gradient(135deg, #171717 0 50%, #f5f4ef 50% 100%)",
 
+                        "black and red":
+                          "linear-gradient(135deg, #171717 0 50%, #a51d2d 50% 100%)",
+
+                        "black & red":
+                          "linear-gradient(135deg, #171717 0 50%, #a51d2d 50% 100%)",
+
+                        "black/red":
+                          "linear-gradient(135deg, #171717 0 50%, #a51d2d 50% 100%)",
+
                         "ivory":
                           "#f3eadc",
 
