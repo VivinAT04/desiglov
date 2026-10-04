@@ -3358,7 +3358,131 @@ function ProductPage({
             </div>
 
             <div className="colour-pill">
-              <span />
+              <span
+                style={{
+                  background:
+                    (() => {
+                      const colour =
+                        String(
+                          product.colour || ""
+                        )
+                          .trim()
+                          .toLowerCase();
+
+                      const swatches = {
+                        "black":
+                          "#171717",
+
+                        "white":
+                          "#f8f7f3",
+
+                        "black & white":
+                          "linear-gradient(135deg, #171717 0 50%, #f5f4ef 50% 100%)",
+
+                        "ivory":
+                          "#f3eadc",
+
+                        "beige":
+                          "#d8c3ad",
+
+                        "cream":
+                          "#f1e6d0",
+
+                        "brown":
+                          "#76543b",
+
+                        "maroon":
+                          "#6e1828",
+
+                        "red":
+                          "#a51d2d",
+
+                        "pink":
+                          "#e7a6b8",
+
+                        "rose":
+                          "#c98291",
+
+                        "orange":
+                          "#d87832",
+
+                        "yellow":
+                          "#d6b51d",
+
+                        "mustard":
+                          "#b69a16",
+
+                        "lime green":
+                          "#8b9a16",
+
+                        "olive green":
+                          "#69752b",
+
+                        "green":
+                          "#23834b",
+
+                        "teal green":
+                          "#008f78",
+
+                        "teal":
+                          "#008f83",
+
+                        "emerald":
+                          "#008f62",
+
+                        "peacock blue":
+                          "#087f9b",
+
+                        "blue":
+                          "#1687c5",
+
+                        "royal blue":
+                          "#3157a5",
+
+                        "navy blue":
+                          "#172c55",
+
+                        "sky blue":
+                          "#67b9dc",
+
+                        "purple":
+                          "#7551a5",
+
+                        "lavender":
+                          "#b8a5d6",
+
+                        "grey":
+                          "#8b8b8b",
+
+                        "gray":
+                          "#8b8b8b",
+
+                        "silver":
+                          "#b8b8b8",
+
+                        "gold":
+                          "#c7a23a",
+
+                        "golden":
+                          "#c7a23a"
+                      };
+
+                      return (
+                        swatches[colour] ||
+                        "#d8c3ad"
+                      );
+                    })(),
+
+                  width: "18px",
+                  height: "18px",
+                  minWidth: "18px",
+                  borderRadius: "50%",
+                  border:
+                    "1px solid rgba(0,0,0,0.12)",
+                  display: "inline-block",
+                  boxSizing: "border-box",
+                }}
+              />
               {
                 product.colour
               }
