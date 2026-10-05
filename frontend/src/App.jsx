@@ -13796,7 +13796,7 @@ function ContactPage() {
     role: "IT Team",
     image: "/Vivin.png",
     phone: "+91 96262 67696",
-    phoneLink: "tel:+919626267696",
+    phoneLink: "https://vivinthambidurai.com",
   },
   {
     name: "Chithran V",
