@@ -21868,3 +21868,42 @@ button svg {
     display: none !important;
   }
 }
+
+/* ============================================================
+   DESIGLOV — MOBILE NAV FULL MENU SCROLL FIX
+   Keep every menu item accessible without affecting shop grid
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+
+    max-height: calc(100dvh - 100px) !important;
+
+    padding-bottom: calc(
+      34px + env(safe-area-inset-bottom)
+    ) !important;
+
+    scrollbar-width: thin;
+  }
+
+  .mobile-nav > button,
+  .mobile-nav-jewellery {
+    flex: 0 0 auto;
+  }
+
+  .mobile-nav-jewellery > summary {
+    flex: 0 0 auto;
+  }
+}
+
+/* Tablets / larger mobile header */
+@media (min-width: 601px) and (max-width: 768px) {
+  .mobile-nav {
+    max-height: calc(100dvh - 110px) !important;
+  }
+}
