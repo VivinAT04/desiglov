@@ -21593,3 +21593,21 @@ button svg {
   appearance: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
+
+/* ============================================================
+   PRODUCT GALLERY — MOBILE IMAGE GAP FIX
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .main-product-image {
+    min-height: 0 !important;
+    height: auto !important;
+    background: transparent;
+  }
+
+  .main-product-image > img {
+    width: 100%;
+    height: auto !important;
+    display: block;
+  }
+}
