@@ -3308,11 +3308,20 @@ function ProductPage({
         </div>
 
         <div className="product-details">
-          <div className="eyebrow">
-            {
-              product.category
-            }
-          </div>
+          <button
+          type="button"
+          className="product-category-link"
+          onClick={() =>
+            navigate(
+              `/shop?category=${encodeURIComponent(
+                product.category
+              )}`
+            )
+          }
+          aria-label={`View all ${product.category}`}
+        >
+          {product.category}
+        </button>
 
           <h1>
             {product.name}

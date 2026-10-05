@@ -21621,3 +21621,40 @@ button svg {
     padding-top: 38px !important;
   }
 }
+
+/* ============================================================
+   PRODUCT DETAIL — CLICKABLE CATEGORY LABEL
+   ============================================================ */
+
+.product-category-link {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-category-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.product-category-link:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 5px;
+}
+
+@media (max-width: 768px) {
+  .product-category-link {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
