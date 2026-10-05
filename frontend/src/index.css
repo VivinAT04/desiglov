@@ -21613,17 +21613,11 @@ button svg {
 }
 
 /* ============================================================
-   DESIGLOV MOBILE FOOTER — CONSISTENT SECTION SPACING
-   Match divider → FOLLOW spacing with divider → SHOP / HELP
+   DESIGLOV MOBILE FOOTER — FOLLOW DIVIDER SPACING
    ============================================================ */
 
 @media (max-width: 768px) {
-  .footer-social {
+  .footer-column:last-child {
     padding-top: 38px !important;
-  }
-
-  .footer-social h4,
-  .footer-social-title {
-    margin-top: 0 !important;
   }
 }

@@ -2091,7 +2091,7 @@ function ShopPage({
     useState(false);
 
   const [sort, setSort] =
-    useState("featured");
+    useState("new");
 
   const [stockOnly, setStockOnly] =
     useState(false);
@@ -2271,10 +2271,6 @@ function ShopPage({
               )
             }
           >
-            <option value="featured">
-              Featured
-            </option>
-
             <option value="new">
               Newest
             </option>
