@@ -21907,3 +21907,46 @@ button svg {
     max-height: calc(100dvh - 110px) !important;
   }
 }
+
+/* ============================================================
+   DESIGLOV — MOBILE NAV CONTENT FLOW FIX
+   Expanded menu must not cover the first shop product row
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  /*
+    The mobile nav is rendered inside the header.
+    Put it into normal document flow instead of overlaying
+    the page with position: fixed.
+  */
+  .mobile-nav {
+    position: relative !important;
+
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+
+    width: 100% !important;
+
+    max-height: none !important;
+    height: auto !important;
+
+    overflow: visible !important;
+
+    flex: 0 0 100%;
+
+    padding:
+      6px
+      18px
+      calc(22px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /*
+    Allow the header to grow when the hamburger menu opens.
+    This pushes the page content down naturally.
+  */
+  .header {
+    height: auto !important;
+  }
+}
