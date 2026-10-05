@@ -21611,3 +21611,19 @@ button svg {
     display: block;
   }
 }
+
+/* ============================================================
+   DESIGLOV MOBILE FOOTER — CONSISTENT SECTION SPACING
+   Match divider → FOLLOW spacing with divider → SHOP / HELP
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .footer-social {
+    padding-top: 38px !important;
+  }
+
+  .footer-social h4,
+  .footer-social-title {
+    margin-top: 0 !important;
+  }
+}
