@@ -2641,6 +2641,71 @@ function ProductPage({
   const [activeImage, setActiveImage] =
     useState(0);
 
+  const [galleryTouchStart, setGalleryTouchStart] =
+    useState(null);
+
+  const productImageCount =
+    Array.isArray(product.images)
+      ? product.images.length
+      : 0;
+
+  function showPreviousProductImage() {
+    if (productImageCount <= 1) return;
+
+    setActiveImage((current) =>
+      current === 0
+        ? productImageCount - 1
+        : current - 1
+    );
+  }
+
+  function showNextProductImage() {
+    if (productImageCount <= 1) return;
+
+    setActiveImage((current) =>
+      current === productImageCount - 1
+        ? 0
+        : current + 1
+    );
+  }
+
+  function handleGalleryTouchStart(event) {
+    setGalleryTouchStart(
+      event.touches[0]?.clientX ?? null
+    );
+  }
+
+  function handleGalleryTouchEnd(event) {
+    if (
+      galleryTouchStart === null ||
+      productImageCount <= 1
+    ) {
+      setGalleryTouchStart(null);
+      return;
+    }
+
+    const touchEnd =
+      event.changedTouches[0]?.clientX;
+
+    if (typeof touchEnd !== "number") {
+      setGalleryTouchStart(null);
+      return;
+    }
+
+    const distance =
+      touchEnd - galleryTouchStart;
+
+    const swipeThreshold = 45;
+
+    if (distance <= -swipeThreshold) {
+      showNextProductImage();
+    } else if (distance >= swipeThreshold) {
+      showPreviousProductImage();
+    }
+
+    setGalleryTouchStart(null);
+  }
+
   const [deliveryPin, setDeliveryPin] =
     useState("");
 
@@ -2669,6 +2734,7 @@ function ProductPage({
   useEffect(() => {
     setSize("");
     setSizeError(false);
+    setActiveImage(0);
   }, [product.id]);
 
   // =========================================================
@@ -3197,7 +3263,11 @@ function ProductPage({
             )}
           </div>
 
-          <div className="main-product-image">
+          <div
+            className="main-product-image"
+            onTouchStart={handleGalleryTouchStart}
+            onTouchEnd={handleGalleryTouchEnd}
+          >
             <img
               src={
                 product.images[
@@ -3207,7 +3277,37 @@ function ProductPage({
               alt={
                 product.name
               }
+              draggable="false"
             />
+
+            {productImageCount > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="product-gallery-arrow product-gallery-arrow-left"
+                  onClick={showPreviousProductImage}
+                  aria-label="Previous product image"
+                >
+                  ‹
+                </button>
+
+                <button
+                  type="button"
+                  className="product-gallery-arrow product-gallery-arrow-right"
+                  onClick={showNextProductImage}
+                  aria-label="Next product image"
+                >
+                  ›
+                </button>
+
+                <div
+                  className="product-gallery-counter"
+                  aria-hidden="true"
+                >
+                  {activeImage + 1} / {productImageCount}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
