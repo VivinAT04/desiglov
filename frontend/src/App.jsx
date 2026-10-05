@@ -3297,6 +3297,30 @@ function ProductPage({
                 </button>
 
                 <div
+                  className="product-gallery-dots"
+                  aria-label="Product images"
+                >
+                  {product.images.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={
+                        index === activeImage
+                          ? "product-gallery-dot active"
+                          : "product-gallery-dot"
+                      }
+                      onClick={() => setActiveImage(index)}
+                      aria-label={`View product image ${index + 1}`}
+                      aria-current={
+                        index === activeImage
+                          ? "true"
+                          : undefined
+                      }
+                    />
+                  ))}
+                </div>
+
+                <div
                   className="product-gallery-counter"
                   aria-hidden="true"
                 >

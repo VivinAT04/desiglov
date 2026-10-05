@@ -21705,51 +21705,166 @@ button svg {
   outline-offset: 5px;
 }
 
-
 /* ============================================================
-   PRODUCT GALLERY — UNIFORM THUMBNAIL FRAMES
-   Images crop inside the thumbnail only.
-   Main product image is NOT affected.
+   DESIGLOV RESPONSIVE PRODUCT GALLERY
+   Desktop: thumbnails + image
+   Mobile: swipe + dots
    ============================================================ */
 
-.product-gallery .thumbnails button {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  height: auto;
-
-  overflow: hidden;
-  flex: 0 0 auto;
+/* Dots are a mobile-only navigation control. */
+.product-gallery-dots {
+  display: none;
 }
 
-.product-gallery .thumbnails button img,
-.product-gallery .thumbnails img {
-  display: block;
+/* ------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------ */
 
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-  object-position: center;
-}
-
-
-/* Mobile gallery thumbnails */
 @media (max-width: 768px) {
+
+  /*
+   * Mobile uses the large image itself as the gallery.
+   * Thumbnails are intentionally hidden.
+   */
   .product-gallery .thumbnails {
-    align-items: stretch;
+    display: none !important;
   }
 
-  .product-gallery .thumbnails button {
-    width: 160px;
-    min-width: 160px;
-    aspect-ratio: 4 / 5;
-    height: auto;
-  }
-
-  .product-gallery .thumbnails button img {
+  /*
+   * Keep the main image responsive.
+   * This prevents the old empty beige area below landscape
+   * product images.
+   */
+  .product-gallery .main-product-image {
+    position: relative;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden;
+    background: #f4efeb;
+    touch-action: pan-y;
+  }
+
+  .product-gallery .main-product-image > img {
+    display: block;
+    width: 100%;
+    height: auto !important;
+    object-fit: contain;
     object-position: center;
+  }
+
+  /*
+   * Amazon-style interaction pattern, but using DesiGlov's
+   * understated visual language.
+   */
+  .product-gallery-dots {
+    position: absolute;
+    z-index: 6;
+
+    left: 50%;
+    bottom: 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    transform: translateX(-50%);
+  }
+
+  .product-gallery-dot {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 7px;
+    height: 7px;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.72);
+
+    box-shadow:
+      0 0 0 1px rgba(31, 28, 26, 0.12);
+
+    cursor: pointer;
+
+    transition:
+      width 160ms ease,
+      height 160ms ease,
+      background 160ms ease,
+      transform 160ms ease;
+
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .product-gallery-dot.active {
+    width: 9px;
+    height: 9px;
+
+    background: #1f1c1a;
+
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.75);
+  }
+
+  .product-gallery-dot:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+
+  /*
+   * Keep the counter in the lower-right corner.
+   * Raise it slightly so it aligns comfortably with the dots.
+   */
+  .product-gallery-counter {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  /*
+   * Swipe is the primary mobile interaction.
+   * Keep arrows subtle rather than removing accessibility
+   * for users who prefer tapping.
+   */
+  .product-gallery-arrow {
+    width: 36px;
+    height: 36px;
+
+    opacity: 0.62;
+
+    font-size: 25px;
+
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .product-gallery-arrow-left {
+    left: 10px;
+  }
+
+  .product-gallery-arrow-right {
+    right: 10px;
+  }
+}
+
+/* ------------------------------------------------------------
+   DESKTOP / TABLET LANDSCAPE
+   ------------------------------------------------------------ */
+
+@media (min-width: 769px) {
+
+  /*
+   * Preserve the original DesiGlov desktop gallery:
+   * thumbnail rail + selected main image.
+   */
+  .product-gallery .thumbnails {
+    display: flex;
+  }
+
+  .product-gallery-dots {
+    display: none !important;
   }
 }
