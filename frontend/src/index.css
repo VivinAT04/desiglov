@@ -22010,3 +22010,58 @@ button svg {
     margin-right: -8px !important;
   }
 }
+
+/* ============================================================
+   DESIGLOV — GLOBAL SOLD OUT PRODUCT CARD STYLE
+   Applies to every product using .out-stock-badge
+   ============================================================ */
+
+.product-card .out-stock-badge,
+.product-image .out-stock-badge {
+  background: rgba(255, 255, 255, 0.94) !important;
+
+  color: #b42318 !important;
+  -webkit-text-fill-color: #b42318 !important;
+
+  border: 0 !important;
+  box-shadow: none !important;
+
+  opacity: 1 !important;
+
+  font-family: var(--sans);
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+
+  letter-spacing: 0.24em !important;
+  text-transform: uppercase !important;
+
+  padding: 13px 18px !important;
+
+  width: auto !important;
+  height: auto !important;
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  z-index: 4 !important;
+}
+
+/*
+  Never fade/desaturate the product image merely because
+  the product is sold out.
+*/
+.product-card .product-image img,
+.product-card .product-image-button img {
+  filter: none !important;
+}
+
+/* Mobile refinement */
+@media (max-width: 768px) {
+  .product-card .out-stock-badge,
+  .product-image .out-stock-badge {
+    font-size: 9px !important;
+    letter-spacing: 0.22em !important;
+    padding: 11px 14px !important;
+  }
+}
