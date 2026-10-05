@@ -22065,3 +22065,26 @@ button svg {
     padding: 11px 14px !important;
   }
 }
+
+/* ============================================================
+   DESIGLOV — FOOTER BODY TEXT CONTRAST
+   Copper section headings remain unchanged.
+   ============================================================ */
+
+.site-footer .footer-tagline,
+.site-footer .footer-column a,
+.site-footer .footer-column button,
+.site-footer .footer-column p {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Preserve SHOP / HELP / FOLLOW copper headings */
+.site-footer .footer-column h3,
+.site-footer .footer-column h4,
+.site-footer .footer-title,
+.site-footer .footer-heading {
+  color: var(--gold) !important;
+  -webkit-text-fill-color: var(--gold) !important;
+}
