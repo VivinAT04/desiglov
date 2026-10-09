@@ -2396,9 +2396,15 @@ router.get(
           LEFT JOIN addresses a
             ON a.id =
               o.address_id
-          WHERE
-            o.user_id = $1
-          ORDER BY
+          WHERE o.user_id = $1
+AND (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND o.payment_status = 'PAID'
+  )
+)
+ORDER BY
             o.created_at DESC
           `,
           [

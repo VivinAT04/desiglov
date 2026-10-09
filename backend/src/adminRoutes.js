@@ -1545,11 +1545,16 @@ router.get(
 
           pool.query(`
             SELECT
-              COUNT(*)::int
-                AS count
-
-            FROM orders
-          `),
+              COUNT(*)::int AS count
+FROM orders o
+WHERE (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND o.payment_status = 'PAID'
+  )
+)
+`),
 
 
           pool.query(`
@@ -1560,10 +1565,15 @@ router.get(
               )::int
                 AS total
 
-            FROM orders
-
-            WHERE
-              status != 'CANCELLED'
+            FROM orders o
+WHERE o.status != 'CANCELLED'
+AND (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND o.payment_status = 'PAID'
+  )
+)
           `),
 
 
@@ -1583,9 +1593,15 @@ router.get(
               COUNT(*)::int
                 AS count
 
-            FROM orders
-
-            WHERE status IN (
+            FROM orders o
+WHERE (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND o.payment_status = 'PAID'
+  )
+)
+AND o.status IN (
               'PLACED',
               'CONFIRMED',
               'PACKED'
@@ -1612,10 +1628,18 @@ router.get(
           FROM orders o
 
           JOIN users u
-            ON u.id =
-              o.user_id
-
-          ORDER BY
+ON u.id = o.user_id
+WHERE (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND (
+      o.payment_status = 'PAID'
+      OR o.status = 'PAYMENT_REVIEW'
+    )
+  )
+)
+ORDER BY
             o.created_at DESC
 
           LIMIT 5
@@ -1742,10 +1766,18 @@ router.get(
               o.user_id
 
           LEFT JOIN addresses a
-            ON a.id =
-              o.address_id
-
-          ORDER BY
+ON a.id = o.address_id
+WHERE (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND (
+      o.payment_status = 'PAID'
+      OR o.status = 'PAYMENT_REVIEW'
+    )
+  )
+)
+ORDER BY
             o.created_at DESC
           `
         );
@@ -2145,8 +2177,14 @@ router.get(
           FROM users u
 
           LEFT JOIN orders o
-            ON o.user_id =
-              u.id
+ON o.user_id = u.id
+AND (
+  o.payment_method = 'COD'
+  OR (
+    o.payment_method = 'RAZORPAY'
+    AND o.payment_status = 'PAID'
+  )
+)
 
           GROUP BY
             u.id,
