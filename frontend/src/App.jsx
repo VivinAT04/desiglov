@@ -360,6 +360,9 @@ function App() {
       FALLBACK_PRODUCTS
     );
 
+  const [stockChecking, setStockChecking] = useState(false);
+  const [stockCheckError, setStockCheckError] = useState(false);
+
   const [catalogueLoading, setCatalogueLoading] =
     useState(true);
 
@@ -760,6 +763,66 @@ function App() {
   }
 
 
+  async function refreshBagStock() {
+    setStockChecking(true);
+    setStockCheckError(false);
+
+    try {
+      const result = await productApi.list();
+
+      if (!Array.isArray(result.products)) {
+        throw new Error("Invalid catalogue response");
+      }
+
+      setProducts(result.products.map((product) => ({
+        ...product,
+        sizes: Array.isArray(product.sizes)
+          ? product.sizes
+          : [],
+        images: Array.isArray(product.images)
+          ? product.images
+          : [],
+      })));
+
+      return result.products;
+    } catch (error) {
+      console.error("Bag inventory refresh failed:", error);
+      setStockCheckError(true);
+      return null;
+    } finally {
+      setStockChecking(false);
+    }
+  }
+
+  useEffect(() => {
+    if (cartOpen && cart.length > 0) {
+      refreshBagStock();
+    }
+  }, [cartOpen]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (
+        document.visibilityState === "visible" &&
+        cart.length > 0
+      ) {
+        refreshBagStock();
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, [cart.length]);
+
   function changeQty(
     key,
     amount
@@ -972,6 +1035,9 @@ function App() {
     page = (
       <CartPage
         items={cartItems}
+        stockChecking={stockChecking}
+        stockCheckError={stockCheckError}
+        refreshBagStock={refreshBagStock}
         country={country}
         totalINR={
           cartTotalINR
@@ -991,6 +1057,9 @@ function App() {
   ) {
     page = (
       <CheckoutPage
+        stockChecking={stockChecking}
+        stockCheckError={stockCheckError}
+        refreshBagStock={refreshBagStock}
         country={country}
         items={cartItems}
         totalINR={
@@ -1171,6 +1240,9 @@ function App() {
       />
 
       <CartDrawer
+        refreshBagStock={refreshBagStock}
+        stockChecking={stockChecking}
+        stockCheckError={stockCheckError}
         open={cartOpen}
         setOpen={
           setCartOpen
@@ -4562,8 +4634,47 @@ function WishlistPage({
   );
 }
 
+
+function getBagStockIssues(items) {
+  return items
+    .map((item) => {
+      const available = Math.max(
+        0,
+        Number(
+          item.product?.sizeAvailable?.[
+            String(item.size || "").trim().toUpperCase()
+          ] ?? 0
+        ) || 0
+      );
+
+      const quantity = Number(item.quantity) || 0;
+
+      if (available <= 0) {
+        return {
+          key: item.key,
+          message: "SOLD OUT",
+          available: 0,
+        };
+      }
+
+      if (quantity > available) {
+        return {
+          key: item.key,
+          message: `Only ${available} available`,
+          available,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function CartPage({
   items,
+  stockChecking,
+  stockCheckError,
+  refreshBagStock,
   country,
   totalINR,
   changeQty,
@@ -4584,6 +4695,15 @@ function CartPage({
       />
 
       <section className="cart-page">
+        {stockChecking && (
+          <p role="status">Checking current stock...</p>
+        )}
+        {stockCheckError && (
+          <p role="alert">
+            Stock information could not be refreshed.
+            Please try again before checkout.
+          </p>
+        )}
         {items.length ===
         0 ? (
           <EmptyState
@@ -4623,11 +4743,39 @@ function CartPage({
               country={
                 country
               }
-              onCheckout={() =>
-                navigate(
-                  "/checkout"
-                )
-              }
+              onCheckout={async () => {
+                const latest = await refreshBagStock();
+
+                if (!latest) {
+                  window.alert(
+                    "Unable to check current stock. Please try again."
+                  );
+                  return;
+                }
+
+                const latestById = new Map(
+                  latest.map((product) => [
+                    String(product.id),
+                    product,
+                  ])
+                );
+
+                const freshItems = items.map((item) => ({
+                  ...item,
+                  product: latestById.get(String(item.id)),
+                }));
+
+                const issues = getBagStockIssues(freshItems);
+
+                if (issues.length > 0) {
+                  window.alert(
+                    "Some items in your bag are sold out or exceed available stock. Please update your bag before checkout."
+                  );
+                  return;
+                }
+
+                navigate("/checkout");
+              }}
             />
           </>
         )}
@@ -4703,7 +4851,24 @@ function CartLine({
           </span>
         </strong>
 
-        <div className="quantity">
+
+        {(() => {
+          const issue = getBagStockIssues([item])[0];
+
+          return issue ? (
+            <p
+              role="alert"
+              style={{
+                color: "#b42318",
+                fontWeight: 700,
+                marginTop: "8px",
+              }}
+            >
+              {issue.message}
+            </p>
+          ) : null;
+        })()}
+<div className="quantity">
           <button
             type="button"
             className="cart-quantity-button"
@@ -4900,6 +5065,9 @@ function loadRazorpayScript() {
 
 
 function CheckoutPage({
+  refreshBagStock,
+  stockChecking,
+  stockCheckError,
   country,
   items,
   totalINR,
@@ -4959,6 +5127,92 @@ function CheckoutPage({
       postalCode: "",
       country: "India",
     });
+
+
+
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkInitialStock() {
+      const latest = await refreshBagStock();
+
+      if (!active || !latest) return;
+
+      const byId = new Map(
+        latest.map((product) => [
+          String(product.id),
+          product,
+        ])
+      );
+
+      const refreshedItems = items.map((item) => ({
+        ...item,
+        product: byId.get(String(item.id)),
+      }));
+
+      if (getBagStockIssues(refreshedItems).length > 0) {
+        window.alert(
+          "Your shopping bag contains unavailable items. Please update your bag."
+        );
+        navigate("/cart");
+      }
+    }
+
+    checkInitialStock();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+
+  async function verifiedOrderCreate(orderData) {
+    const stockValid = await verifyCheckoutStock();
+
+    if (!stockValid) {
+      throw new Error(
+        "Some items are unavailable or current stock could not be verified. Please update your shopping bag before ordering."
+      );
+    }
+
+    return orderApi.create(orderData);
+  }
+
+  async function verifyCheckoutStock() {
+    const latest = await refreshBagStock();
+
+    if (!latest) {
+      window.alert(
+        "Unable to verify current stock. Please try again."
+      );
+      return false;
+    }
+
+    const latestById = new Map(
+      latest.map((product) => [
+        String(product.id),
+        product,
+      ])
+    );
+
+    const currentItems = items.map((item) => ({
+      ...item,
+      product: latestById.get(String(item.id)),
+    }));
+
+    const issues = getBagStockIssues(currentItems);
+
+    if (issues.length > 0) {
+      window.alert(
+        "Some products are sold out or have insufficient stock. Please update your shopping bag."
+      );
+      navigate("/cart");
+      return false;
+    }
+
+    return true;
+  }
 
 
   useEffect(() => {
@@ -5255,6 +5509,8 @@ function CheckoutPage({
 
 
   async function placeOrder() {
+    if (placing || stockChecking) return;
+
     if (!selectedAddress) {
       setError(
         "Please select or add a delivery address."
@@ -5289,7 +5545,7 @@ function CheckoutPage({
     if (paymentMethod === "COD") {
       try {
         const result =
-          await orderApi.create({
+          await verifiedOrderCreate({
             addressId:
               selectedAddress,
 
@@ -5341,7 +5597,7 @@ function CheckoutPage({
       }
 
       const result =
-        await orderApi.create({
+        await verifiedOrderCreate({
           addressId:
             selectedAddress,
 
@@ -5483,6 +5739,19 @@ function CheckoutPage({
   if (loading) {
     return (
       <>
+      {stockChecking && (
+        <p role="status">
+          Checking current product availability...
+        </p>
+      )}
+
+      {stockCheckError && (
+        <p role="alert">
+          Current stock could not be verified.
+          Please retry before placing your order.
+        </p>
+      )}
+
         <PageHero
           eyebrow="SECURE CHECKOUT"
           title="Complete your order."
@@ -14838,6 +15107,9 @@ function SearchPanel({
 }
 
 function CartDrawer({
+  refreshBagStock,
+  stockChecking,
+  stockCheckError,
   open,
   setOpen,
   items,
@@ -14883,6 +15155,26 @@ function CartDrawer({
             ×
           </button>
         </div>
+
+        {stockChecking && (
+          <p role="status" style={{ padding: "12px 20px" }}>
+            Checking current stock...
+          </p>
+        )}
+
+        {stockCheckError && (
+          <p
+            role="alert"
+            style={{
+              padding: "12px 20px",
+              color: "#b42318",
+              fontWeight: 600,
+            }}
+          >
+            Stock information could not be refreshed.
+            Please try again.
+          </p>
+        )}
 
         <div className="drawer-items">
           {items.length >
@@ -14934,12 +15226,42 @@ function CartDrawer({
 
             <button
               className="add-bag"
-              onClick={() => {
-                setOpen(false);
+              disabled={stockChecking}
+              onClick={async () => {
+                if (stockChecking) return;
 
-                navigate(
-                  "/checkout"
+                const latest = await refreshBagStock();
+
+                if (!latest) {
+                  window.alert(
+                    "Unable to verify current stock. Please try again."
+                  );
+                  return;
+                }
+
+                const latestById = new Map(
+                  latest.map((product) => [
+                    String(product.id),
+                    product,
+                  ])
                 );
+
+                const refreshedItems = items.map((item) => ({
+                  ...item,
+                  product: latestById.get(String(item.id)),
+                }));
+
+                const issues = getBagStockIssues(refreshedItems);
+
+                if (issues.length > 0) {
+                  window.alert(
+                    "Some products are sold out or exceed available stock. Please update your shopping bag."
+                  );
+                  return;
+                }
+
+                setOpen(false);
+                navigate("/checkout");
               }}
             >
               CHECKOUT

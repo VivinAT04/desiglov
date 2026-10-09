@@ -222,8 +222,7 @@ router.get(
                 SELECT jsonb_object_agg(
                   pss.size,
                   GREATEST(
-                    pss.stock -
-                    pss.reserved_stock,
+                    pss.stock,
                     0
                   )
                 )
@@ -296,8 +295,7 @@ router.get(
                 SELECT jsonb_object_agg(
                   pss.size,
                   GREATEST(
-                    pss.stock -
-                    pss.reserved_stock,
+                    pss.stock,
                     0
                   )
                 )
