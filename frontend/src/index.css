@@ -22126,3 +22126,16 @@ button svg {
     object-position: center;
   }
 }
+
+
+/* DESIGLOV AUTOMATIC SALE BADGE */
+.desiglov-sale-badge {
+  background: #c62828 !important;
+  color: #ffffff !important;
+  border-color: #c62828 !important;
+}
+
+.desiglov-sale-badge,
+.desiglov-sale-badge * {
+  color: #ffffff !important;
+}

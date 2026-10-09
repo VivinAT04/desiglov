@@ -2551,6 +2551,66 @@ function ShopPage({
   );
 }
 
+
+
+function isProductSaleBadgeActive(product) {
+  if (!product) return false;
+
+  const originalPrice = Number(
+    product.originalPriceINR ??
+    product.compareAtPriceINR ??
+    product.priceINR ??
+    0
+  );
+
+  const salePrice = Number(
+    product.salePriceINR ??
+    product.discountedPriceINR ??
+    product.priceINR ??
+    0
+  );
+
+  const hasDiscount =
+    Number.isFinite(originalPrice) &&
+    Number.isFinite(salePrice) &&
+    originalPrice > salePrice;
+
+  const saleEnd =
+    product.saleEndsAt ??
+    product.saleEnd ??
+    null;
+
+  const saleStart =
+    product.saleStartsAt ??
+    product.saleStart ??
+    null;
+
+  if (!hasDiscount || !saleEnd) {
+    return false;
+  }
+
+  const now = Date.now();
+
+  const endTime = new Date(saleEnd).getTime();
+
+  if (!Number.isFinite(endTime) || now >= endTime) {
+    return false;
+  }
+
+  if (saleStart) {
+    const startTime = new Date(saleStart).getTime();
+
+    if (
+      !Number.isFinite(startTime) ||
+      now < startTime
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function ProductCard({
   product,
   country,
@@ -2603,10 +2663,10 @@ function ProductCard({
         </button>
 
         {Number(product.stock) <= 0 ? (
-          <span className="badge out-stock-badge">
+          <span className={`badge out-stock-badge${isProductSaleBadgeActive(product) ? " desiglov-sale-badge" : ""}`}>
             SOLD OUT
           </span>
-        ) : product.badge ? (
+        ) : (isProductSaleBadgeActive(product) ? "SALE" : product.badge) ? (
           <span className="badge">
             {
               product.badge
