@@ -22091,3 +22091,38 @@ button svg {
   color: #c99170 !important;
   -webkit-text-fill-color: #c99170 !important;
 }
+
+
+/* ============================================================
+   DESIGLOV PRODUCT GALLERY HEIGHT FIX
+   Keep images independent of product details accordion height
+   ============================================================ */
+
+@media (min-width: 769px) {
+  .product-page {
+    align-items: start;
+  }
+
+  .product-page > .product-gallery {
+    align-self: start;
+    height: auto;
+    min-height: 0;
+  }
+
+  .product-page .main-product-image {
+    align-self: start;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+  }
+
+  .product-page .main-product-image > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+}
