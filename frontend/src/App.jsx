@@ -3745,18 +3745,15 @@ function ProductPage({
                 handleAdd
               }
               disabled={
-                !size ||
-                selectedSizeAvailable <=
-                0
+                !productHasStock ||
+                (Boolean(size) && selectedSizeAvailable <= 0)
               }
             >
               {
                 !productHasStock
                   ? "SOLD OUT"
-
-                  : selectedSizeAvailable <= 0
+                  : size && selectedSizeAvailable <= 0
                     ? "SIZE SOLD OUT"
-
                     : "ADD TO BAG"
               }
             </button>
