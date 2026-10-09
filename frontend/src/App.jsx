@@ -10925,6 +10925,33 @@ function AdminPage({
   }
 
 
+  async function deleteAdminOrder(order) {
+    if (
+      !window.confirm(
+        `Delete order ${order.orderNumber}?\n\n` +
+        "This removes the order from normal views. " +
+        "Payment records remain stored."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setError("");
+      setMessage("");
+
+      await adminApi.deleteOrder(order.id);
+
+      const result = await adminApi.orders();
+      setOrders(result.orders);
+
+      setMessage("Order deleted successfully.");
+    } catch (err) {
+      setError(err.message || "Delete failed.");
+      window.alert(err.message || "Delete failed.");
+    }
+  }
+
   async function updateStatus(
     orderId,
     status,
@@ -12302,6 +12329,27 @@ function AdminPage({
                             order={order}
                             onSave={updateStatus}
                           />
+                            {order.status === "CANCELLED" &&
+                              order.paymentMethod === "COD" &&
+                              order.paymentStatus === "PENDING" && (
+                                <button
+                                  type="button"
+                                  onClick={() => deleteAdminOrder(order)}
+                                  style={{
+                                    marginTop: "16px",
+                                    padding: "12px 20px",
+                                    border: "1px solid #b42318",
+                                    borderRadius: "4px",
+                                    background: "#fff",
+                                    color: "#b42318",
+                                    fontWeight: 700,
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  DELETE ORDER
+                                </button>
+                              )}
+
 
                       </label>
 

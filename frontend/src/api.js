@@ -394,6 +394,13 @@ export const adminApi = {
     );
   },
 
+  deleteOrder(id) {
+    return request(
+      `/admin/orders/${id}`,
+      { method: "DELETE" }
+    );
+  },
+
   updateOrderStatus(
     id,
     status,

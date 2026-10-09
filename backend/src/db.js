@@ -984,6 +984,17 @@ export async function initialiseDatabase() {
 
 
   // =========================================================
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS deleted_by UUID;
+  `);
+
   // DISCOUNT CODES
   // =========================================================
 

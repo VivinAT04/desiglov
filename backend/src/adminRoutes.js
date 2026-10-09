@@ -1547,8 +1547,8 @@ router.get(
             SELECT
               COUNT(*)::int AS count
 FROM orders o
-WHERE (
-  o.payment_method = 'COD'
+WHERE o.deleted_at IS NULL AND (
+o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
     AND o.payment_status = 'PAID'
@@ -1594,8 +1594,8 @@ AND (
                 AS count
 
             FROM orders o
-WHERE (
-  o.payment_method = 'COD'
+WHERE o.deleted_at IS NULL AND (
+o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
     AND o.payment_status = 'PAID'
@@ -1629,8 +1629,8 @@ AND o.status IN (
 
           JOIN users u
 ON u.id = o.user_id
-WHERE (
-  o.payment_method = 'COD'
+WHERE o.deleted_at IS NULL AND (
+o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
     AND (
@@ -1767,8 +1767,8 @@ router.get(
 
           LEFT JOIN addresses a
 ON a.id = o.address_id
-WHERE (
-  o.payment_method = 'COD'
+WHERE o.deleted_at IS NULL AND (
+o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
     AND (
@@ -1912,6 +1912,112 @@ ORDER BY
   }
 );
 
+
+
+router.delete("/orders/:id", async (req, res, next) => {
+  const id = String(req.params.id || "");
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return res.status(400).json({
+      error: "Invalid order ID."
+    });
+  }
+
+  let client;
+
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `
+        SELECT
+          id,
+          order_number,
+          status,
+          payment_method,
+          payment_status,
+          stock_reserved,
+          razorpay_order_id,
+          razorpay_payment_id,
+          deleted_at
+        FROM orders
+        WHERE id = $1
+        FOR UPDATE
+      `,
+      [id]
+    );
+
+    if (!result.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        error: "Order not found."
+      });
+    }
+
+    const order = result.rows[0];
+
+    if (order.deleted_at) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: "Order already deleted."
+      });
+    }
+
+    if (
+      order.payment_method !== "COD" ||
+      order.status !== "CANCELLED" ||
+      order.payment_status !== "PENDING" ||
+      order.stock_reserved ||
+      order.razorpay_order_id ||
+      order.razorpay_payment_id
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: "Only cancelled, unpaid COD orders can be deleted."
+      });
+    }
+
+    await client.query(
+      `
+        UPDATE orders
+        SET deleted_at = NOW(),
+            deleted_by = $2,
+            updated_at = NOW()
+        WHERE id = $1
+          AND deleted_at IS NULL
+      `,
+      [id, req.admin?.id || req.userId || null]
+    );
+
+    await client.query("COMMIT");
+
+    await writeAdminAudit({
+      adminUserId: req.admin?.id || req.userId || null,
+      action: "ORDER_SOFT_DELETED",
+      entityType: "ORDER",
+      entityId: id,
+      details: {
+        orderNumber: order.order_number
+      }
+    });
+
+    return res.json({
+      success: true,
+      orderId: id
+    });
+
+  } catch (error) {
+    if (client) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {}
+    }
+    next(error);
+  } finally {
+    if (client) client.release();
+  }
+});
 
 const statusSchema =
   z.object({

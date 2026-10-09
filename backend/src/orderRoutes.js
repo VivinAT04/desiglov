@@ -2397,6 +2397,7 @@ router.get(
             ON a.id =
               o.address_id
           WHERE o.user_id = $1
+AND o.deleted_at IS NULL
 AND (
   o.payment_method = 'COD'
   OR (
