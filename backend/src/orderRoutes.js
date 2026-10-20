@@ -112,7 +112,7 @@ function calculateShipping(
     normalised === "tamilnadu" ||
     normalised === "tn"
   ) {
-    return 70;
+    return 78;
   }
 
   return 99;

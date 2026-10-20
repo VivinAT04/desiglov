@@ -5990,7 +5990,7 @@ function CheckoutPage({
       : discountedSubtotal >= 2999
         ? 0
         : isTamilNadu
-          ? 70
+          ? 78
           : 99;
 
   const codFee =
