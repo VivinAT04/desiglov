@@ -2557,6 +2557,7 @@ function isProductSaleBadgeActive(product) {
   if (!product) return false;
 
   const originalPrice = Number(
+    product.oldPriceINR ??
     product.originalPriceINR ??
     product.compareAtPriceINR ??
     product.priceINR ??
