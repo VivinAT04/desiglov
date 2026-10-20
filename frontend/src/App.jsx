@@ -2663,14 +2663,14 @@ function ProductCard({
         </button>
 
         {Number(product.stock) <= 0 ? (
-          <span className={`badge out-stock-badge${isProductSaleBadgeActive(product) ? " desiglov-sale-badge" : ""}`}>
+          <span className="badge out-stock-badge">
             SOLD OUT
           </span>
-        ) : (isProductSaleBadgeActive(product) ? "SALE" : product.badge) ? (
-          <span className="badge">
-            {
-              product.badge
-            }
+        ) : (isProductSaleBadgeActive(product) || product.badge) ? (
+          <span
+            className={`badge${isProductSaleBadgeActive(product) ? " desiglov-sale-badge" : ""}`}
+          >
+            {isProductSaleBadgeActive(product) ? "SALE" : product.badge}
           </span>
         ) : null}
 
