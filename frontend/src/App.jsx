@@ -12329,9 +12329,17 @@ function AdminPage({
                             order={order}
                             onSave={updateStatus}
                           />
-                            {order.status === "CANCELLED" &&
-                              order.paymentMethod === "COD" &&
-                              order.paymentStatus === "PENDING" && (
+                            {(
+                              (
+                                order.status === "CANCELLED" &&
+                                order.paymentMethod === "COD" &&
+                                order.paymentStatus === "PENDING"
+                              ) ||
+                              (
+                                order.paymentMethod === "RAZORPAY" &&
+                                order.paymentStatus === "EXPIRED"
+                              )
+                            ) && (
                                 <button
                                   type="button"
                                   onClick={() => deleteAdminOrder(order)}

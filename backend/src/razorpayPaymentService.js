@@ -333,7 +333,8 @@ export async function finaliseRazorpayPayment({
           razorpay_order_id,
           razorpay_payment_id,
           stock_reserved,
-          reservation_expires_at
+          reservation_expires_at,
+          deleted_at
         FROM orders
         WHERE
           id = $1
@@ -359,6 +360,97 @@ export async function finaliseRazorpayPayment({
 
     const order =
       orderResult.rows[0];
+
+    // -------------------------------------------------------
+    // DELETED ORDER PAYMENT SAFETY
+    //
+    // A deleted order must never be automatically restored
+    // or fulfilled if a delayed Razorpay payment arrives.
+    //
+    // Preserve the order and payment records for manual
+    // investigation and refund handling.
+    // -------------------------------------------------------
+
+
+
+    if (order.deleted_at) {
+      // A captured payment arrived after deletion.
+      // Do not restore the order or consume inventory.
+
+      if (
+        order.payment_method !== "RAZORPAY" ||
+        payment.order_id !== order.razorpay_order_id ||
+        Number(payment.amount) !== Number(order.total_inr) * 100 ||
+        payment.currency !== "INR"
+      ) {
+        const error = new Error(
+          "Deleted-order payment verification failed."
+        );
+
+        error.statusCode = 409;
+        throw error;
+      }
+
+      if (
+        order.razorpay_payment_id &&
+        order.razorpay_payment_id !== payment.id
+      ) {
+        const error = new Error(
+          "Deleted order already references a different payment."
+        );
+
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const reviewResult = await client.query(
+        `
+          UPDATE orders
+          SET
+            status = 'PAYMENT_REVIEW',
+            payment_status = 'PAYMENT_REVIEW',
+            razorpay_payment_id = $2,
+            stock_reserved = FALSE,
+            reservation_expires_at = NULL,
+            updated_at = NOW()
+          WHERE id = $1
+            AND deleted_at IS NOT NULL
+            AND payment_method = 'RAZORPAY'
+            AND razorpay_order_id = $3
+            AND (
+              razorpay_payment_id IS NULL
+              OR razorpay_payment_id = $2
+            )
+          RETURNING id
+        `,
+        [
+          order.id,
+          payment.id,
+          payment.order_id
+        ]
+      );
+
+      if (reviewResult.rowCount !== 1) {
+        throw new Error(
+          "Could not record deleted-order payment for manual review."
+        );
+      }
+
+      await client.query("COMMIT");
+      transactionOpen = false;
+
+      const error = new Error(
+        "Captured payment for deleted order requires manual review or refund."
+      );
+
+      error.statusCode = 409;
+      error.paymentNeedsReview = true;
+      error.orderId = order.id;
+      error.orderNumber = order.order_number;
+      error.razorpayPaymentId = payment.id;
+
+      throw error;
+    }
 
     if (
       order.payment_method !==
@@ -888,6 +980,7 @@ export async function finaliseRazorpayPayment({
             'PENDING'
           AND razorpay_order_id =
             $4
+            AND deleted_at IS NULL
         RETURNING
           id
         `,

@@ -1,3 +1,4 @@
+import Razorpay from "razorpay";
 import express from "express";
 import multer from "multer";
 import crypto from "crypto";
@@ -1547,11 +1548,20 @@ router.get(
             SELECT
               COUNT(*)::int AS count
 FROM orders o
-WHERE o.deleted_at IS NULL AND (
+WHERE (
+          o.deleted_at IS NULL
+          OR (
+            o.deleted_at IS NOT NULL
+            AND o.status = 'PAYMENT_REVIEW'
+          )
+        ) AND (
 o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
-    AND o.payment_status = 'PAID'
+    AND (
+      o.payment_status = 'PAID'
+      OR o.status = 'PAYMENT_REVIEW'
+    )
   )
 )
 `),
@@ -1571,7 +1581,10 @@ AND (
   o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
-    AND o.payment_status = 'PAID'
+    AND (
+      o.payment_status = 'PAID'
+      OR o.status = 'PAYMENT_REVIEW'
+    )
   )
 )
           `),
@@ -1594,11 +1607,20 @@ AND (
                 AS count
 
             FROM orders o
-WHERE o.deleted_at IS NULL AND (
+WHERE (
+          o.deleted_at IS NULL
+          OR (
+            o.deleted_at IS NOT NULL
+            AND o.status = 'PAYMENT_REVIEW'
+          )
+        ) AND (
 o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
-    AND o.payment_status = 'PAID'
+    AND (
+      o.payment_status = 'PAID'
+      OR o.status = 'PAYMENT_REVIEW'
+    )
   )
 )
 AND o.status IN (
@@ -1629,7 +1651,13 @@ AND o.status IN (
 
           JOIN users u
 ON u.id = o.user_id
-WHERE o.deleted_at IS NULL AND (
+WHERE (
+          o.deleted_at IS NULL
+          OR (
+            o.deleted_at IS NOT NULL
+            AND o.status = 'PAYMENT_REVIEW'
+          )
+        ) AND (
 o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
@@ -1767,7 +1795,13 @@ router.get(
 
           LEFT JOIN addresses a
 ON a.id = o.address_id
-WHERE o.deleted_at IS NULL AND (
+WHERE (
+          o.deleted_at IS NULL
+          OR (
+            o.deleted_at IS NOT NULL
+            AND o.status = 'PAYMENT_REVIEW'
+          )
+        ) AND (
 o.payment_method = 'COD'
   OR (
     o.payment_method = 'RAZORPAY'
@@ -1914,20 +1948,26 @@ ORDER BY
 
 
 
+
 router.delete("/orders/:id", async (req, res, next) => {
   const id = String(req.params.id || "");
 
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  ) {
     return res.status(400).json({
       error: "Invalid order ID."
     });
   }
 
   let client;
+  let transactionOpen = false;
 
   try {
     client = await pool.connect();
+
     await client.query("BEGIN");
+    transactionOpen = true;
 
     const result = await client.query(
       `
@@ -1950,6 +1990,8 @@ router.delete("/orders/:id", async (req, res, next) => {
 
     if (!result.rowCount) {
       await client.query("ROLLBACK");
+      transactionOpen = false;
+
       return res.status(404).json({
         error: "Order not found."
       });
@@ -1959,63 +2001,205 @@ router.delete("/orders/:id", async (req, res, next) => {
 
     if (order.deleted_at) {
       await client.query("ROLLBACK");
+      transactionOpen = false;
+
       return res.status(409).json({
         error: "Order already deleted."
       });
     }
 
-    if (
-      order.payment_method !== "COD" ||
-      order.status !== "CANCELLED" ||
-      order.payment_status !== "PENDING" ||
-      order.stock_reserved ||
-      order.razorpay_order_id ||
-      order.razorpay_payment_id
-    ) {
+    if (order.stock_reserved) {
       await client.query("ROLLBACK");
+      transactionOpen = false;
+
       return res.status(409).json({
-        error: "Only cancelled, unpaid COD orders can be deleted."
+        error: "Reserved stock must be released first."
       });
+    }
+
+    let allowed = false;
+
+    if (
+      order.payment_method === "COD" &&
+      order.status === "CANCELLED" &&
+      order.payment_status === "PENDING" &&
+      !order.razorpay_order_id &&
+      !order.razorpay_payment_id
+    ) {
+      allowed = true;
+    }
+
+    if (
+      order.payment_method === "RAZORPAY" &&
+      order.payment_status === "EXPIRED" &&
+      !order.razorpay_payment_id &&
+      order.razorpay_order_id
+    ) {
+      const keyId = process.env.RAZORPAY_KEY_ID;
+      const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+      if (!keyId || !keySecret) {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+
+        return res.status(503).json({
+          error: "Razorpay verification unavailable."
+        });
+      }
+
+      const razorpay = new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret
+      });
+
+      let response;
+
+      try {
+        response = await razorpay.orders.fetchPayments(
+          order.razorpay_order_id
+        );
+      } catch {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+
+        return res.status(503).json({
+          error: "Could not verify Razorpay payment."
+        });
+      }
+
+      const payments = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.items)
+          ? response.items
+          : null;
+
+      const reportedCount = Number(response?.count);
+
+      const incompletePaymentList =
+        !Array.isArray(response) &&
+        (
+          !Number.isFinite(reportedCount) ||
+          reportedCount > payments?.length
+        );
+
+      if (incompletePaymentList) {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+
+        return res.status(503).json({
+          error:
+            "Razorpay payment verification is incomplete. " +
+            "Deletion blocked."
+        });
+      }
+
+      if (!payments) {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+
+        return res.status(503).json({
+          error: "Invalid Razorpay verification response."
+        });
+      }
+
+      const safeStatuses = new Set(["failed"]);
+
+      allowed = payments.every(
+        payment =>
+          payment &&
+          safeStatuses.has(payment.status)
+      );
+    }
+
+    if (!allowed) {
+      await client.query("ROLLBACK");
+      transactionOpen = false;
+
+      return res.status(409).json({
+        error:
+          "Order cannot be deleted. " +
+          "Paid or uncertain payments are protected."
+      });
+    }
+
+    const updated = await client.query(
+      `
+        UPDATE orders
+        SET
+          deleted_at = NOW(),
+          deleted_by = $2,
+          updated_at = NOW()
+        WHERE id = $1
+          AND deleted_at IS NULL
+        RETURNING id
+      `,
+      [
+        id,
+        req.admin?.id || req.userId || null
+      ]
+    );
+
+    if (updated.rowCount !== 1) {
+      throw new Error("Order update failed.");
     }
 
     await client.query(
       `
-        UPDATE orders
-        SET deleted_at = NOW(),
-            deleted_by = $2,
-            updated_at = NOW()
-        WHERE id = $1
-          AND deleted_at IS NULL
+        INSERT INTO admin_audit_log (
+          id,
+          admin_user_id,
+          admin_email,
+          action,
+          entity_type,
+          entity_id,
+          metadata,
+          ip_address
+        )
+        VALUES (
+          gen_random_uuid(),
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6::jsonb,
+          $7
+        )
       `,
-      [id, req.admin?.id || req.userId || null]
+      [
+        req.admin?.id || req.userId || null,
+        req.admin?.email || req.userEmail || null,
+        "ORDER_SOFT_DELETED",
+        "order",
+        id,
+        JSON.stringify({
+          orderNumber: order.order_number,
+          paymentMethod: order.payment_method,
+          paymentStatus: order.payment_status
+        }),
+        req.ip || null
+      ]
     );
 
     await client.query("COMMIT");
-
-    await writeAdminAudit({
-      adminUserId: req.admin?.id || req.userId || null,
-      action: "ORDER_SOFT_DELETED",
-      entityType: "ORDER",
-      entityId: id,
-      details: {
-        orderNumber: order.order_number
-      }
-    });
+    transactionOpen = false;
 
     return res.json({
       success: true,
       orderId: id
     });
-
   } catch (error) {
-    if (client) {
+    if (client && transactionOpen) {
       try {
         await client.query("ROLLBACK");
       } catch {}
     }
+
     next(error);
   } finally {
-    if (client) client.release();
+    if (client) {
+      client.release();
+    }
   }
 });
 
