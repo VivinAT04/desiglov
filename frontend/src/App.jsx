@@ -7044,11 +7044,49 @@ function AdminOrderTracking({
       <button
         type="button"
         className="admin-cancel-order"
-        onClick={() =>
-          setStatus("CANCELLED")
-        }
+        disabled={saving || status === "CANCELLED"}
+        onClick={async () => {
+          if (saving || status === "CANCELLED") {
+            return;
+          }
+
+          const confirmed = window.confirm(
+            "Cancel this order? This will update the order status."
+          );
+
+          if (!confirmed) {
+            return;
+          }
+
+          const previousStatus = status;
+
+          try {
+            setSaving(true);
+
+            await onSave(
+              order.id,
+              "CANCELLED",
+              awbNumber.trim()
+            );
+
+            setStatus("CANCELLED");
+          } catch (err) {
+            setStatus(previousStatus);
+
+            window.alert(
+              err.message ||
+                "Could not cancel this order."
+            );
+          } finally {
+            setSaving(false);
+          }
+        }}
       >
-        MARK AS CANCELLED
+        {saving
+          ? "UPDATING..."
+          : status === "CANCELLED"
+            ? "ORDER CANCELLED"
+            : "MARK AS CANCELLED"}
       </button>
     </div>
   );

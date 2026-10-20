@@ -17,6 +17,10 @@ import {
 } from "./db.js";
 
 import {
+  releaseReservedStock,
+} from "./razorpayPaymentService.js";
+
+import {
   requireAuth,
   requireAdmin,
   writeAdminAudit,
@@ -2229,78 +2233,236 @@ const statusSchema =
 
 router.patch(
   "/orders/:id/status",
-  async (
-    req,
-    res,
-    next
-  ) => {
+  async (req, res, next) => {
+    const parsed = statusSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: "Invalid order status.",
+      });
+    }
+
+    const requestedStatus = parsed.data.status;
+    const requestedAwb = parsed.data.awbNumber ?? null;
+
+    let client;
+    let transactionOpen = false;
+    let result;
+    let previousStatus;
+    let stockReleased = false;
 
     try {
+      client = await pool.connect();
 
-      const parsed =
-        statusSchema.safeParse(
-          req.body
-        );
+      await client.query("BEGIN");
+      transactionOpen = true;
 
+      const existingResult = await client.query(
+        `
+          SELECT
+            id,
+            status,
+            payment_method,
+            payment_status,
+            stock_reserved,
+            razorpay_order_id,
+            razorpay_payment_id,
+            awb_number,
+            deleted_at
+          FROM orders
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [req.params.id]
+      );
 
-      if (
-        !parsed.success
-      ) {
+      if (existingResult.rowCount === 0) {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
 
-        return res
-          .status(400)
-          .json({
-            error:
-              "Invalid order status.",
-          });
+        return res.status(404).json({
+          error: "Order not found.",
+        });
       }
 
+      const existing = existingResult.rows[0];
+      previousStatus = existing.status;
+
+      if (existing.deleted_at) {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+
+        return res.status(409).json({
+          error: "Deleted orders cannot be updated.",
+        });
+      }
 
       if (
-        parsed.data.status === "ON_THE_WAY" &&
-        !String(parsed.data.awbNumber || "").trim()
+        existing.status === "CANCELLED" &&
+        requestedStatus !== "CANCELLED"
       ) {
-        const existing =
-          await pool.query(
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+
+        return res.status(409).json({
+          error: "Cancelled orders cannot be reactivated.",
+        });
+      }
+
+      if (requestedStatus === "CANCELLED") {
+        if (
+          existing.status === "CANCELLED" &&
+          !existing.stock_reserved
+        ) {
+          await client.query("COMMIT");
+          transactionOpen = false;
+
+          return res.json({
+            order: {
+              id: existing.id,
+              status: "CANCELLED",
+              awbNumber: existing.awb_number || "",
+            },
+            alreadyCancelled: true,
+          });
+        }
+
+        const allowedStatuses = [
+          "PLACED",
+          "CONFIRMED",
+          "PACKED",
+        ];
+
+        if (
+          existing.payment_method !== "COD" ||
+          existing.payment_status !== "PENDING" ||
+          existing.razorpay_order_id ||
+          existing.razorpay_payment_id ||
+          !allowedStatuses.includes(existing.status)
+        ) {
+          await client.query("ROLLBACK");
+          transactionOpen = false;
+
+          return res.status(409).json({
+            error:
+              "Only eligible unpaid COD orders can be cancelled here.",
+          });
+        }
+
+        if (existing.stock_reserved) {
+          stockReleased = await releaseReservedStock(
+            client,
+            existing.id
+          );
+        } else {
+          const itemsResult = await client.query(
             `
-            SELECT awb_number
-            FROM orders
-            WHERE id = $1
+              SELECT
+                product_id,
+                UPPER(TRIM(size)) AS size,
+                SUM(quantity)::int AS quantity
+              FROM order_items
+              WHERE order_id = $1
+              GROUP BY product_id, UPPER(TRIM(size))
+              ORDER BY product_id, size
             `,
-            [req.params.id]
+            [existing.id]
           );
 
-        if (
-          existing.rowCount === 0
-        ) {
-          return res
-            .status(404)
-            .json({
-              error:
-                "Order not found.",
-            });
+          if (itemsResult.rowCount === 0) {
+            const error = new Error(
+              "Cannot restore stock: order has no items."
+            );
+            error.statusCode = 409;
+            throw error;
+          }
+
+          const productIds = new Set();
+
+          for (const item of itemsResult.rows) {
+            const restored = await client.query(
+              `
+                UPDATE product_size_stock
+                SET
+                  stock = stock + $1,
+                  updated_at = NOW()
+                WHERE product_id = $2
+                  AND size = $3
+                RETURNING product_id
+              `,
+              [
+                item.quantity,
+                item.product_id,
+                item.size,
+              ]
+            );
+
+            if (restored.rowCount !== 1) {
+              const error = new Error(
+                "Cannot restore COD inventory safely."
+              );
+              error.statusCode = 409;
+              throw error;
+            }
+
+            productIds.add(item.product_id);
+          }
+
+          for (const productId of [...productIds].sort(
+            (a, b) => a - b
+          )) {
+            await client.query(
+              `
+                UPDATE products p
+                SET
+                  stock = (
+                    SELECT COALESCE(SUM(stock), 0)::int
+                    FROM product_size_stock
+                    WHERE product_id = p.id
+                  ),
+                  reserved_stock = (
+                    SELECT COALESCE(SUM(reserved_stock), 0)::int
+                    FROM product_size_stock
+                    WHERE product_id = p.id
+                  ),
+                  updated_at = NOW()
+                WHERE id = $1
+              `,
+              [productId]
+            );
+          }
+
+          stockReleased = true;
+        }
+      } else {
+        if (existing.status === "CANCELLED") {
+          await client.query("ROLLBACK");
+          transactionOpen = false;
+
+          return res.status(409).json({
+            error: "Cancelled orders cannot be reactivated.",
+          });
         }
 
         if (
+          requestedStatus === "ON_THE_WAY" &&
           !String(
-            existing.rows[0].awb_number || ""
+            requestedAwb ?? existing.awb_number ?? ""
           ).trim()
         ) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "Enter the Delhivery AWB number before marking the order On the Way.",
-            });
+          await client.query("ROLLBACK");
+          transactionOpen = false;
+
+          return res.status(400).json({
+            error:
+              "Enter the Delhivery AWB number before marking the order On the Way.",
+          });
         }
       }
 
-
-      const result =
-        await pool.query(
-          `
+      result = await client.query(
+        `
           UPDATE orders
-
           SET
             status = $1,
             awb_number =
@@ -2311,38 +2473,52 @@ router.patch(
               END,
             courier = 'Delhivery',
             updated_at = NOW()
-
           WHERE id = $3
-
+            AND deleted_at IS NULL
           RETURNING
             id,
             order_number,
             status,
             courier,
             awb_number
-          `,
-          [
-            parsed.data.status,
-            parsed.data.awbNumber ?? null,
-            req.params.id,
-          ]
+        `,
+        [
+          requestedStatus,
+          requestedAwb,
+          req.params.id,
+        ]
+      );
+
+      if (result.rowCount !== 1) {
+        throw new Error(
+          "Order status update could not be completed."
         );
-
-
-      if (
-        result.rowCount ===
-        0
-      ) {
-
-        return res
-          .status(404)
-          .json({
-            error:
-              "Order not found.",
-          });
       }
 
+      await client.query("COMMIT");
+      transactionOpen = false;
 
+    } catch (error) {
+      if (client && transactionOpen) {
+        try {
+          await client.query("ROLLBACK");
+        } catch (rollbackError) {
+          console.error(
+            "Order cancellation rollback failed:",
+            rollbackError
+          );
+        }
+      }
+
+      return next(error);
+
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+
+    try {
       await writeAdminAudit({
         adminUserId:
           req.admin?.id ||
@@ -2354,68 +2530,59 @@ router.patch(
           req.userEmail ||
           null,
 
-        action:
-          "ORDER_STATUS_CHANGED",
+        action: "ORDER_STATUS_CHANGED",
 
-        entityType:
-          "order",
+        entityType: "order",
 
-        entityId:
-          result.rows[0].id,
+        entityId: result.rows[0].id,
 
         metadata: {
           orderNumber:
-            result.rows[0]
-              .order_number,
+            result.rows[0].order_number,
+
+          previousStatus,
 
           status:
-            result.rows[0]
-              .status,
+            result.rows[0].status,
+
+          stockReleased,
 
           courier:
-            result.rows[0]
-              .courier,
+            result.rows[0].courier,
 
           awbNumber:
-            result.rows[0]
-              .awb_number,
+            result.rows[0].awb_number,
         },
 
-        ipAddress:
-          req.ip || null,
+        ipAddress: req.ip || null,
       });
-
-
-      return res.json({
-        order: {
-
-          id:
-            result.rows[0].id,
-
-          orderNumber:
-            result.rows[0]
-              .order_number,
-
-          status:
-            result.rows[0]
-              .status,
-
-          courier:
-            result.rows[0]
-              .courier || "Delhivery",
-
-          awbNumber:
-            result.rows[0]
-              .awb_number || "",
-        },
-      });
-
-    } catch (error) {
-
-      next(error);
+    } catch (auditError) {
+      console.error(
+        "Order status saved but audit logging failed:",
+        auditError
+      );
     }
+
+    return res.json({
+      order: {
+        id: result.rows[0].id,
+
+        orderNumber:
+          result.rows[0].order_number,
+
+        status:
+          result.rows[0].status,
+
+        courier:
+          result.rows[0].courier || "Delhivery",
+
+        awbNumber:
+          result.rows[0].awb_number || "",
+      },
+    });
   }
 );
+
 
 
 // ===========================================================
