@@ -3766,14 +3766,18 @@ function ProductPage({
                 SELECT SIZE
               </span>
 
-              <button
-                type="button"
-                onClick={() =>
-                  navigate("/size-guide")
-                }
-              >
-                SIZE GUIDE
-              </button>
+              {String(product.category ?? "")
+                .trim()
+                .toLowerCase() !== "jewellery" && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/size-guide")
+                  }
+                >
+                  SIZE GUIDE
+                </button>
+              )}
             </div>
 
             <div className="size-grid">
