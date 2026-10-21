@@ -22139,3 +22139,31 @@ button svg {
 .desiglov-sale-badge * {
   color: #ffffff !important;
 }
+
+/* DESIGLOV SALE BADGE - RED BACKGROUND WHITE TEXT ALL DEVICES */
+.product-card .badge.desiglov-sale-badge,
+.product-image .badge.desiglov-sale-badge {
+  background: #c62828 !important;
+  background-color: #c62828 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #c62828 !important;
+  opacity: 1 !important;
+}
+
+.product-card .badge.desiglov-sale-badge *,
+.product-image .badge.desiglov-sale-badge * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  .product-card .badge.desiglov-sale-badge,
+  .product-image .badge.desiglov-sale-badge {
+    background: #c62828 !important;
+    background-color: #c62828 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #c62828 !important;
+  }
+}
