@@ -22139,21 +22139,3 @@ button svg {
 .desiglov-sale-badge * {
   color: #ffffff !important;
 }
-
-
-/* DESIGLOV MOBILE SALE BADGE - WHITE */
-@media (max-width: 768px) {
-  .product-card .desiglov-sale-badge,
-  .product-image .desiglov-sale-badge {
-    background: rgba(255, 255, 255, 0.96) !important;
-    color: #b42318 !important;
-    -webkit-text-fill-color: #b42318 !important;
-    border-color: transparent !important;
-  }
-
-  .product-card .desiglov-sale-badge *,
-  .product-image .desiglov-sale-badge * {
-    color: #b42318 !important;
-    -webkit-text-fill-color: #b42318 !important;
-  }
-}
